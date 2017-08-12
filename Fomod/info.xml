@@ -1,0 +1,20 @@
+﻿<fomod>
+  <Name>SexLab Separate Orgasm</Name>
+  <Version>1.2.8</Version>
+  <Author>Ed86</Author>
+  <Website>http://www.loverslab.com/files/file/3736-sexlab-separate-orgasm/</Website>
+  <Description>
+  
+Requirements:
+Sex Animation Framework v1.62
+SKYUI
+SKSE
+
+useful hot-keys:
+SPACE!!! - advance animation stage
+shift+SPACE!!! -  go back 1 animation stage
+O - switch animation
+End - End animation
+
+ </Description>
+</fomod>

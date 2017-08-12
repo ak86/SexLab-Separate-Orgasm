@@ -1,0 +1,109 @@
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
+	<moduleName>SexLab Separate Orgasm</moduleName>
+	<installSteps order="Explicit">	
+		<installStep name="Core Setup">
+			<optionalFileGroups>
+				<group name="0_Config" type="SelectExactlyOne">
+					<plugins order="Explicit">
+						<plugin name="CONFIG.json">
+							<description>
+								<![CDATA[Core mod, includes .esp with widgets, game script, mcm and json config file with mod settings. Data\SKSE\Plugins\StorageUtilData\SLSO]]>
+							</description>
+							<conditionFlags>
+								<flag name="Config">Active</flag>
+							</conditionFlags>
+							<files>
+								<folder source="00_Core\00_Config" destination=""/>
+							</files>
+							<typeDescriptor>
+								<type name="Required"/>
+							</typeDescriptor>
+						</plugin>
+					</plugins>
+				</group>
+				<group name="0_sslThreadController" type="SelectAny">
+					<plugins order="Explicit">
+						<plugin name="sslThreadController">
+							<description>
+								<![CDATA[Modified sslThreadController script, allows disabling of "OrgasmStart" and "OrgasmEnd" events when player has "Separate Orgasms". Enables Victim control loss.]]>
+							</description>
+							<conditionFlags>
+								<flag name="sslThreadController">Active</flag>
+							</conditionFlags>
+							<files>
+								<folder source="00_Core\01_sslThreadController" destination=""/>
+							</files>
+							<typeDescriptor>
+								<type name="Recommended"/>
+							</typeDescriptor>
+						</plugin>
+					</plugins>   
+				</group>
+				<group name="1_sslActorAlias" type="SelectExactlyOne">
+					<plugins order="Explicit">
+						<plugin name="sslActorAlias">
+							<description>
+								<![CDATA[Modified sslActorAlias script, you want this! No, you dont have a choice.]]>
+							</description>
+							<conditionFlags>
+								<flag name="sslActorAlias">Active</flag>
+							</conditionFlags>
+							<files>
+								<folder source="00_Core\02_sslActorAlias" destination=""/>
+							</files>
+							<typeDescriptor>
+								<type name="Required"/>
+							</typeDescriptor>				
+						</plugin>
+					</plugins>   
+				</group>
+				<group name="2_sslBaseVoice" type="SelectAny">
+					<plugins order="Explicit">
+						<plugin name="sslBaseVoice">
+							<description>
+								<![CDATA[Modified sslBaseVoice script to allow "hot" voice strenght change.]]>
+							</description>
+							<conditionFlags>
+								<flag name="sslBaseVoice">Active</flag>
+							</conditionFlags>
+							<files>
+								<folder source="00_Core\03_sslBaseVoice" destination=""/>
+							</files>
+							<typeDescriptor>
+								<type name="Recommended"/>
+							</typeDescriptor>				
+						</plugin>
+					</plugins>   
+				</group>
+				<group name="3_Patches" type="SelectAny">
+					<plugins order="Explicit">			
+						<plugin name="Patch_SLA_AAAA_Lewd">
+							<description>
+								<![CDATA[SLAR Animation-Appropriate Arousal Adjustments 1.0.5 based patch to support creatures and other perversions. Includes new event to take into account SL separate orgasms. Changes SLA arousal loss during orgasms to use characters sexlab lewdness stat: (20 - 2*character lewdness[0-6]), the more char is nympho, the harder it to loose arousal. Characters with high lewdness(>5) would gain exposure, rather than lose, from being rape victim.]]>
+							</description>
+							<conditionFlags>
+								<flag name="Patch_SLA_AAAA_Lewd">Active</flag>
+							</conditionFlags>
+							<files>
+								<folder source="01_Patches\01_Sla_AAAA_Lewd" destination=""/>
+							</files>
+							<typeDescriptor>
+								<dependencyType>
+									<defaultType name="NotUsable"/>
+									<patterns>
+										<pattern>
+											<dependencies>
+												<fileDependency file="SexLabAroused.esm" state="Active"/>
+											</dependencies>
+											<type name="Recommended"/>
+										</pattern>
+									</patterns>
+								</dependencyType>
+							</typeDescriptor>
+						</plugin>
+					</plugins>   
+				</group>
+			</optionalFileGroups>
+		</installStep>
+	</installSteps>
+</config>		
