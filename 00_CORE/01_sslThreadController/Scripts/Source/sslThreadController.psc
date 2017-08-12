@@ -190,14 +190,19 @@ state Animating
 	function GoToStage(int ToStage)
 		UnregisterForUpdate()
 		String File = "/SLSO/Config.json"
-		If Stage > StageCount - 1
-			if Config.SeparateOrgasms && HasPlayer && GetVictim() != none && JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1 
+		int maxStage = StageCount - 1
+		; if possible do not proceed to last stage until after orgasm
+		if StageCount > 2
+			maxStage = StageCount - 2
+		endIf
+		if Stage > maxStage
+			if Config.SeparateOrgasms && HasPlayer && GetVictim() != none && (JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1 || JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1)
 
 				int i = ActorCount
 				while i > 0
 					i -= 1
 					if ActorAlias[i].GetRef() != none
-						if ActorAlias[i].IsAggressor() && ActorAlias[i].GetRef() != GetPlayer()
+						if ActorAlias[i].IsAggressor() && ((ActorAlias[i].GetRef() != GetPlayer() && JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1) || (ActorAlias[i].GetRef() == GetPlayer() && JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1))
 							if ((ActorAlias[i].IsCreature() && JsonUtil.GetIntValue(File, "game_enabled") == 1) || !ActorAlias[i].IsCreature())
 								if ActorAlias[i].GetOrgasmCount() < 1
 									Bool Belted = false
@@ -217,9 +222,18 @@ state Animating
 									EndIf
 									
 									if Belted == false
-										ToStage = Utility.RandomInt(0, StageCount - 1)
+										int minStage = 1
+										; If there are more than 2 stages, do not include first (often transition)
+										if StageCount > 3
+											minStage = 2
+										; If there are more than 5 stages, do not include first 2
+										elseIf StageCount > 5
+											minStage = 3
+										endIf
+
+										ToStage = Utility.RandomInt(minStage, maxStage)
 										i = 0
-										Log("Victim found, aggressor is not satisfied, setting stage to " + (StageCount - 2))
+										Log("Victim found, aggressor is not satisfied, setting stage to " + ToStage)
 									endif
 								endIf
 							endIf

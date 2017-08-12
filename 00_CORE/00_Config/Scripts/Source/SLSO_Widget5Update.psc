@@ -177,16 +177,3 @@ Function GetCurrentHourOfDay()
 		LastTimeFlash = Time
 	endif
 EndFunction
-
-;----------------------------------------------------------------------------
-;SL Events
-;----------------------------------------------------------------------------
-
-;scene end, disable widget
-Event OnSexLabEnd(string EventName, string argString, Float argNum, form sender)
-	controller = SexLab.GetController(argString as int)
-
-	if controller.HasPlayer
-		StopWidget()
-	endif
-EndEvent

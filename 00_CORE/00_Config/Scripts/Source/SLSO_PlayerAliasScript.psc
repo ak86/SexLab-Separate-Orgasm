@@ -93,7 +93,6 @@ Event OnSexLabStart(string EventName, string argString, Float argNum, form sende
 				(self.GetOwningQuest().GetAlias(i+1+5) as ReferenceAlias).ForceRefTo(controller.ActorAlias[i].GetActorRef())
 				(self.GetOwningQuest().GetAlias(i+1)).RegisterForModEvent("SLSO_Start_widget", "Start_widget")
 				(self.GetOwningQuest().GetAlias(i+1)).RegisterForModEvent("SLSO_Stop_widget", "Stop_widget")
-				;(self.GetOwningQuest().GetAlias(i+1)).RegisterForModEvent("AnimationEnd", "OnSexLabEnd")
 				int handle = ModEvent.Create("SLSO_start_widget")
 				if (handle)
 					ModEvent.PushInt(handle, i+1)

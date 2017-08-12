@@ -71,6 +71,7 @@ function Page_Config()
 		AddHeaderOption("$Config_Orgasm_event_configuration_Header_2")
 			
 			AddToggleOptionST("condition_aggressor_orgasm", "$condition_aggressor_orgasm", JsonUtil.GetIntValue(File, "condition_aggressor_orgasm"))
+			AddToggleOptionST("condition_player_aggressor_orgasm", "$condition_player_aggressor_orgasm", JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm"))
 			AddToggleOptionST("sl_agressor_bonus_enjoyment", "$sl_agressor_bonus_enjoyment", JsonUtil.GetIntValue(File, "sl_agressor_bonus_enjoyment"))
 
 			if JsonUtil.GetIntValue(File, "condition_victim_orgasm") == 1
@@ -418,6 +419,21 @@ state condition_aggressor_orgasm
 	
 	event OnHighlightST()
 		SetInfoText("$condition_aggressor_orgasm_description")
+	endEvent
+endState
+
+state condition_player_aggressor_orgasm
+	event OnSelectST()
+		if JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1
+			JsonUtil.SetIntValue(File, "condition_player_aggressor_orgasm", 0)
+		else
+			JsonUtil.SetIntValue(File, "condition_player_aggressor_orgasm", 1)
+		endif
+		SetToggleOptionValueST(JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm"))
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$condition_player_aggressor_orgasm_description")
 	endEvent
 endState
 
