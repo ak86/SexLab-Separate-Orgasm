@@ -187,12 +187,12 @@ Function AnimSpeed()
 	Float FullEnjoymentMOD
 	
 	if JsonUtil.GetIntValue(File, "game_animation_speed_control") == 1														;stamina based animation speed
-		FullEnjoymentMOD = PapyrusUtil.ClampFloat(ActorSync.GetActorValuePercentage("Stamina")*100/30, 0.0, 3.0)
-		AnimSpeedHelper.SetAnimationSpeed(ActorRef, FullEnjoymentMOD/3+0.5, 0.5, 0)
+		FullEnjoymentMOD = PapyrusUtil.ClampFloat(ActorSync.GetActorValuePercentage("Stamina")*100/30/3, 0.25, 0.75)
+		AnimSpeedHelper.SetAnimationSpeed(ActorRef, FullEnjoymentMOD+0.5, 0.5, 0)
 		;SexLab.Log(" SLSO AnimSpeed()(sta) actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " ActorSync to " + ActorSync.GetLeveledActorBase().GetName() + " , speed: ", FullEnjoymentMOD / 3 + 0.5)
 	elseif JsonUtil.GetIntValue(File, "game_animation_speed_control") == 2													;enjoyment based animation speed
-		FullEnjoymentMOD = PapyrusUtil.ClampFloat(controller.ActorAlias(ActorSync).GetFullEnjoyment()/30, 0.0, 3.0)
-		AnimSpeedHelper.SetAnimationSpeed(ActorRef, FullEnjoymentMOD/3+0.5, 0.5, 0)
+		FullEnjoymentMOD = PapyrusUtil.ClampFloat(controller.ActorAlias(ActorSync).GetFullEnjoyment()/30/3, 0.25, 0.75)
+		AnimSpeedHelper.SetAnimationSpeed(ActorRef, FullEnjoymentMOD+0.5, 0.5, 0)
 		;SexLab.Log(" SLSO AnimSpeed()(enjoyment) actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " ActorSync to " + ActorSync.GetLeveledActorBase().GetName() + " , speed: ", FullEnjoymentMOD / 3 + 0.5)
 	endif
 EndFunction
@@ -347,7 +347,8 @@ Function Game(string var = "")
 	
 	If ((JsonUtil.GetIntValue(File, "game_no_sta_endanim") == 1 && ActorRef.GetActorValuePercentage("Stamina") < 0.10)\
 	|| (JsonUtil.GetIntValue(File, "game_male_orgasm_endanim") == 1 && !IsFemale && (controller.ActorAlias(ActorRef) as sslActorAlias).GetOrgasmCount() > 0))\
-	&& ((self.GetID() - 5 - 1 != 0 && controller.ActorCount <= 2) || controller.ActorCount == 1)
+	&& ((self.GetID() - 5 - 1 != 0 && controller.ActorCount <= 2) || controller.ActorCount == 1)\
+	&& controller.Stage < controller.Animation.StageCount
 		controller.AdvanceStage()
 	EndIf
 	;SexLab.Log(" SLSO GAME(): " + (game.GetRealHoursPassed()-bench)*24*60*60 )

@@ -772,12 +772,11 @@ state Animating
 			if !IsSilent
 				if !IsFemale
 					PlayLouder(Voice.GetSound(100, false), ActorRef, Config.VoiceVolume)
-					PlayLouder(OrgasmFX, MarkerRef, Config.SFXVolume)
 				elseif ((JsonUtil.GetIntValue(File, "sl_voice_player") == 0 && IsPlayer) || (JsonUtil.GetIntValue(File, "sl_voice_npc") == 0 && !IsPlayer))
 					PlayLouder(Voice.GetSound(100, false), ActorRef, Config.VoiceVolume)
-					PlayLouder(OrgasmFX, MarkerRef, Config.SFXVolume)
 				endIf
 			endIf
+			PlayLouder(OrgasmFX, MarkerRef, Config.SFXVolume)
 		endIf
 		; Apply cum to female positions from male position orgasm
 		int i = Thread.ActorCount
@@ -1218,7 +1217,9 @@ function BonusEnjoyment(actor Ref = none, int experience = 0)
 			;Log("increase BonusEnjoyment["+BonusEnjoyment+"] experience["+experience+"]")
 		elseif Ref == ActorRef || Thread.ActorCount != 2
 			;increase own enjoyment
-			if BaseSex == 0 
+			if BaseSex == 0
+				BonusEnjoyment	+=slaActorArousal
+			elseif JsonUtil.GetIntValue(File, "condition_female_orgasm_bonus") != 1
 				BonusEnjoyment	+=slaActorArousal
 			else
 				BonusEnjoyment	+=slaActorArousal + GetOrgasmCount()

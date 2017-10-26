@@ -65,6 +65,7 @@ function Page_Config()
 			AddToggleOptionST("condition_ddbelt_orgasm", "$condition_ddbelt_orgasm", JsonUtil.GetIntValue(File, "condition_ddbelt_orgasm"))
 			AddToggleOptionST("condition_female_orgasm", "$condition_female_orgasm", JsonUtil.GetIntValue(File, "condition_female_orgasm"))
 			AddToggleOptionST("condition_male_orgasm", "$condition_male_orgasm", JsonUtil.GetIntValue(File, "condition_male_orgasm"))
+			AddToggleOptionST("condition_female_orgasm_bonus", "$condition_female_orgasm_bonus", JsonUtil.GetIntValue(File, "condition_female_orgasm_bonus"))
 			
 			AddEmptyOption()
 			
@@ -449,6 +450,21 @@ state sl_agressor_bonus_enjoyment
 	
 	event OnHighlightST()
 		SetInfoText("$sl_agressor_bonus_enjoyment_description")
+	endEvent
+endState
+
+state condition_female_orgasm_bonus
+	event OnSelectST()
+		if JsonUtil.GetIntValue(File, "condition_female_orgasm_bonus") == 1
+			JsonUtil.SetIntValue(File, "condition_female_orgasm_bonus", 0)
+		else
+			JsonUtil.SetIntValue(File, "condition_female_orgasm_bonus", 1)
+		endif
+		SetToggleOptionValueST(JsonUtil.GetIntValue(File, "condition_female_orgasm_bonus"))
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$condition_female_orgasm_bonus_description")
 	endEvent
 endState
 

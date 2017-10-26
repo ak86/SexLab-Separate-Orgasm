@@ -13,11 +13,12 @@
 	"int" : 
 	{
 		"condition_aggressor_orgasm" : 1,
-		"condition_player_aggressor_orgasm" : 0,
 		"condition_ddbelt_orgasm" : 0,
 		"condition_female_orgasm" : 1,
+		"condition_female_orgasm_bonus" : 0,
 		"condition_leadin_orgasm" : 0,
 		"condition_male_orgasm" : 1,
+		"condition_player_aggressor_orgasm" : 0,
 		"condition_player_orgasm" : 1,
 		"condition_victim_orgasm" : 2,
 		"game_animation_speed_control" : 2,
