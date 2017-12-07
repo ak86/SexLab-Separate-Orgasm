@@ -1,6 +1,8 @@
 {
 	"float" : 
 	{
+		"sl_enjoymentrate_female" : 1,
+		"sl_enjoymentrate_male" : 1,
 		"widget_backgroundalpha" : 50,
 		"widget_borderalpha" : 50,
 		"widget_height" : 25,

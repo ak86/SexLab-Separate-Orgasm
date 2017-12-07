@@ -1127,6 +1127,7 @@ int function GetFullEnjoyment()
 endFunction
 
 float function GetFullEnjoymentMod()
+	String File = "/SLSO/Config.json"
 	return 	100*MusturbationMod/ExhibitionistMod/GenderMod
 endFunction
 
@@ -1144,13 +1145,20 @@ int function CalculateFullEnjoyment()
 	endIf
 
 	int FullEnjoyment = (GetEnjoyment() + BaseEnjoyment + slaActorArousal + BonusEnjoyment)
-
-	if BaseSex == 0 && JsonUtil.GetIntValue(File, "condition_male_orgasm") == 1
-		;male wont be able to orgasm 2nd time if slso game() and sla disabled
-		;Log("male FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + GetOrgasmCount()*2)) as int+"]")
-		if (Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))) || Position != 0
-			GenderMod = (1 + GetOrgasmCount()*2)
+	
+	float sl_enjoymentrate = 1
+	
+	if BaseSex == 0
+		sl_enjoymentrate = JsonUtil.GetFloatValue(File, "sl_enjoymentrate_male", missing = 1)
+		if JsonUtil.GetIntValue(File, "condition_male_orgasm") == 1
+			;male wont be able to orgasm 2nd time if slso game() and sla disabled
+			;Log("male FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + GetOrgasmCount()*2)) as int+"]")
+			if (Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))) || Position != 0
+				GenderMod = (1 + GetOrgasmCount()*2)
+			endif
 		endif
+	else
+		sl_enjoymentrate = JsonUtil.GetFloatValue(File, "sl_enjoymentrate_female", missing = 1)
 	endif
 	
 	If JsonUtil.GetIntValue(File, "game_enabled") == 1 || JsonUtil.GetIntValue(File, "sl_sla_arousal") >= 2
@@ -1190,7 +1198,7 @@ int function CalculateFullEnjoyment()
 		endif
 	Endif
 	;Log("SL Enjoyment ["+Enjoyment+"] SL BaseEnjoyment["+BaseEnjoyment+"] SLArousal["+slaActorArousal+"]"+"] BonusEnjoyment["+BonusEnjoyment+"]"+"] FullEnjoyment["+FullEnjoyment+"]")
-	ActorFullEnjoyment = (FullEnjoyment * MusturbationMod / ExhibitionistMod / GenderMod) as int
+	ActorFullEnjoyment = (FullEnjoyment * MusturbationMod / ExhibitionistMod / GenderMod * sl_enjoymentrate) as int
 	return ActorFullEnjoyment
 endFunction
 

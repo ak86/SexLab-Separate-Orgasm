@@ -90,6 +90,8 @@ function Page_Config()
 			AddToggleOptionST("sl_npcscene_always_orgasm", "$sl_npcscene_always_orgasm", JsonUtil.GetIntValue(File, "sl_npcscene_always_orgasm"))
 			AddToggleOptionST("sl_passive_enjoyment", "$sl_passive_enjoyment", JsonUtil.GetIntValue(File, "sl_passive_enjoyment"))
 			AddToggleOptionST("sl_stage_enjoyment", "$sl_stage_enjoyment", JsonUtil.GetIntValue(File, "sl_stage_enjoyment"))
+			AddSliderOptionST("sl_enjoymentrate_female", "$sl_enjoymentrate_female", (JsonUtil.GetFloatValue(File, "sl_enjoymentrate_female")*100) as int)
+			AddSliderOptionST("sl_enjoymentrate_male", "$sl_enjoymentrate_male", (JsonUtil.GetFloatValue(File, "sl_enjoymentrate_male")*100) as int)
 			if JsonUtil.GetIntValue(File, "sl_sla_arousal") == 1
 				AddTextOptionST("sl_sla_arousal", "$sl_sla_arousal", "$sl_sla_arousal_s1")
 			elseif JsonUtil.GetIntValue(File, "sl_sla_arousal") == 2
@@ -276,6 +278,34 @@ endfunction
 ;=============================================================
 ;Sliders
 ;=============================================================
+
+state sl_enjoymentrate_male
+	event OnSliderOpenST()
+		SetSliderDialogStartValue((JsonUtil.GetFloatValue(File, "sl_enjoymentrate_male")*100) as int)
+		SetSliderDialogDefaultValue(100)
+		SetSliderDialogRange(1, 200)
+		SetSliderDialogInterval(1)
+	endEvent
+
+	event OnSliderAcceptST(float value)
+		JsonUtil.SetFloatValue(File, "sl_enjoymentrate_male", value/100)
+		SetSliderOptionValueST((JsonUtil.GetFloatValue(File, "sl_enjoymentrate_male")*100) as int)
+	endEvent
+endState
+
+state sl_enjoymentrate_female
+	event OnSliderOpenST()
+		SetSliderDialogStartValue((JsonUtil.GetFloatValue(File, "sl_enjoymentrate_female")*100) as int)
+		SetSliderDialogDefaultValue(100)
+		SetSliderDialogRange(1, 200)
+		SetSliderDialogInterval(1)
+	endEvent
+
+	event OnSliderAcceptST(float value)
+		JsonUtil.SetFloatValue(File, "sl_enjoymentrate_female", value/100)
+		SetSliderOptionValueST((JsonUtil.GetFloatValue(File, "sl_enjoymentrate_female")*100) as int)
+	endEvent
+endState
 
 state sl_hot_voice_strength
 	event OnSliderOpenST()
