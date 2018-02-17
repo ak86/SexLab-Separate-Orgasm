@@ -680,53 +680,55 @@ state Animating
 		; SyncLocation(false)
 	endEvent /;
 
-	function OrgasmEffect()
+	function OrgasmEffect(bool Force = false)
 		if Math.Abs(Utility.GetCurrentRealTime() - LastOrgasm) < 5.0
 			Log("Excessive OrgasmEffect Triggered")
 			return
 		endIf
 		String File = "/SLSO/Config.json"
-		if LeadIn && JsonUtil.GetIntValue(File, "condition_leadin_orgasm") == 0
-			Log("OrgasmEffect Triggered, orgasms disabled at LeadIn/Foreplay Stage")
-			return
-		endIf
-		if IsPlayer && JsonUtil.GetIntValue(File, "condition_player_orgasm") == 0
-			Log("OrgasmEffect Triggered, player is forbidden to orgasm")
-			return
-		endIf
-		if JsonUtil.GetIntValue(File, "condition_ddbelt_orgasm") == 0
-			if zadDeviousBelt != none
-				if ActorRef.WornHasKeyword(zadDeviousBelt)
-					Log("OrgasmEffect Triggered, ActorRef has DD belt prevent orgasming")
-					return
-				EndIf
-			endIf
-		endIf
-		if IsVictim
-			if JsonUtil.GetIntValue(File, "condition_victim_orgasm") == 0
-				Log("OrgasmEffect Triggered, ActorRef is victim, victim forbidden to orgasm")
+		If !Force
+			if LeadIn && JsonUtil.GetIntValue(File, "condition_leadin_orgasm") == 0
+				Log("OrgasmEffect Triggered, orgasms disabled at LeadIn/Foreplay Stage")
 				return
-			elseif JsonUtil.GetIntValue(File, "condition_victim_orgasm") == 2
-				if (Stats.GetSkillLevel(ActorRef, Stats.kLewd)*10) as int < Utility.RandomInt(0, 100)
-					Log("OrgasmEffect Triggered, ActorRef is victim, victim didn't pass lewd check to orgasm")
-					return
+			endIf
+			if IsPlayer && JsonUtil.GetIntValue(File, "condition_player_orgasm") == 0
+				Log("OrgasmEffect Triggered, player is forbidden to orgasm")
+				return
+			endIf
+			if JsonUtil.GetIntValue(File, "condition_ddbelt_orgasm") == 0
+				if zadDeviousBelt != none
+					if ActorRef.WornHasKeyword(zadDeviousBelt)
+						Log("OrgasmEffect Triggered, ActorRef has DD belt prevent orgasming")
+						return
+					EndIf
 				endIf
 			endIf
-		endIf
-		if !IsAggressor
-			if !(Animation.HasTag("69") || Animation.HasTag("Masturbation")) || Thread.Positions.Length == 2
-				if  IsFemale && JsonUtil.GetIntValue(File, "condition_female_orgasm") == 1
-					if Position == 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Cunnilingus") || Animation.HasTag("Fisting") || Animation.HasTag("Lesbian"))
-						Log("OrgasmEffect Triggered, female pos 0, conditions not met, no HasTag(Vaginal,Anal,Cunnilingus,Fisting)")
+			if IsVictim
+				if JsonUtil.GetIntValue(File, "condition_victim_orgasm") == 0
+					Log("OrgasmEffect Triggered, ActorRef is victim, victim forbidden to orgasm")
+					return
+				elseif JsonUtil.GetIntValue(File, "condition_victim_orgasm") == 2
+					if (Stats.GetSkillLevel(ActorRef, Stats.kLewd)*10) as int < Utility.RandomInt(0, 100)
+						Log("OrgasmEffect Triggered, ActorRef is victim, victim didn't pass lewd check to orgasm")
 						return
 					endIf
-				elseif IsMale && JsonUtil.GetIntValue(File, "condition_male_orgasm") == 1
-					if Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))
-						Log("OrgasmEffect Triggered, male pos 0, conditions not met, no HasTag(Anal,Fisting)")
-						return
-					elseif Position != 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Boobjob") || Animation.HasTag("Blowjob") || Animation.HasTag("Handjob") || Animation.HasTag("Footjob"))
-						Log("OrgasmEffect Triggered, male pos > 0, conditions not met, no HasTag(Vaginal,Anal,Boobjob,Blowjob,Handjob,Footjob)")
-						return
+				endIf
+			endIf
+			if !IsAggressor
+				if !(Animation.HasTag("69") || Animation.HasTag("Masturbation")) || Thread.Positions.Length == 2
+					if  IsFemale && JsonUtil.GetIntValue(File, "condition_female_orgasm") == 1
+						if Position == 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Cunnilingus") || Animation.HasTag("Fisting") || Animation.HasTag("Lesbian"))
+							Log("OrgasmEffect Triggered, female pos 0, conditions not met, no HasTag(Vaginal,Anal,Cunnilingus,Fisting)")
+							return
+						endIf
+					elseif IsMale && JsonUtil.GetIntValue(File, "condition_male_orgasm") == 1
+						if Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))
+							Log("OrgasmEffect Triggered, male pos 0, conditions not met, no HasTag(Anal,Fisting)")
+							return
+						elseif Position != 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Boobjob") || Animation.HasTag("Blowjob") || Animation.HasTag("Handjob") || Animation.HasTag("Footjob"))
+							Log("OrgasmEffect Triggered, male pos > 0, conditions not met, no HasTag(Vaginal,Anal,Boobjob,Blowjob,Handjob,Footjob)")
+							return
+						endIf
 					endIf
 				endIf
 			endIf
@@ -1246,7 +1248,10 @@ function BonusEnjoyment(actor Ref = none, int experience = 0)
 endFunction
 
 function Orgasm(float experience = 0.0)
-	if ActorFullEnjoyment >= 90
+	if experience == -2
+		LastOrgasm = Math.Abs(RealTime[0] - 11)
+		OrgasmEffect(true)
+	elseif ActorFullEnjoyment >= 90
 		if experience == -1
 			LastOrgasm = Math.Abs(RealTime[0] - 11)
 		endIf
@@ -1750,7 +1755,7 @@ function Snap()
 endFunction
 event OnTranslationComplete()
 endEvent
-function OrgasmEffect()
+function OrgasmEffect(bool Force = false)
 endFunction
 event ResetActor()
 endEvent
