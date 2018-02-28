@@ -133,12 +133,13 @@ bool function SetActor(Actor ProspectRef)
 	IsTracked  = Config.ThreadLib.IsActorTracked(ActorRef)
 	IsPlayer   = ActorRef == PlayerRef
 	; Player and creature specific
+	If IsPlayer
+		Thread.HasPlayer = true
+	endIf
 	if IsCreature
 		Thread.CreatureRef = BaseRef.GetRace()
 	elseIf !IsPlayer
 		Stats.SeedActor(ActorRef)
-	else
-		Thread.HasPlayer = true
 	endIf
 	; Actor's Adjustment Key
 	ActorKey = MiscUtil.GetRaceEditorID(BaseRef.GetRace())
