@@ -60,14 +60,9 @@ float StartedAt
 float ActorScale
 float AnimScale
 float LastOrgasm
-float MusturbationMod
-float ExhibitionistMod
-float GenderMod
 int BestRelation
 int BaseEnjoyment
 int Enjoyment
-int ActorFullEnjoyment
-int BonusEnjoyment
 int Orgasms
 int NthTranslation
 
@@ -79,10 +74,20 @@ Sound OrgasmFX
 Spell HDTHeelSpell
 Form HadBoots
 
+;SLSO edits
 Faction slaArousal
 Faction slaExhibitionist
 Bool bslaExhibitionist
+Bool SLSOGetEnjoymentCheck1
+Bool SLSOGetEnjoymentCheck2
+;Int AllowNonAggressorOrgasm
 Int slaExhibitionistNPCCount
+int BonusEnjoyment
+int ActorFullEnjoyment
+float sl_enjoymentrate
+float MusturbationMod
+float ExhibitionistMod
+float GenderMod
 Keyword zadDeviousBelt
 
 ; Animation Position/Stage flags
@@ -163,38 +168,7 @@ bool function SetActor(Actor ProspectRef)
 	Flags   = new int[5]
 	Offsets = new float[4]
 	Loc     = new float[6]
-	if Game.GetModByName("SexLabAroused.esm") != 255
-		slaArousal = Game.GetFormFromFile(0x3FC36, "SexLabAroused.esm") As Faction
-	endIf
-	bslaExhibitionist = false
-	slaExhibitionistNPCCount = 0
-	if Game.GetModByName("SexLabAroused.esm") != 255
-		slaExhibitionist = Game.GetFormFromFile(0x713DA, "SexLabAroused.esm") As Faction
-		if slaExhibitionist != none
-			if ActorRef.GetFactionRank(slaExhibitionist) >= 0
-				bslaExhibitionist = true
-			endif
-		endif
-	endIf
-	String File = "/SLSO/Config.json"
-	if JsonUtil.GetIntValue(File, "sl_exhibitionist") == 1
-		Cell akTargetCell = ActorRef.GetParentCell()
-		int iRef = 0
-		while iRef <= akTargetCell.getNumRefs(43) && slaExhibitionistNPCCount < 6 ;GetType() 62-char,44-lvchar,43-npc
-			Actor aNPC = akTargetCell.getNthRef(iRef, 43) as Actor
-			If aNPC!= none && aNPC.GetDistance(ActorRef) < 500 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
-				slaExhibitionistNPCCount += 1
-			EndIf
-			iRef = iRef + 1
-		endWhile
-	endif
-	if Game.GetModByName("Devious Devices - Assets.esm") != 255
-		zadDeviousBelt = Game.GetFormFromFile(0x3330, "Devious Devices - Assets.esm") As Keyword
-	endif
-	MusturbationMod = 1
-	ExhibitionistMod = 1
-	GenderMod = 1
-	BonusEnjoyment = 0
+	
 	; Ready
 	RegisterEvents()
 	TrackedEvent("Added")
@@ -478,6 +452,113 @@ state Prepare
 		CurrentSA = Animation.Registry
 		; Debug.SendAnimationEvent(ActorRef, Animation.FetchPositionStage(Position, 1))
 		Debug.SendAnimationEvent(ActorRef, "IdleForceDefaultState")
+
+		; SLSO CHECKS
+			String File = "/SLSO/Config.json"
+			BonusEnjoyment = 0
+			if Game.GetModByName("SexLabAroused.esm") != 255
+				slaArousal = Game.GetFormFromFile(0x3FC36, "SexLabAroused.esm") As Faction
+			endIf
+			if Game.GetModByName("Devious Devices - Assets.esm") != 255
+				zadDeviousBelt = Game.GetFormFromFile(0x3330, "Devious Devices - Assets.esm") As Keyword
+			endif
+		
+		;GetEnjoyment() condi checks
+			if JsonUtil.GetIntValue(File, "sl_passive_enjoyment") == 1 || Thread.ActorCount > 2 || !Thread.HasPlayer || JsonUtil.GetIntValue(File, "game_enabled") != 1
+				SLSOGetEnjoymentCheck1 = true
+			else
+				SLSOGetEnjoymentCheck1 = false
+			endIf
+			
+			if JsonUtil.GetIntValue(File, "sl_stage_enjoyment") == 1 || !Thread.HasPlayer || JsonUtil.GetIntValue(File, "game_enabled") != 1
+				SLSOGetEnjoymentCheck2 = true
+			else
+				SLSOGetEnjoymentCheck2 = false
+			endIf
+		
+		;CalculateFullEnjoyment() checks
+			ExhibitionistMod = 1
+			bslaExhibitionist = false
+			slaExhibitionistNPCCount = 0
+			if Game.GetModByName("SexLabAroused.esm") != 255
+				slaExhibitionist = Game.GetFormFromFile(0x713DA, "SexLabAroused.esm") As Faction
+				if slaExhibitionist != none
+					if ActorRef.GetFactionRank(slaExhibitionist) >= 0
+						bslaExhibitionist = true
+					endif
+				endif
+			endIf
+			if JsonUtil.GetIntValue(File, "sl_exhibitionist") == 1
+				Cell akTargetCell = ActorRef.GetParentCell()
+				int iRef = 0
+				while iRef <= akTargetCell.getNumRefs(43) && slaExhibitionistNPCCount < 6 ;GetType() 62-char,44-lvchar,43-npc
+					Actor aNPC = akTargetCell.getNthRef(iRef, 43) as Actor
+					If aNPC!= none && aNPC.GetDistance(ActorRef) < 500 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
+						slaExhibitionistNPCCount += 1
+					EndIf
+					iRef = iRef + 1
+				endWhile
+			endif
+			if JsonUtil.GetIntValue(File, "sl_exhibitionist") > 0
+				if bslaExhibitionist || Skills[Stats.kLewd] > 5
+					;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
+					ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
+				elseif slaExhibitionistNPCCount > 1 && !IsAggressor
+					;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + 0.2 * slaExhibitionistNPCCount)) as int+"]")
+					ExhibitionistMod = (1 + 0.2 * slaExhibitionistNPCCount)
+				endif
+			endif
+			
+			MusturbationMod = 1
+			if JsonUtil.GetIntValue(File, "sl_masturbation") == 1
+				if Thread.ActorCount == 1
+					;Log("masturbation_penalty FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment * (1 - 1 * (Skills[Stats.kLewd]) / 10)) as int+"]")
+					if Animation.HasTag("Estrus")				;Estrus, increase enjoyment with lewdness
+						MusturbationMod = 1 + 1 * (Skills[Stats.kLewd]) / 10
+					else										;normal, reduce enjoyment with lewdness
+						MusturbationMod = 1 - 1 * (Skills[Stats.kLewd]) / 10
+					endif
+					MusturbationMod = PapyrusUtil.ClampFloat(MusturbationMod, 0.1, 2.0)
+				endif
+			endif
+			GenderMod = 1
+			if BaseSex == 0
+				sl_enjoymentrate = JsonUtil.GetFloatValue(File, "sl_enjoymentrate_male", missing = 1)
+				if JsonUtil.GetIntValue(File, "condition_male_orgasm") == 1
+					;male wont be able to orgasm 2nd time if slso game() and sla disabled
+					;Log("male FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + GetOrgasmCount()*2)) as int+"]")
+					
+					;can probably be broken(not refreshed) by manually changing position/animation
+					; probably no one will notice so w/e
+					if (Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))) || Position != 0
+						GenderMod = (1 + GetOrgasmCount()*2)
+					endif
+				endif
+			else
+				sl_enjoymentrate = JsonUtil.GetFloatValue(File, "sl_enjoymentrate_female", missing = 1)
+			endif
+		
+	;OrgasmEffect() Orgasm condi checks
+	;check if non aggressor actor meets orgasm conditions
+	;can probably be broken by manually changing position/animation
+	;perfomance increase probably not worth it 
+;		AllowNonAggressorOrgasm = 0
+;		if !IsAggressor
+;			if !(Animation.HasTag("69") || Animation.HasTag("Masturbation")) || Thread.Positions.Length == 2
+;				if  IsFemale && JsonUtil.GetIntValue(File, "condition_female_orgasm") == 1
+;					if Position == 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Cunnilingus") || Animation.HasTag("Fisting") || Animation.HasTag("Lesbian"))
+;						AllowNonAggressorOrgasm = 1
+;					endIf
+;				elseif IsMale && JsonUtil.GetIntValue(File, "condition_male_orgasm") == 1
+;					if Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))
+;						AllowNonAggressorOrgasm = 2
+;					elseif Position != 0 && && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Boobjob") || Animation.HasTag("Blowjob") || Animation.HasTag("Handjob") || Animation.HasTag("Footjob"))
+;						AllowNonAggressorOrgasm = 3
+;					endIf
+;				endIf
+;			endIf
+;		endIf
+
 		; If enabled, start Auto TFC for player
 		if IsPlayer && Config.AutoTFC
 			MiscUtil.SetFreeCameraState(true)
@@ -689,28 +770,28 @@ state Animating
 		String File = "/SLSO/Config.json"
 		If !Force
 			if LeadIn && JsonUtil.GetIntValue(File, "condition_leadin_orgasm") == 0
-				Log("OrgasmEffect Triggered, orgasms disabled at LeadIn/Foreplay Stage")
+				Log("Orgasm blocked, orgasms disabled at LeadIn/Foreplay Stage")
 				return
 			endIf
 			if IsPlayer && JsonUtil.GetIntValue(File, "condition_player_orgasm") == 0
-				Log("OrgasmEffect Triggered, player is forbidden to orgasm")
+				Log("Orgasm blocked, player is forbidden to orgasm")
 				return
 			endIf
 			if JsonUtil.GetIntValue(File, "condition_ddbelt_orgasm") == 0
 				if zadDeviousBelt != none
 					if ActorRef.WornHasKeyword(zadDeviousBelt)
-						Log("OrgasmEffect Triggered, ActorRef has DD belt prevent orgasming")
+						Log("Orgasm blocked, ActorRef has DD belt prevent orgasming")
 						return
 					EndIf
 				endIf
 			endIf
 			if IsVictim
 				if JsonUtil.GetIntValue(File, "condition_victim_orgasm") == 0
-					Log("OrgasmEffect Triggered, ActorRef is victim, victim forbidden to orgasm")
+					Log("Orgasm blocked, ActorRef is victim, victim forbidden to orgasm")
 					return
 				elseif JsonUtil.GetIntValue(File, "condition_victim_orgasm") == 2
 					if (Stats.GetSkillLevel(ActorRef, Stats.kLewd)*10) as int < Utility.RandomInt(0, 100)
-						Log("OrgasmEffect Triggered, ActorRef is victim, victim didn't pass lewd check to orgasm")
+						Log("Orgasm blocked, ActorRef is victim, victim didn't pass lewd check to orgasm")
 						return
 					endIf
 				endIf
@@ -719,15 +800,15 @@ state Animating
 				if !(Animation.HasTag("69") || Animation.HasTag("Masturbation")) || Thread.Positions.Length == 2
 					if  IsFemale && JsonUtil.GetIntValue(File, "condition_female_orgasm") == 1
 						if Position == 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Cunnilingus") || Animation.HasTag("Fisting") || Animation.HasTag("Lesbian"))
-							Log("OrgasmEffect Triggered, female pos 0, conditions not met, no HasTag(Vaginal,Anal,Cunnilingus,Fisting)")
+							Log("Orgasm blocked, female pos 0, conditions not met, no HasTag(Vaginal,Anal,Cunnilingus,Fisting)")
 							return
 						endIf
 					elseif IsMale && JsonUtil.GetIntValue(File, "condition_male_orgasm") == 1
 						if Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))
-							Log("OrgasmEffect Triggered, male pos 0, conditions not met, no HasTag(Anal,Fisting)")
+							Log("Orgasm blocked, male pos 0, conditions not met, no HasTag(Anal,Fisting)")
 							return
 						elseif Position != 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Boobjob") || Animation.HasTag("Blowjob") || Animation.HasTag("Handjob") || Animation.HasTag("Footjob"))
-							Log("OrgasmEffect Triggered, male pos > 0, conditions not met, no HasTag(Vaginal,Anal,Boobjob,Blowjob,Handjob,Footjob)")
+							Log("Orgasm blocked, male pos > 0, conditions not met, no HasTag(Vaginal,Anal,Boobjob,Blowjob,Handjob,Footjob)")
 							return
 						endIf
 					endIf
@@ -738,6 +819,15 @@ state Animating
 		UnregisterForUpdate()
 		Orgasms   += 1
 		
+		if BaseSex == 0
+			if JsonUtil.GetIntValue(File, "condition_male_orgasm") == 1
+				;male wont be able to orgasm 2nd time if slso game() and sla disabled
+				;Log("male FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + GetOrgasmCount()*2)) as int+"]")
+				if (Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))) || Position != 0
+					GenderMod = (1 + GetOrgasmCount()*2)
+				endif
+			endif
+		endif
 		if (Utility.RandomInt(0, 100) > (JsonUtil.GetIntValue(File, "sl_multiorgasmchance") + ((Skills[Stats.kLewd]*10) as int) - 5 * Orgasms)) || BaseSex != 1
 			LastOrgasm = Math.Abs(Utility.GetCurrentRealTime())
 			; Reset enjoyment build up, if using separate orgasms
@@ -1088,8 +1178,11 @@ int function GetEnjoyment()
 	if !ActorRef
 		Enjoyment = 0
 	elseif !IsSkilled
-		if JsonUtil.GetIntValue(File, "sl_passive_enjoyment") == 1 || Thread.ActorCount > 2  || !Thread.HasPlayer || JsonUtil.GetIntValue(File, "game_enabled") != 1
-			if JsonUtil.GetIntValue(File, "sl_stage_enjoyment") == 1 || !Thread.HasPlayer || JsonUtil.GetIntValue(File, "game_enabled") != 1
+		;run default sexlab enjoyment if: enabled in slso mcm, more than 2 actors, thread has no player, game() disabled
+		;if JsonUtil.GetIntValue(File, "sl_passive_enjoyment") == 1 || Thread.ActorCount > 2 || !Thread.HasPlayer || JsonUtil.GetIntValue(File, "game_enabled") != 1
+		if SLSOGetEnjoymentCheck1
+			;if JsonUtil.GetIntValue(File, "sl_stage_enjoyment") == 1 || !Thread.HasPlayer || JsonUtil.GetIntValue(File, "game_enabled") != 1
+			if SLSOGetEnjoymentCheck2
 				Enjoyment = (PapyrusUtil.ClampFloat(((RealTime[0] - StartedAt) + 1.0) / 5.0, 0.0, 40.0) + ((Stage as float / StageCount as float) * 60.0)) as int
 			else
 				Enjoyment = (PapyrusUtil.ClampFloat(((RealTime[0] - StartedAt) + 1.0) / 5.0, 0.0, 40.0)) as int
@@ -1104,8 +1197,8 @@ int function GetEnjoyment()
 			Thread.RecordSkills()
 			Thread.SetBonuses()
 		endIf
-		if JsonUtil.GetIntValue(File, "sl_passive_enjoyment") == 1 || Thread.ActorCount > 2 || !Thread.HasPlayer || JsonUtil.GetIntValue(File, "game_enabled") != 1
-			if JsonUtil.GetIntValue(File, "sl_stage_enjoyment") == 1 || !Thread.HasPlayer || JsonUtil.GetIntValue(File, "game_enabled") != 1
+		if SLSOGetEnjoymentCheck1
+			if SLSOGetEnjoymentCheck2
 				Enjoyment = BaseEnjoyment + CalcEnjoyment(SkillBonus, Skills, LeadIn, IsFemale, (RealTime[0] - StartedAt), Stage, StageCount)
 			else
 				Enjoyment = BaseEnjoyment + CalcEnjoyment(SkillBonus, Skills, LeadIn, IsFemale, (RealTime[0] - StartedAt), 0, StageCount)
@@ -1142,64 +1235,34 @@ int function CalculateFullEnjoyment()
 	if JsonUtil.GetIntValue(File, "sl_sla_arousal") == 2 || JsonUtil.GetIntValue(File, "sl_sla_arousal") == 3
 		if slaArousal != none
 			slaActorArousal = ActorRef.GetFactionRank(slaArousal)
-		else 
+		endIf
+		if slaActorArousal < 0
 			slaActorArousal = 0
 		endIf
 	endIf
 
 	int FullEnjoyment = (GetEnjoyment() + BaseEnjoyment + slaActorArousal + BonusEnjoyment)
 	
-	float sl_enjoymentrate = 1
-	
-	if BaseSex == 0
-		sl_enjoymentrate = JsonUtil.GetFloatValue(File, "sl_enjoymentrate_male", missing = 1)
-		if JsonUtil.GetIntValue(File, "condition_male_orgasm") == 1
-			;male wont be able to orgasm 2nd time if slso game() and sla disabled
-			;Log("male FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + GetOrgasmCount()*2)) as int+"]")
-			if (Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))) || Position != 0
-				GenderMod = (1 + GetOrgasmCount()*2)
-			endif
+	; realtime exhibitionism detection, very script heavy
+	if JsonUtil.GetIntValue(File, "sl_exhibitionist") == 2
+		Cell akTargetCell = ActorRef.GetParentCell()
+		int iRef = 0
+		slaExhibitionistNPCCount = 0
+		while iRef <= akTargetCell.getNumRefs(43) && slaExhibitionistNPCCount < 6 ;GetType() 62-char,44-lvchar,43-npc
+			Actor aNPC = akTargetCell.getNthRef(iRef, 43) as Actor
+			If aNPC!= none && aNPC.GetDistance(ActorRef) < 500 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
+				slaExhibitionistNPCCount += 1
+			EndIf
+			iRef = iRef + 1
+		endWhile
+		if bslaExhibitionist || Skills[Stats.kLewd] > 5
+			;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
+			ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
+		elseif slaExhibitionistNPCCount > 1 && !IsAggressor
+			;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + 0.2 * slaExhibitionistNPCCount)) as int+"]")
+			ExhibitionistMod = (1 + 0.2 * slaExhibitionistNPCCount)
 		endif
-	else
-		sl_enjoymentrate = JsonUtil.GetFloatValue(File, "sl_enjoymentrate_female", missing = 1)
 	endif
-	
-	If JsonUtil.GetIntValue(File, "game_enabled") == 1 || JsonUtil.GetIntValue(File, "sl_sla_arousal") >= 2
-	;character most likely wont be able to orgasm without slso game(), sla arousal and with below conditions on
-		if JsonUtil.GetIntValue(File, "sl_exhibitionist") > 0
-			if JsonUtil.GetIntValue(File, "sl_exhibitionist") == 2
-				Cell akTargetCell = ActorRef.GetParentCell()
-				int iRef = 0
-				slaExhibitionistNPCCount = 0
-				while iRef <= akTargetCell.getNumRefs(43) && slaExhibitionistNPCCount < 6 ;GetType() 62-char,44-lvchar,43-npc
-					Actor aNPC = akTargetCell.getNthRef(iRef, 43) as Actor
-					If aNPC!= none && aNPC.GetDistance(ActorRef) < 500 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
-						slaExhibitionistNPCCount += 1
-					EndIf
-					iRef = iRef + 1
-				endWhile
-			endif
-			if bslaExhibitionist || Skills[Stats.kLewd] > 5
-				;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
-				ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
-			elseif slaExhibitionistNPCCount > 1 && !IsAggressor
-				;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + 0.2 * slaExhibitionistNPCCount)) as int+"]")
-				ExhibitionistMod = (1 + 0.2 * slaExhibitionistNPCCount)
-			endif
-		endif
-
-		if JsonUtil.GetIntValue(File, "sl_masturbation") == 1
-			if Thread.ActorCount == 1
-				;Log("masturbation_penalty FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment * (1 - 1 * (Skills[Stats.kLewd]) / 10)) as int+"]")
-				if Animation.HasTag("Estrus")				;Estrus
-					MusturbationMod = 1 + 1 * (Skills[Stats.kLewd]) / 10
-				else										;normal
-					MusturbationMod = 1 - 1 * (Skills[Stats.kLewd]) / 10
-				endif
-				MusturbationMod = PapyrusUtil.ClampFloat(MusturbationMod, 0.1, 2.0)
-			endif
-		endif
-	Endif
 	;Log("SL Enjoyment ["+Enjoyment+"] SL BaseEnjoyment["+BaseEnjoyment+"] SLArousal["+slaActorArousal+"]"+"] BonusEnjoyment["+BonusEnjoyment+"]"+"] FullEnjoyment["+FullEnjoyment+"]")
 	ActorFullEnjoyment = (FullEnjoyment * MusturbationMod / ExhibitionistMod / GenderMod * sl_enjoymentrate) as int
 	return ActorFullEnjoyment
@@ -1212,7 +1275,8 @@ function BonusEnjoyment(actor Ref = none, int experience = 0)
 		if JsonUtil.GetIntValue(File, "sl_sla_arousal") == 1 || JsonUtil.GetIntValue(File, "sl_sla_arousal") == 3
 			if slaArousal != none
 				slaActorArousal = ActorRef.GetFactionRank(slaArousal)
-			else 
+			endIf
+			if slaActorArousal < 0
 				slaActorArousal = 0
 			endIf
 		endIf
