@@ -250,6 +250,9 @@ Function Game(string var = "")
 	float FullEnjoymentMOD = PapyrusUtil.ClampFloat(controller.ActorAlias(ActorRef).GetFullEnjoyment()/30, 1.0, 3.0)
 	float mod
 	
+	if ActorRef.GetActorValuePercentage("Magicka") > 0.25 && MentallyBroken == true
+		MentallyBroken = false
+	EndIf
 	;PC only
 	;raise enjoyment
 	If var == "Stamina"
@@ -314,10 +317,6 @@ Function Game(string var = "")
 				PartnerRef = PartnerReference
 			Else
 				;not aggressor
-				
-				if ActorRef.GetActorValuePercentage("Magicka") > 0.25 && MentallyBroken == true
-					MentallyBroken = false
-				EndIf
 				
 				;mentally not broken, pleasure self
 				if ActorRef.GetActorValuePercentage("Magicka") > 0.10
