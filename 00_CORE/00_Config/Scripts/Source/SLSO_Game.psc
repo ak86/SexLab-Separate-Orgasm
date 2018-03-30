@@ -141,22 +141,23 @@ EndFunction
 
 Event OnUpdate()
 	;SexLab.Log(self.GetID() - 6  + " SLSO_Game OnUpdate() is running on " + ActorRef.GetLeveledActorBase().GetName())
+	;float bench = game.GetRealHoursPassed()
 	If self.GetActorRef() != none
 		if controller.ActorAlias[self.GetID() - 5 - 1] != none
 			if controller.ActorAlias[self.GetID() - 5 - 1].GetState() == "Animating"
-				Int RawFullEnjoyment = controller.ActorAlias(ActorRef).GetFullEnjoyment()
-				Int FullEnjoyment = PapyrusUtil.ClampInt(RawFullEnjoyment/10, 0, 10) + 1
+				RegisterForSingleUpdate(1)
+
 				AnimSpeed()
-				If JsonUtil.GetIntValue(File, "game_enabled") == 1
-					Game()
-				EndIf
 				
+				;SexLab.Log(" SLSO OnUpdate()AnimSpeed: " + (game.GetRealHoursPassed()-bench)*60*60 )
 				if !IsSilent && IsFemale && controller.ActorAlias[self.GetID() - 5 - 1].GetState() == "Animating"
 					if Voice > 0 && SoundContainer != none
 						;SexLab.Log(" voice set " + ActorRef.GetLeveledActorBase().GetName() + ", you should not see this after animation end")
 						TransitUp(20, 50)
 						
 						sound mySFX
+						Int RawFullEnjoyment = controller.ActorAlias(ActorRef).GetFullEnjoyment()
+						Int FullEnjoyment = PapyrusUtil.ClampInt(RawFullEnjoyment/10, 0, 10) + 1
 							
 						if FullEnjoyment > 9			;orgasm
 							mySFX = (SoundContainer.GetAt(1) As formlist).GetAt(0) As Sound
@@ -183,7 +184,12 @@ Event OnUpdate()
 					endif
 				endif
 				
-				RegisterForSingleUpdate(1)
+				;SexLab.Log(" SLSO OnUpdate()voice: " + (game.GetRealHoursPassed()-bench)*60*60 )
+				If JsonUtil.GetIntValue(File, "game_enabled") == 1
+					Game()
+				EndIf
+				
+				;SexLab.Log(" SLSO OnUpdate()Game: " + (game.GetRealHoursPassed()-bench)*60*60 )
 				return
 			endif
 		endif
@@ -372,7 +378,7 @@ Function Game(string var = "")
 	&& controller.Stage < controller.Animation.StageCount
 		controller.AdvanceStage()
 	EndIf
-	;SexLab.Log(" SLSO GAME(): " + (game.GetRealHoursPassed()-bench)*24*60*60 )
+	;SexLab.Log(" SLSO GAME(): " + (game.GetRealHoursPassed()-bench)*60*60 )
 EndFunction
 
 Function ModEnjoyment(Actor PartnerRef, float mod, float FullEnjoymentMOD)
@@ -424,7 +430,6 @@ Event OnVibrateStop(string eventName, string argString, float argNum, form sende
 		Vibrate = 0
 	EndIf
 EndEvent
-
 
 ;----------------------------------------------------------------------------
 ;Hotkeys

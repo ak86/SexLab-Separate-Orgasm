@@ -762,13 +762,17 @@ state Animating
 		; SyncLocation(false)
 	endEvent /;
 
-	function OrgasmEffect(bool Force = false)
+	function OrgasmEffect()
+		OrgasmEffectSLSO(false)
+	endFunction
+	
+	function OrgasmEffectSLSO(bool Force = true)
 		if Math.Abs(Utility.GetCurrentRealTime() - LastOrgasm) < 5.0
 			Log("Excessive OrgasmEffect Triggered")
 			return
 		endIf
 		String File = "/SLSO/Config.json"
-		If !Force
+		If Force != true
 			if LeadIn && JsonUtil.GetIntValue(File, "condition_leadin_orgasm") == 0
 				Log("Orgasm blocked, orgasms disabled at LeadIn/Foreplay Stage")
 				return
@@ -1315,7 +1319,7 @@ endFunction
 function Orgasm(float experience = 0.0)
 	if experience == -2
 		LastOrgasm = Math.Abs(RealTime[0] - 11)
-		OrgasmEffect(true)
+		OrgasmEffectSLSO(true)
 	elseif ActorFullEnjoyment >= 90
 		if experience == -1
 			LastOrgasm = Math.Abs(RealTime[0] - 11)
@@ -1820,7 +1824,9 @@ function Snap()
 endFunction
 event OnTranslationComplete()
 endEvent
-function OrgasmEffect(bool Force = false)
+function OrgasmEffect()
+endFunction
+function OrgasmEffectSLSO(bool Force = true)
 endFunction
 event ResetActor()
 endEvent
