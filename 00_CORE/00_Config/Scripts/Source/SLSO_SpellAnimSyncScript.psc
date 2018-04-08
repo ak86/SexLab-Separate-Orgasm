@@ -11,7 +11,12 @@ Event OnEffectStart( Actor akTarget, Actor akCaster )
 	ActorRef = akTarget
 	File = "/SLSO/Config.json"
 	SexLab = Quest.GetQuest("SexLabQuestFramework") as SexLabFramework
-	controller = SexLab.GetController(SexLab.FindActorController(ActorRef))
+	RegisterForModEvent("SLSO_Start_widget", "Start_widget")
+	RegisterForModEvent("SLSO_Stop_widget", "Stop_widget")
+EndEvent
+
+Event Start_widget(Int Widget_Id, Int Thread_Id)
+	controller = SexLab.GetController(Thread_Id)
 	
 	if JsonUtil.GetIntValue(File, "game_animation_speed_control_actorsync") == 1
 		;sync to player
@@ -39,6 +44,13 @@ Event OnEffectStart( Actor akTarget, Actor akCaster )
 	RegisterForSingleUpdate(1)
 EndEvent
 
+Event Stop_widget(Int Widget_Id)
+	UnRegisterForUpdate()
+	UnregisterForAllModEvents()
+	UnregisterForAllKeys()
+	Remove()
+EndEvent
+
 Event OnUpdate()
 	if controller.ActorAlias(ActorRef).GetActorRef() != none
 		if controller.ActorAlias(ActorRef).GetState() == "Animating"
@@ -58,16 +70,19 @@ Event OnUpdate()
 			return
 		endif
 	endif
-	SLSO_MCM SLSO = Quest.GetQuest("SLSO") as SLSO_MCM
-	ActorRef.RemoveSpell(SLSO.SLSO_SpellAnimSync)
+	Remove()
 EndEvent
 
 Event OnPlayerLoadGame()
-	SLSO_MCM SLSO = Quest.GetQuest("SLSO") as SLSO_MCM
-	ActorRef.RemoveSpell(SLSO.SLSO_SpellAnimSync)
+	Remove()
 EndEvent
 
 Event OnEffectFinish( Actor akTarget, Actor akCaster )
 	AnimSpeedHelper.ResetAll()
-	UnregisterforUpdate()
 EndEvent
+
+
+function Remove()
+	SLSO_MCM SLSO = Quest.GetQuest("SLSO") as SLSO_MCM
+	ActorRef.RemoveSpell(SLSO.SLSO_SpellAnimSync)
+endFunction

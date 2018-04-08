@@ -18,7 +18,12 @@ Event OnEffectStart( Actor akTarget, Actor akCaster )
 	ActorRef = akTarget
 	File = "/SLSO/Config.json"
 	SexLab = Quest.GetQuest("SexLabQuestFramework") as SexLabFramework
-	controller = SexLab.GetController(SexLab.FindActorController(ActorRef))
+	RegisterForModEvent("SLSO_Start_widget", "Start_widget")
+	RegisterForModEvent("SLSO_Stop_widget", "Stop_widget")
+EndEvent
+
+Event Start_widget(Int Widget_Id, Int Thread_Id)
+	controller = SexLab.GetController(Thread_Id)
 	
 	IsVictim = controller.IsVictim(ActorRef)
 	IsPlayer = ActorRef == Game.GetPlayer()
@@ -66,10 +71,16 @@ Event OnEffectStart( Actor akTarget, Actor akCaster )
 	RegisterForSingleUpdate(1)
 EndEvent
 
+Event Stop_widget(Int Widget_Id)
+	UnRegisterForUpdate()
+	UnregisterForAllModEvents()
+	UnregisterForAllKeys()
+	Remove()
+EndEvent
+
 Event OnUpdate()
 	if controller.ActorAlias(ActorRef).GetActorRef() != none
 		if controller.ActorAlias(ActorRef).GetState() == "Animating"
-			;SexLab.Log(" SLSO OnUpdate()AnimSpeed: " + (game.GetRealHoursPassed()-bench)*60*60 )
 			if !IsSilent && IsFemale
 				if Voice > 0 && SoundContainer != none
 					;SexLab.Log(" voice set " + ActorRef.GetLeveledActorBase().GetName() + ", you should not see this after animation end")
@@ -107,9 +118,16 @@ Event OnUpdate()
 			endif
 		endif
 	endif
-	SLSO_MCM SLSO = Quest.GetQuest("SLSO") as SLSO_MCM
-	ActorRef.RemoveSpell(SLSO.SLSO_SpellVoice)
+	Remove()
 EndEvent
+
+Event OnPlayerLoadGame()
+	Remove()
+EndEvent
+
+Event OnEffectFinish( Actor akTarget, Actor akCaster )
+EndEvent
+
 
 function TransitUp(int from, int to)
 	while from < to
@@ -125,11 +143,8 @@ function TransitDown(int from, int to)
 	endWhile
 endFunction
 
-Event OnPlayerLoadGame()
+function Remove()
 	SLSO_MCM SLSO = Quest.GetQuest("SLSO") as SLSO_MCM
 	ActorRef.RemoveSpell(SLSO.SLSO_SpellVoice)
-EndEvent
+endFunction
 
-Event OnEffectFinish( Actor akTarget, Actor akCaster )
-	UnregisterforUpdate()
-EndEvent
