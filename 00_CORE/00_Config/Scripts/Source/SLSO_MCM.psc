@@ -2,6 +2,8 @@ scriptname SLSO_MCM extends SKI_ConfigBase
 {MCM Menu script}
 
 SexLabFramework property SexLab auto
+Spell property SLSO_SpellAnimSync auto
+Spell property SLSO_SpellVoice auto
 
 String File
 ;string[] VoiceList

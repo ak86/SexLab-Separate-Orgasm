@@ -3,21 +3,13 @@ Scriptname SLSO_Game Extends ReferenceAlias
 SexLabFramework SexLab
 sslThreadController controller
 
-import MfgConsoleFunc
-
 String File
 Bool IsAggressor
-Bool IsVictim
-Bool IsPlayer
 Bool IsFemale
-Bool IsSilent
 Bool MentallyBroken
 Actor ActorRef
 Actor PartnerReference
-Actor ActorSync	; for animation speed control
 Float Vibrate
-Int Voice
-FormList SoundContainer
 float GetModSelfSta
 float GetModSelfMag
 float GetModPartSta
@@ -30,71 +22,7 @@ Function Setup(Int Thread_Id)
 	controller = SexLab.GetController(Thread_Id)
 	ActorRef = self.GetActorRef()
 	IsAggressor = controller.IsAggressor(ActorRef)
-	IsVictim = controller.IsVictim(ActorRef)
-	IsPlayer = self.GetActorRef() == Game.GetPlayer()
 	IsFemale = controller.ActorAlias(ActorRef).GetGender() == 1
-	IsSilent = controller.ActorAlias[self.GetID() - 6].IsSilent()
-	
-	if IsFemale
-		Voice = 0
-		SoundContainer = (Game.GetFormFromFile(0x535D, "SLSO.esp") as formlist).GetAt(1) as formlist
-		if SoundContainer.GetSize() > 0
-			if IsPlayer																							;PC selected voice
-				Voice = JsonUtil.GetIntValue(File, "sl_voice_player")
-				SexLab.Log(" SLSO Setup() actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " Voice: " +Voice + " PC selected voice")
-			elseif JsonUtil.GetIntValue(File, "sl_voice_npc") == -2 && SoundContainer.GetSize() > 0				;NPC random voice
-				Voice = Utility.RandomInt(1, (SoundContainer.GetSize()))
-				SexLab.Log(" SLSO Setup() actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " Voice: " +Voice + " NPC random voice")
-			elseif JsonUtil.GetIntValue(File, "sl_voice_npc") == -1 && SoundContainer.GetSize() > 1				;NPC random non PC voice
-				while Voice < 1 || Voice == JsonUtil.GetIntValue(File, "sl_voice_player") 
-					Voice = Utility.RandomInt(1, (SoundContainer.GetSize()))
-					SexLab.Log(" SLSO Setup() actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " Voice: " +Voice + " NPC random non PC voice")
-				endwhile
-			elseif JsonUtil.GetIntValue(File, "sl_voice_npc") > 0												;todo	;NPC selected voice ; or not todo
-				Voice = JsonUtil.GetIntValue(File, "sl_voice_npc")
-				SexLab.Log(" SLSO Setup() actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " Voice: " +Voice + " sl_voice_npc > 0")
-			endif
-		else
-			JsonUtil.SetIntValue(File, "sl_voice_player", 0)
-			JsonUtil.SetIntValue(File, "sl_voice_npc", 0)
-			Voice = 0
-			SexLab.Log(" SLSO Setup() actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " no voice packs found")
-		endif
-		
-		if Voice > 0
-			SoundContainer = SoundContainer.GetAt(Voice - 1) as formlist
-			SexLab.Log(" SLSO Setup() actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " Voice: " +Voice + " SoundContainer " + SoundContainer)
-		else
-			SexLab.Log(" SLSO Setup() actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " Voice(0=disabled): " +Voice + " SoundContainer " + SoundContainer)
-		endif
-	else 
-		Voice = 0
-		SoundContainer = none
-		SexLab.Log(" SLSO Setup() actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " is not female, playing sexlab voice")
-	endif
-	
-	if JsonUtil.GetIntValue(File, "game_animation_speed_control_actorsync") == 1
-		;sync to player
-		ActorSync = Game.GetPlayer()
-		SexLab.Log(" SLSO Setup() actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " ActorSync to player")
-	elseif JsonUtil.GetIntValue(File, "game_animation_speed_control_actorsync") == 2
-		;sync to last actor in animation(probably male\aggressor)
-		int i = controller.ActorCount
-		while i > 0 && ActorSync == none
-			i -= 1
-			if controller.ActorAlias[i].GetActorRef() != none
-				if !controller.ActorAlias[i].IsVictim()
-					ActorSync = controller.ActorAlias[i].GetActorRef()
-				endIf
-			endIf
-		endWhile
-		SexLab.Log(" SLSO Setup() actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " ActorSync to " + controller.ActorAlias[i].GetActorRef().GetLeveledActorBase().GetName())
-	endif
-	
-	if ActorSync == none
-		ActorSync = ActorRef
-		SexLab.Log(" SLSO Setup() actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " ActorSync to self")
-	endif
 	
 	GetModSelfSta = GetMod("Stamina", ActorRef)
 	GetModSelfMag = GetMod("Magicka", ActorRef)
@@ -120,14 +48,8 @@ Function Shutdown()
 	UnRegisterForUpdate()
 	UnregisterForAllModEvents()
 	UnregisterForAllKeys()
-	if self.GetActorRef() != none
-		AnimSpeedHelper.ResetAll()
-	endif
 	ActorRef = none
 	PartnerReference = none
-	ActorSync = none
-	Voice = 0
-	SoundContainer = none
 	MentallyBroken = false
 	Vibrate = 0
 	GetModSelfSta = 0
@@ -145,85 +67,18 @@ Event OnUpdate()
 	If self.GetActorRef() != none
 		if controller.ActorAlias[self.GetID() - 5 - 1] != none
 			if controller.ActorAlias[self.GetID() - 5 - 1].GetState() == "Animating"
-				RegisterForSingleUpdate(1)
-
-				AnimSpeed()
-				
-				;SexLab.Log(" SLSO OnUpdate()AnimSpeed: " + (game.GetRealHoursPassed()-bench)*60*60 )
-				if !IsSilent && IsFemale && controller.ActorAlias[self.GetID() - 5 - 1].GetState() == "Animating"
-					if Voice > 0 && SoundContainer != none
-						;SexLab.Log(" voice set " + ActorRef.GetLeveledActorBase().GetName() + ", you should not see this after animation end")
-						TransitUp(20, 50)
-						
-						sound mySFX
-						Int RawFullEnjoyment = controller.ActorAlias(ActorRef).GetFullEnjoyment()
-						Int FullEnjoyment = PapyrusUtil.ClampInt(RawFullEnjoyment/10, 0, 10) + 1
-							
-						if FullEnjoyment > 9			;orgasm
-							mySFX = (SoundContainer.GetAt(1) As formlist).GetAt(0) As Sound
-						elseif IsVictim					;pain
-							mySFX = (SoundContainer.GetAt(2) As formlist).GetAt(0) As Sound
-						else							;normal
-							if (SoundContainer.GetAt(0) As formlist).GetSize() != 10 || JsonUtil.GetIntValue(File, "sl_voice_enjoymentbased") != 1
-								FullEnjoyment = 0
-							endif
-							mySFX = (SoundContainer.GetAt(0) As formlist).GetAt(FullEnjoyment) As Sound
-						endif
-						
-						if JsonUtil.GetIntValue(File, "sl_voice_playandwait") == 1
-							mySFX.PlayAndWait(ActorRef)
-							;SexLab.Log(self.GetID() - 6 + " SLSO GAME() PW1: " +ActorRef.GetLeveledActorBase().GetName())
-						else
-							mySFX.Play(ActorRef)
-							;SexLab.Log(self.GetID() - 6 + " SLSO GAME() PW2: " +ActorRef.GetLeveledActorBase().GetName())
-						endif
-						
-						TransitDown(50, 20)
-					elseif Voice != 0
-						SexLab.Log(" smthn wrong " + ActorRef.GetLeveledActorBase().GetName() + " Voice " + Voice + " SoundContainer " + SoundContainer)
-					endif
-				endif
-				
-				;SexLab.Log(" SLSO OnUpdate()voice: " + (game.GetRealHoursPassed()-bench)*60*60 )
 				If JsonUtil.GetIntValue(File, "game_enabled") == 1
 					Game()
 				EndIf
 				
 				;SexLab.Log(" SLSO OnUpdate()Game: " + (game.GetRealHoursPassed()-bench)*60*60 )
+				RegisterForSingleUpdate(1)
 				return
 			endif
 		endif
 	endif
 	Shutdown()
 EndEvent
-
-function TransitUp(int from, int to)
-	while from < to
-		from += 2
-		SetPhonemeModifier(ActorRef, 0, 1, from)
-	endWhile
-endFunction
-
-function TransitDown(int from, int to)
-	while from > to
-		from -= 2
-		SetPhonemeModifier(ActorRef, 0, 1, from)
-	endWhile
-endFunction
-
-Function AnimSpeed()
-	Float FullEnjoymentMOD
-	
-	if JsonUtil.GetIntValue(File, "game_animation_speed_control") == 1														;stamina based animation speed
-		FullEnjoymentMOD = PapyrusUtil.ClampFloat(ActorSync.GetActorValuePercentage("Stamina")*100/30/3, 0.25, 0.75)
-		AnimSpeedHelper.SetAnimationSpeed(ActorRef, FullEnjoymentMOD+0.5, 0.5, 0)
-		;SexLab.Log(" SLSO AnimSpeed()(sta) actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " ActorSync to " + ActorSync.GetLeveledActorBase().GetName() + " , speed: ", FullEnjoymentMOD / 3 + 0.5)
-	elseif JsonUtil.GetIntValue(File, "game_animation_speed_control") == 2													;enjoyment based animation speed
-		FullEnjoymentMOD = PapyrusUtil.ClampFloat(controller.ActorAlias(ActorSync).GetFullEnjoyment()/30/3, 0.25, 0.75)
-		AnimSpeedHelper.SetAnimationSpeed(ActorRef, FullEnjoymentMOD+0.5, 0.5, 0)
-		;SexLab.Log(" SLSO AnimSpeed()(enjoyment) actor: " + (self.GetID() - 6) + ActorRef.GetLeveledActorBase().GetName() + " ActorSync to " + ActorSync.GetLeveledActorBase().GetName() + " , speed: ", FullEnjoymentMOD / 3 + 0.5)
-	endif
-EndFunction
 
 float Function GetMod(string var = "", actor PartnerRef = none)
 	if PartnerRef == none

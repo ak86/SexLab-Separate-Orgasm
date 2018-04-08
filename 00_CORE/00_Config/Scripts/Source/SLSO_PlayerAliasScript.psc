@@ -99,6 +99,10 @@ Event OnSexLabStart(string EventName, string argString, Float argNum, form sende
 					ModEvent.PushInt(handle, argString as int)
 					ModEvent.Send(handle)
 				endif
+				
+				;add abilities
+				controller.ActorAlias[i].GetActorRef().AddSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellAnimSync, false )
+				controller.ActorAlias[i].GetActorRef().AddSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellVoice, false )
 			;FormListAdd(none, SLSO_Actors, controller.ActorAlias[i].GetActorRef(), false)
 			;IntListAdd(none, SLSO_Orgasms, 0, false)
 			;IntListAdd(none, SLSO_Time, 0, false)

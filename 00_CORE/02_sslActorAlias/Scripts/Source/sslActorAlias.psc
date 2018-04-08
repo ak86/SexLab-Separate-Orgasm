@@ -651,7 +651,7 @@ state Animating
 					Voice.PlayMoan(ActorRef, ActorFullEnjoyment, IsVictim, UseLipSync)
 					;Log("  !IsFemale " + ActorName)
 					RefreshExpression()
-				elseif ((JsonUtil.GetIntValue(File, "sl_voice_player") == 0 && IsPlayer) || (JsonUtil.GetIntValue(File, "sl_voice_npc") == 0 && !IsPlayer))
+				elseif ((JsonUtil.GetIntValue(File, "sl_voice_player") == 0 && IsPlayer) || (JsonUtil.GetIntValue(File, "sl_voice_npc") == 0 && !IsPlayer) || !Thread.HasPlayer)
 					Voice.PlayMoan(ActorRef, ActorFullEnjoyment, IsVictim, UseLipSync)
 					;Log("  IsFemale " + ActorName)
 					RefreshExpression()
