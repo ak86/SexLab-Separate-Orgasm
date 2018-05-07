@@ -7,13 +7,13 @@
 					<plugins order="Explicit">
 						<plugin name="CONFIG.json">
 							<description>
-								<![CDATA[Core mod, includes .esp with widgets, game script, mcm and json config file with mod settings. Data\SKSE\Plugins\StorageUtilData\SLSO]]>
+								<![CDATA[Core mod, includes .esp with widgets, scripst, mcm and json config file with mod settings. Data\SKSE\Plugins\StorageUtilData\SLSO]]>
 							</description>
 							<conditionFlags>
 								<flag name="Config">Active</flag>
 							</conditionFlags>
 							<files>
-								<folder source="00_Core\00_Config" destination=""/>
+								<folder source="00_Core\00_slso" destination=""/>
 							</files>
 							<typeDescriptor>
 								<type name="Required"/>

@@ -85,7 +85,7 @@ Int slaExhibitionistNPCCount
 int BonusEnjoyment
 int ActorFullEnjoyment
 float sl_enjoymentrate
-float MusturbationMod
+float MasturbationMod
 float ExhibitionistMod
 float GenderMod
 Keyword zadDeviousBelt
@@ -462,15 +462,18 @@ state Prepare
 			if Game.GetModByName("Devious Devices - Assets.esm") != 255
 				zadDeviousBelt = Game.GetFormFromFile(0x3330, "Devious Devices - Assets.esm") As Keyword
 			endif
+			
+			bool SLSO_GAME_validate = JsonUtil.GetIntValue(File, "game_enabled") != 1 && (Thread.HasPlayer || JsonUtil.GetIntValue(File, "game_npc_enabled", 0) == 1)
 		
 		;GetEnjoyment() condi checks
-			if JsonUtil.GetIntValue(File, "sl_passive_enjoyment") == 1 || Thread.ActorCount > 2 || !Thread.HasPlayer || JsonUtil.GetIntValue(File, "game_enabled") != 1
+		;to enable default sexlab enjoyment gains if true
+			if JsonUtil.GetIntValue(File, "sl_passive_enjoyment") == 1 || Thread.ActorCount > 2 || !SLSO_GAME_validate
 				SLSOGetEnjoymentCheck1 = true
 			else
 				SLSOGetEnjoymentCheck1 = false
 			endIf
 			
-			if JsonUtil.GetIntValue(File, "sl_stage_enjoyment") == 1 || !Thread.HasPlayer || JsonUtil.GetIntValue(File, "game_enabled") != 1
+			if JsonUtil.GetIntValue(File, "sl_stage_enjoyment") == 1 || !SLSO_GAME_validate
 				SLSOGetEnjoymentCheck2 = true
 			else
 				SLSOGetEnjoymentCheck2 = false
@@ -480,6 +483,7 @@ state Prepare
 			ExhibitionistMod = 1
 			bslaExhibitionist = false
 			slaExhibitionistNPCCount = 0
+		;Check if actor sla exhibitionist
 			if Game.GetModByName("SexLabAroused.esm") != 255
 				slaExhibitionist = Game.GetFormFromFile(0x713DA, "SexLabAroused.esm") As Faction
 				if slaExhibitionist != none
@@ -488,6 +492,7 @@ state Prepare
 					endif
 				endif
 			endIf
+		;check npcs nearby for exhibitionist modifier
 			if JsonUtil.GetIntValue(File, "sl_exhibitionist") == 1
 				Cell akTargetCell = ActorRef.GetParentCell()
 				int iRef = 0
@@ -499,6 +504,7 @@ state Prepare
 					iRef = iRef + 1
 				endWhile
 			endif
+		;apply modifier 
 			if JsonUtil.GetIntValue(File, "sl_exhibitionist") > 0
 				if bslaExhibitionist || Skills[Stats.kLewd] > 5
 					;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
@@ -509,22 +515,25 @@ state Prepare
 				endif
 			endif
 			
-			MusturbationMod = 1
+		;apply masturbation modifier 
+			MasturbationMod = 1
 			if JsonUtil.GetIntValue(File, "sl_masturbation") == 1
 				if Thread.ActorCount == 1
 					;Log("masturbation_penalty FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment * (1 - 1 * (Skills[Stats.kLewd]) / 10)) as int+"]")
 					if Animation.HasTag("Estrus")				;Estrus, increase enjoyment with lewdness
-						MusturbationMod = 1 + 1 * (Skills[Stats.kLewd]) / 10
+						MasturbationMod = 1 + 1 * (Skills[Stats.kLewd]) / 10
 					else										;normal, reduce enjoyment with lewdness
-						MusturbationMod = 1 - 1 * (Skills[Stats.kLewd]) / 10
+						MasturbationMod = 1 - 1 * (Skills[Stats.kLewd]) / 10
 					endif
-					MusturbationMod = PapyrusUtil.ClampFloat(MusturbationMod, 0.1, 2.0)
+					MasturbationMod = PapyrusUtil.ClampFloat(MasturbationMod, 0.1, 2.0)
 				endif
 			endif
+
+		;apply gender modifier 
 			GenderMod = 1
 			if BaseSex == 0
 				sl_enjoymentrate = JsonUtil.GetFloatValue(File, "sl_enjoymentrate_male", missing = 1)
-				if JsonUtil.GetIntValue(File, "condition_male_orgasm") == 1
+				if JsonUtil.GetIntValue(File, "condition_male_orgasm_penalty") == 1
 					;male wont be able to orgasm 2nd time if slso game() and sla disabled
 					;Log("male FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + GetOrgasmCount()*2)) as int+"]")
 					
@@ -651,7 +660,7 @@ state Animating
 					Voice.PlayMoan(ActorRef, ActorFullEnjoyment, IsVictim, UseLipSync)
 					;Log("  !IsFemale " + ActorName)
 					RefreshExpression()
-				elseif ((JsonUtil.GetIntValue(File, "sl_voice_player") == 0 && IsPlayer) || (JsonUtil.GetIntValue(File, "sl_voice_npc") == 0 && !IsPlayer) || !Thread.HasPlayer)
+				elseif ((JsonUtil.GetIntValue(File, "sl_voice_player") == 0 && IsPlayer) || (JsonUtil.GetIntValue(File, "sl_voice_npc") == 0 && !IsPlayer))
 					Voice.PlayMoan(ActorRef, ActorFullEnjoyment, IsVictim, UseLipSync)
 					;Log("  IsFemale " + ActorName)
 					RefreshExpression()
@@ -824,7 +833,7 @@ state Animating
 		Orgasms   += 1
 		
 		if BaseSex == 0
-			if JsonUtil.GetIntValue(File, "condition_male_orgasm") == 1
+			if JsonUtil.GetIntValue(File, "condition_male_orgasm_penalty") == 1
 				;male wont be able to orgasm 2nd time if slso game() and sla disabled
 				;Log("male FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + GetOrgasmCount()*2)) as int+"]")
 				if (Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))) || Position != 0
@@ -869,6 +878,7 @@ state Animating
 			if !IsSilent
 				if !IsFemale
 					PlayLouder(Voice.GetSound(100, false), ActorRef, Config.VoiceVolume)
+				;replace SL actor voice with SLSO, if voice options enabled in SLSO
 				elseif ((JsonUtil.GetIntValue(File, "sl_voice_player") == 0 && IsPlayer) || (JsonUtil.GetIntValue(File, "sl_voice_npc") == 0 && !IsPlayer))
 					PlayLouder(Voice.GetSound(100, false), ActorRef, Config.VoiceVolume)
 				endIf
@@ -1182,10 +1192,8 @@ int function GetEnjoyment()
 	if !ActorRef
 		Enjoyment = 0
 	elseif !IsSkilled
-		;run default sexlab enjoyment if: enabled in slso mcm, more than 2 actors, thread has no player, game() disabled
-		;if JsonUtil.GetIntValue(File, "sl_passive_enjoyment") == 1 || Thread.ActorCount > 2 || !Thread.HasPlayer || JsonUtil.GetIntValue(File, "game_enabled") != 1
+		;run default sexlab enjoyment if: enabled in slso mcm, more than 2 actors, thread has no player or npc_game(), game() disabled
 		if SLSOGetEnjoymentCheck1
-			;if JsonUtil.GetIntValue(File, "sl_stage_enjoyment") == 1 || !Thread.HasPlayer || JsonUtil.GetIntValue(File, "game_enabled") != 1
 			if SLSOGetEnjoymentCheck2
 				Enjoyment = (PapyrusUtil.ClampFloat(((RealTime[0] - StartedAt) + 1.0) / 5.0, 0.0, 40.0) + ((Stage as float / StageCount as float) * 60.0)) as int
 			else
@@ -1228,7 +1236,7 @@ endFunction
 
 float function GetFullEnjoymentMod()
 	String File = "/SLSO/Config.json"
-	return 	100*MusturbationMod/ExhibitionistMod/GenderMod
+	return 	100*MasturbationMod/ExhibitionistMod/GenderMod
 endFunction
 
 int function CalculateFullEnjoyment()
@@ -1268,7 +1276,7 @@ int function CalculateFullEnjoyment()
 		endif
 	endif
 	;Log("SL Enjoyment ["+Enjoyment+"] SL BaseEnjoyment["+BaseEnjoyment+"] SLArousal["+slaActorArousal+"]"+"] BonusEnjoyment["+BonusEnjoyment+"]"+"] FullEnjoyment["+FullEnjoyment+"]")
-	ActorFullEnjoyment = (FullEnjoyment * MusturbationMod / ExhibitionistMod / GenderMod * sl_enjoymentrate) as int
+	ActorFullEnjoyment = (FullEnjoyment * MasturbationMod / ExhibitionistMod / GenderMod * sl_enjoymentrate) as int
 	return ActorFullEnjoyment
 endFunction
 
@@ -1742,7 +1750,7 @@ function Initialize()
 	ActorScale     = 0.0
 	AnimScale      = 0.0
 	StartWait      = 0.1
-	MusturbationMod     = 1.0
+	MasturbationMod     = 1.0
 	ExhibitionistMod     = 1.0
 	GenderMod     = 1.0
 	; Factions
