@@ -26,9 +26,15 @@ EndEvent
 
 Event Start_widget(Int Widget_Id, Int Thread_Id)
 	if Widget_Id == self.GetID()
+		UnregisterForModEvent("SLSO_Start_widget")
+
 		SexLab = Quest.GetQuest("SexLabQuestFramework") as SexLabFramework
 		controller = SexLab.GetController(Thread_Id)
-		StartWidget()
+		if controller.HasPlayer
+			StartWidget()
+		else
+			StopWidget()
+		endif
 	endif
 EndEvent
 
@@ -43,8 +49,9 @@ Function StartWidget()
 EndFunction
 
 Function StopWidget()
-	UnregisterForAllKeys()
 	UnRegisterForUpdate()
+	UnregisterForAllModEvents()
+	UnregisterForAllKeys()
 	HideWidget()
 	(self as ReferenceAlias).Clear()
 EndFunction

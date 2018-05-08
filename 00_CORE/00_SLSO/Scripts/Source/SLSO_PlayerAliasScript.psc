@@ -113,8 +113,7 @@ Event OnSexLabStart(string EventName, string argString, Float argNum, form sende
 				
 				;start alias widget, game, abilities
 				(self.GetOwningQuest().GetAlias(i+1)).RegisterForModEvent("SLSO_Start_widget", "Start_widget")
-				(self.GetOwningQuest().GetAlias(i+1)).RegisterForModEvent("SLSO_Stop_widget", "Stop_widget")
-				
+			
 				;wait 1s for scripts and abilities setup and be ready for events
 				;there should be some sort of callback, but fuck that magic, waiting 1 sec is easier
 				utility.wait(1)
