@@ -93,11 +93,15 @@ Event OnPlayerLoadGame()
 EndEvent
 
 Event OnEffectFinish( Actor akTarget, Actor akCaster )
-	;AnimSpeedHelper.ResetAll()
-	AnimSpeedHelper.SetAnimationSpeed(ActorRef, 1, 0, 0)
+	If ActorRef != none
+		;AnimSpeedHelper.ResetAll()
+		AnimSpeedHelper.SetAnimationSpeed(ActorRef, 1, 0, 0)
+	endIf
 EndEvent
 
 function Remove()
-	SLSO_MCM SLSO = Quest.GetQuest("SLSO") as SLSO_MCM
-	ActorRef.RemoveSpell(SLSO.SLSO_SpellAnimSync)
+	If ActorRef != none
+		SLSO_MCM SLSO = Quest.GetQuest("SLSO") as SLSO_MCM
+		ActorRef.RemoveSpell(SLSO.SLSO_SpellAnimSync)
+	endIf
 endFunction

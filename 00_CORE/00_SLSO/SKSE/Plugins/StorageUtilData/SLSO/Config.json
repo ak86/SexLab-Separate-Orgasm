@@ -57,7 +57,7 @@
 		"sl_voice_npc" : 0,
 		"sl_voice_playandwait" : 1,
 		"sl_voice_player" : 0,
-		"widget_enabled" : 0,
+		"widget_enabled" : 1,
 		"widget_player_only" : 0,
 		"widget_show_enjoymentmodifier" : 1
 	},

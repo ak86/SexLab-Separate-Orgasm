@@ -152,6 +152,8 @@ function TransitDown(int from, int to)
 endFunction
 
 function Remove()
-	SLSO_MCM SLSO = Quest.GetQuest("SLSO") as SLSO_MCM
-	ActorRef.RemoveSpell(SLSO.SLSO_SpellVoice)
+	If ActorRef != none
+		SLSO_MCM SLSO = Quest.GetQuest("SLSO") as SLSO_MCM
+		ActorRef.RemoveSpell(SLSO.SLSO_SpellVoice)
+	endIf
 endFunction

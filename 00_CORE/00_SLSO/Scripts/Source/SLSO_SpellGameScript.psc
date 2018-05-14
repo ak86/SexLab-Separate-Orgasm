@@ -279,11 +279,13 @@ Event OnEffectFinish( Actor akTarget, Actor akCaster )
 EndEvent
 
 Function Remove()
-	UnRegisterForUpdate()
-	UnregisterForAllModEvents()
-	UnregisterForAllKeys()
-	SLSO_MCM SLSO = Quest.GetQuest("SLSO") as SLSO_MCM
-	ActorRef.RemoveSpell(SLSO.SLSO_SpellGame)
+	If ActorRef != none
+		UnRegisterForUpdate()
+		UnregisterForAllModEvents()
+		UnregisterForAllKeys()
+		SLSO_MCM SLSO = Quest.GetQuest("SLSO") as SLSO_MCM
+		ActorRef.RemoveSpell(SLSO.SLSO_SpellGame)
+	endIf
 EndFunction
 
 ;----------------------------------------------------------------------------
