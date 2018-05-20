@@ -115,7 +115,8 @@ Function Game(string var = "")
 	if ActorRef.GetActorValuePercentage("Magicka") > 0.25 && MentallyBroken == true
 		MentallyBroken = false
 	EndIf
-	;PC only
+	
+	;PC only (hotkey)
 	;raise enjoyment
 	If var == "Stamina"
 		If MentallyBroken == false
@@ -135,6 +136,7 @@ Function Game(string var = "")
 			EndIf
 		EndIf
 	
+	;PC only (hotkey)
 	;edge
 	ElseIf var == "Magicka"
 		;Edge
@@ -160,7 +162,7 @@ Function Game(string var = "")
 			EndIf
 		EndIf
 
-	;PC/NPC
+	;PC(auto/mentalbreak)/NPC
 	Elseif ActorRef != Game.GetPlayer()\
 	|| JsonUtil.GetIntValue(File, "game_player_autoplay") == 1\
 	|| ActorRef.GetActorValuePercentage("Magicka") < 0.10
@@ -170,13 +172,12 @@ Function Game(string var = "")
 			;aggressor
 			if controller.IsAggressor(ActorRef)
 				;not broken, pleasure self
-				if ActorRef.GetActorValuePercentage("Magicka") > 0.10
+				if ActorRef.GetActorValuePercentage("Magicka") > 0.10 || controller.ActorCount == 2
 					ModEnjoyment(ActorRef, mod, FullEnjoymentMOD)
 				;mental broken, pleasure partner
 				else
 					ModEnjoyment(none, mod, FullEnjoymentMOD)
 				EndIf
-				PartnerRef = PartnerReference
 			Else
 				;not aggressor
 				
@@ -186,19 +187,17 @@ Function Game(string var = "")
 					;lewdness based check
 					if (Utility.RandomInt(0, 100) < SexLab.Stats.GetSkillLevel(ActorRef, "Lewd")*10*1.5) && JsonUtil.GetIntValue(File, "game_pleasure_priority") == 1
 						ModEnjoyment(ActorRef, mod, FullEnjoymentMOD)
-						PartnerRef = PartnerReference
 				
 					;relationship based check
 					;try to pleasure other actor
 					elseif (Utility.RandomInt(0, 100) < (25+controller.GetHighestPresentRelationshipRank(ActorRef)*10*2)) && controller.ActorCount == 2
 						ModEnjoyment(none, mod, FullEnjoymentMOD)
-						PartnerRef = PartnerReference
 					
 					;pleasure self if partner priority
 					;lewdness based check
 					elseif (Utility.RandomInt(0, 100) < SexLab.Stats.GetSkillLevel(ActorRef, "Lewd")*10*1.5) && JsonUtil.GetIntValue(File, "game_pleasure_priority") == 0
 						ModEnjoyment(ActorRef, mod, FullEnjoymentMOD)
-						PartnerRef = PartnerReference
+
 					EndIf
 					
 				;mentally broken, pleasure partner
@@ -206,12 +205,13 @@ Function Game(string var = "")
 					MentallyBroken = true
 					ModEnjoyment(none, mod, FullEnjoymentMOD)
 				EndIf
-				PartnerRef = PartnerReference
 			EndIf
+			PartnerRef = PartnerReference
 		EndIf
 		
 		mod = GetModSelfMag
-		;try to hold out if high relation with partner
+		
+		;try to hold out orgasm if high relation with partner
 		If ActorRef.GetActorValuePercentage("Magicka") > 0.10 && (Utility.RandomInt(0, 100) < (25+controller.GetHighestPresentRelationshipRank(ActorRef)*10*2) && controller.ActorCount == 2)
 			If controller.ActorAlias(ActorRef).GetFullEnjoyment() as float > 95
 				ActorRef.DamageActorValue("Magicka", ActorRef.GetBaseActorValue("Magicka")/(10+mod)) 
@@ -222,12 +222,14 @@ Function Game(string var = "")
 	
 	MentalBreak(PartnerRef)
 	
+	;DD vibrations
 	If Vibrate > 0
 		ActorRef.DamageActorValue("Stamina", ActorRef.GetBaseActorValue("Stamina")/(10+GetModSelfMag+FullEnjoymentMOD))
 		controller.ActorAlias(ActorRef).BonusEnjoyment(ActorRef, Vibrate as Int)
 		MentalBreak(ActorRef)
 	EndIf
 	
+	;end animation if male actor out of sta or orgasmed
 	If ((JsonUtil.GetIntValue(File, "game_no_sta_endanim") == 1 && ActorRef.GetActorValuePercentage("Stamina") < 0.10)\
 	|| (JsonUtil.GetIntValue(File, "game_male_orgasm_endanim") == 1 && !IsFemale && (controller.ActorAlias(ActorRef) as sslActorAlias).GetOrgasmCount() > 0))\
 	&& ((Position != 0 && controller.ActorCount <= 2) || controller.ActorCount == 1)\
