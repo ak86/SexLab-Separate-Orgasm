@@ -138,7 +138,7 @@ bool function SetActor(Actor ProspectRef)
 	IsTracked  = Config.ThreadLib.IsActorTracked(ActorRef)
 	IsPlayer   = ActorRef == PlayerRef
 	; Player and creature specific
-	If IsPlayer
+	if IsPlayer
 		Thread.HasPlayer = true
 	endIf
 	if IsCreature
@@ -1228,6 +1228,7 @@ int function GetEnjoyment()
 				Enjoyment = 100
 			endIf
 		endIf
+		; Log("Enjoyment["+Enjoyment+"] / BaseEnjoyment["+BaseEnjoyment+"] / FullEnjoyment["+(Enjoyment - BaseEnjoyment)+"]")
 	endIf
 	return Enjoyment - BaseEnjoyment
 endFunction
