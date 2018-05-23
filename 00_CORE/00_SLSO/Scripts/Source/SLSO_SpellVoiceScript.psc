@@ -1,7 +1,5 @@
 Scriptname SLSO_SpellVoiceScript extends activemagiceffect
 
-import MfgConsoleFunc
-
 SexLabFramework SexLab
 sslThreadController controller
 
@@ -93,7 +91,7 @@ Event OnUpdate()
 			if !IsSilent && IsFemale
 				if Voice > 0 && SoundContainer != none
 					;SexLab.Log(" voice set " + ActorRef.GetLeveledActorBase().GetName() + ", you should not see this after animation end")
-					TransitUp(20, 50)
+					SexLab.OpenMouth(ActorRef)
 					
 					sound mySFX
 					Int RawFullEnjoyment = controller.ActorAlias(ActorRef).GetFullEnjoyment()
@@ -118,7 +116,7 @@ Event OnUpdate()
 						;SexLab.Log(" SLSO GAME() Play: " +ActorRef.GetLeveledActorBase().GetName())
 					endif
 					
-					TransitDown(50, 20)
+					SexLab.CloseMouth(ActorRef)
 					RegisterForSingleUpdate(1)
 					return
 				elseif Voice != 0
@@ -136,20 +134,6 @@ EndEvent
 
 Event OnEffectFinish( Actor akTarget, Actor akCaster )
 EndEvent
-
-function TransitUp(int from, int to)
-	while from < to
-		from += 2
-		SetPhonemeModifier(ActorRef, 0, 1, from)
-	endWhile
-endFunction
-
-function TransitDown(int from, int to)
-	while from > to
-		from -= 2
-		SetPhonemeModifier(ActorRef, 0, 1, from)
-	endWhile
-endFunction
 
 function Remove()
 	If ActorRef != none

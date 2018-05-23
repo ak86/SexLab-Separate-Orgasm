@@ -2,6 +2,7 @@ scriptname sslThreadController extends sslThreadModel
 { Animation Thread Controller: Runs manipulation logic of thread based on information from model. Access only through functions; NEVER create a property directly to this. }
 
 ; TODO: SetFirstAnimation() - allow custom defined starter anims instead of random
+; TODO: ctrl+shift+u - 180 degree rotation
 
 import PapyrusUtil
 
@@ -32,6 +33,9 @@ bool Prepared
 state Prepare
 	function FireAction()
 		Prepared = false
+
+		HookAnimationPrepare()
+
 		; Ensure center is set
 		if !CenterRef
 			CenterOnObject(Positions[0], false)
@@ -111,7 +115,7 @@ endState
 
 state Advancing
 	function FireAction()
-		Log("Stage: "+Stage, "Advancing")
+		; Log("Stage: "+Stage, "Advancing")
 		if Stage < 1
 			Stage = 1
 		elseIf Stage > StageCount
@@ -128,6 +132,7 @@ state Advancing
 		RegisterForSingleUpdate(0.1)
 	endFunction
 	event OnUpdate()
+		HookStageStart()
 		Action("Animating")
 		SendThreadEvent("StageStart")
 	endEvent
@@ -144,10 +149,10 @@ state Animating
 		ResolveTimers()
 		PlayStageAnimations()
 		; Send events
-		if !LeadIn && Stage >= StageCount\
+		if !LeadIn && Stage >= StageCount && !DisableOrgasms\
 		&& (!Config.SeparateOrgasms || JsonUtil.GetIntValue("/SLSO/Config", "sl_default_always_orgasm") == 1 || (!HasPlayer && JsonUtil.GetIntValue("/SLSO/Config", "sl_npcscene_always_orgasm") == 1))
 			SendThreadEvent("OrgasmStart")
-			TriggerOrgasm()		
+			TriggerOrgasm()
 		endIf
 		; Begin loop
 		RegisterForSingleUpdate(0.5)
@@ -179,7 +184,8 @@ state Animating
 	endEvent
 
 	function EndAction()
-		if !LeadIn && Stage >= StageCount\
+		HookStageEnd()
+		if !LeadIn && Stage > StageCount && !DisableOrgasms\
 		&& (!Config.SeparateOrgasms || JsonUtil.GetIntValue("/SLSO/Config", "sl_default_always_orgasm") == 1 || (!HasPlayer && JsonUtil.GetIntValue("/SLSO/Config", "sl_npcscene_always_orgasm") == 1))
 			SendThreadEvent("OrgasmEnd")
 		else
@@ -683,6 +689,7 @@ endFunction
 state Ending
 	event OnBeginState()
 		UnregisterForUpdate()
+		HookAnimationEnding()
 		SendThreadEvent("AnimationEnding")
 		RecordSkills()
 		DisableHotkeys()
@@ -694,6 +701,7 @@ state Ending
 	endEvent
 	function ResetDone()
 		UnregisterforUpdate()
+		HookAnimationEnd()
 		SendThreadEvent("AnimationEnd")
 		if Adjusted
 			Log("Auto saving adjustments...")
@@ -825,6 +833,12 @@ function PlayStageAnimations()
 		StageTimer = RealTime[0] + GetTimer()
 	endIf
 endFunction
+
+; ------------------------------------------------------- ;
+; --- Thread Events - SYSTEM USE ONLY                 --- ;
+; ------------------------------------------------------- ;
+
+
 
 ; ------------------------------------------------------- ;
 ; --- State Restricted                                --- ;

@@ -31,6 +31,7 @@ float StartWait
 string StartAnimEvent
 string EndAnimEvent
 string ActorKey
+bool NoOrgasm
 
 ; Voice
 sslBaseVoice Voice
@@ -138,7 +139,7 @@ bool function SetActor(Actor ProspectRef)
 	IsTracked  = Config.ThreadLib.IsActorTracked(ActorRef)
 	IsPlayer   = ActorRef == PlayerRef
 	; Player and creature specific
-	If IsPlayer
+	if IsPlayer
 		Thread.HasPlayer = true
 	endIf
 	if IsCreature
@@ -168,7 +169,6 @@ bool function SetActor(Actor ProspectRef)
 	Flags   = new int[5]
 	Offsets = new float[4]
 	Loc     = new float[6]
-	
 	; Ready
 	RegisterEvents()
 	TrackedEvent("Added")
@@ -286,6 +286,35 @@ state Ready
 			PathToCenter()
 		endIf
 		LockActor()
+		; pre-move to starting position near other actors
+		Offsets[0] = 0.0
+		Offsets[1] = 0.0
+		Offsets[2] = 5.0 ; hopefully prevents some users underground/teleport to giant camp problem?
+		Offsets[3] = 0.0
+		; Starting position
+		if Position == 1
+			Offsets[0] = 25.0
+			Offsets[3] = 180.0
+
+		elseif Position == 2
+			Offsets[1] = -25.0
+			Offsets[3] = 90.0
+
+		elseif Position == 3
+			Offsets[1] = 25.0
+			Offsets[3] = -90.0
+
+		elseif Position == 4
+			Offsets[0] = -25.0
+
+		endIf
+		OffsetCoords(Loc, Center, Offsets)
+		MarkerRef.SetPosition(Loc[0], Loc[1], Loc[2])
+		MarkerRef.SetAngle(Loc[3], Loc[4], Loc[5])
+		ActorRef.SetPosition(Loc[0], Loc[1], Loc[2])
+		ActorRef.SetAngle(Loc[3], Loc[4], Loc[5])
+		AttachMarker()
+		Utility.Wait(1.0) ; DEV TMP
 		; Pick a voice if needed
 		if !Voice && !IsForcedSilent
 			if IsCreature
@@ -319,7 +348,8 @@ state Ready
 			ResolveStrapon()
 			; Debug.SendAnimationEvent(ActorRef, "SOSFastErect")
 			; Suppress High Heels
-			if IsFemale && Config.RemoveHeelEffect && ActorRef.GetWornForm(0x00000080)
+			; SKYRIM SE DISABLED
+			;/ if IsFemale && Config.RemoveHeelEffect && ActorRef.GetWornForm(0x00000080)
 				; Remove NiOverride High Heels
 				if Config.HasNiOverride && NiOverride.HasNodeTransformPosition(ActorRef, false, IsFemale, "NPC", "internal")
 					float[] pos = NiOverride.GetNodeTransformPosition(ActorRef, false, IsFemale, "NPC", "internal")
@@ -336,7 +366,7 @@ state Ready
 					Log(HDTHeelSpell, "RemoveHeelEffect (HDTHeelSpell)")
 					ActorRef.RemoveSpell(HDTHeelSpell)
 				endIf
-			endIf
+			endIf /;
 			; Pick an expression if needed
 			if !Expression && Config.UseExpressions
 				Expression = Config.ExpressionSlots.PickByStatus(ActorRef, IsVictim, IsType[0] && !IsVictim)
@@ -401,12 +431,27 @@ state Ready
 					ActorRef.EvaluatePackage()
 				endIf
 				ActorRef.SetLookAt(WaitRef, true)
-				float Failsafe = Utility.GetCurrentRealTime() + 15.0
-				while Distance > 135.0 && Utility.GetCurrentRealTime() < Failsafe
+
+				; Start wait loop for actor pathing.
+				int StuckCheck  = 0
+				float Failsafe  = Utility.GetCurrentRealTime() + 15.0
+				while Distance > 80.0 && Utility.GetCurrentRealTime() < Failsafe
 					Utility.Wait(1.0)
+					float Previous = Distance
 					Distance = ActorRef.GetDistance(WaitRef)
-					Log("Distance From WaitRef["+WaitRef+"]: "+Distance)
+					Log("Current Distance From WaitRef["+WaitRef+"]: "+Distance+" // Moved: "+(Previous - Distance))
+					; Check if same distance as last time.
+					if Math.Abs(Previous - Distance) < 1.0
+						if StuckCheck > 2 ; Stuck for 2nd time, end loop.
+							Distance = 0.0
+						endIf
+						StuckCheck += 1 ; End loop on next iteration if still stuck.
+						Log("StuckCheck("+StuckCheck+") No progress while waiting for ["+WaitRef+"]")
+					else
+						StuckCheck -= 1 ; Reset stuckcheck if progress was made.
+					endIf
 				endWhile
+
 				ActorRef.ClearLookAt()
 				if CenterRef != ActorRef
 					ActorRef.SetFactionRank(AnimatingFaction, 1)
@@ -420,6 +465,8 @@ endState
 
 state Prepare
 	event OnUpdate()
+		Utility.Wait(5.0) ; DEV TMP
+
 		ClearEffects()
 		GetPositionInfo()
 		; Starting position
@@ -648,7 +695,7 @@ state Animating
 		endIf
 		; Trigger orgasm
 		;GetEnjoyment()
-		if CalculateFullEnjoyment() >= 100 && SeparateOrgasms && (RealTime[0] - LastOrgasm) > 10.0
+		if !NoOrgasm && Stage < StageCount && CalculateFullEnjoyment() >= 100 && SeparateOrgasms && (RealTime[0] - LastOrgasm) > 10.0
 			OrgasmEffect()
 		endIf
 		; Lip sync and refresh expression
@@ -772,16 +819,19 @@ state Animating
 	endEvent /;
 
 	function OrgasmEffect()
-		OrgasmEffectSLSO(false)
+		DoOrgasm()
 	endFunction
-	
-	function OrgasmEffectSLSO(bool Force = true)
-		if Math.Abs(Utility.GetCurrentRealTime() - LastOrgasm) < 5.0
+
+	function DoOrgasm(bool Forced = false)
+		String File = "/SLSO/Config.json"
+		if !Forced && (NoOrgasm || Thread.DisableOrgasms)
+			; Orgasm Disabled for actor or whole thread
+			return 
+		elseIf Math.Abs(Utility.GetCurrentRealTime() - LastOrgasm) < 5.0
 			Log("Excessive OrgasmEffect Triggered")
 			return
-		endIf
-		String File = "/SLSO/Config.json"
-		If Force != true
+		elseIf !Forced
+		;SLSO conditions to prevent orgasm
 			if LeadIn && JsonUtil.GetIntValue(File, "condition_leadin_orgasm") == 0
 				Log("Orgasm blocked, orgasms disabled at LeadIn/Foreplay Stage")
 				return
@@ -844,14 +894,17 @@ state Animating
 			endif
 		endif
 		if (Utility.RandomInt(0, 100) > (JsonUtil.GetIntValue(File, "sl_multiorgasmchance") + ((Skills[Stats.kLewd]*10) as int) - 5 * Orgasms)) || BaseSex != 1
+			;orgasm
 			LastOrgasm = Math.Abs(Utility.GetCurrentRealTime())
-			; Reset enjoyment build up, if using separate orgasms
+			; Reset enjoyment build up, if using separate orgasms option
 			if Config.SeparateOrgasms
 				BaseEnjoyment = BaseEnjoyment - Enjoyment
 				BaseEnjoyment += Utility.RandomInt((BestRelation + 10), PapyrusUtil.ClampInt(((Skills[Stats.kLewd]*1.5) as int) + (BestRelation + 10), 10, 35))
 			endIf
+			;reset slso enjoyment build up
 			BonusEnjoyment = 0
 		else
+			;slso multiorgasm for females (rnd + lewdness), reset timer
 			LastOrgasm = Math.Abs(Utility.GetCurrentRealTime() - 9)
 		endIf
 		
@@ -862,6 +915,7 @@ state Animating
 		ModEvent.PushInt(eid, Orgasms)
 		ModEvent.Send(eid)
 		
+		; Send an slso separate orgasm event hook with actor and thread id
 		int Seid = ModEvent.Create("SexLabOrgasmSeparate")
 		if Seid
 			ModEvent.PushForm(Seid, ActorRef)
@@ -886,19 +940,19 @@ state Animating
 				endIf
 			endIf
 			PlayLouder(OrgasmFX, MarkerRef, Config.SFXVolume)
-		endIf
-		; Apply cum to female positions from male position orgasm
-		int i = Thread.ActorCount
-		if i > 1 && Config.UseCum && (MalePosition || IsCreature) && (IsMale || IsCreature || (Config.AllowFFCum && IsFemale))
-			if i == 2
-				Thread.PositionAlias(IntIfElse(Position == 1, 0, 1)).ApplyCum()
-			else
-				while i > 0
-					i -= 1
-					if Position != i && Animation.IsCumSource(Position, i, Stage)
-						Thread.PositionAlias(i).ApplyCum()
-					endIf
-				endWhile
+			; Apply cum to female positions from male position orgasm
+			int i = Thread.ActorCount
+			if i > 1 && Config.UseCum && (MalePosition || IsCreature) && (IsMale || IsCreature || (Config.AllowFFCum && IsFemale))
+				if i == 2
+					Thread.PositionAlias(IntIfElse(Position == 1, 0, 1)).ApplyCum()
+				else
+					while i > 0
+						i -= 1
+						if Position != i && Animation.IsCumSource(Position, i, Stage)
+							Thread.PositionAlias(i).ApplyCum()
+						endIf
+					endWhile
+				endIf
 			endIf
 		endIf
 		Utility.WaitMenuMode(0.2)
@@ -937,7 +991,8 @@ state Animating
 		if !IsCreature && !ActorRef.IsDead()
 			Unstrip()
 			; Add back high heel effects
-			if Config.RemoveHeelEffect
+			; SKYRIM SE DISABLED
+			;/ if Config.RemoveHeelEffect
 				; HDT High Heel
 				if HDTHeelSpell && ActorRef.GetWornForm(0x00000080) && !ActorRef.HasSpell(HDTHeelSpell)
 					ActorRef.AddSpell(HDTHeelSpell)
@@ -946,7 +1001,7 @@ state Animating
 				if Config.HasNiOverride && NiOverride.RemoveNodeTransformPosition(ActorRef, false, IsFemale, "NPC", "SexLab.esm")
 					NiOverride.UpdateNodeTransform(ActorRef, false, IsFemale, "NPC")
 				endIf
-			endIf
+			endIf /;
 		endIf
 		; Free alias slot
 		Clear()
@@ -1110,7 +1165,7 @@ function RestoreActorDefaults()
 		endIf
 		; Reset expression
 		ActorRef.ClearExpressionOverride()
-		MfgConsoleFunc.SetPhonemeModifier(ActorRef, -1, 0, 0)
+		sslBaseExpression.ClearMFG(ActorRef)
 	endIf
 	; Player specific actions
 	if IsPlayer
@@ -1228,10 +1283,12 @@ int function GetEnjoyment()
 				Enjoyment = 100
 			endIf
 		endIf
+		; Log("Enjoyment["+Enjoyment+"] / BaseEnjoyment["+BaseEnjoyment+"] / FullEnjoyment["+(Enjoyment - BaseEnjoyment)+"]")
 	endIf
 	return Enjoyment - BaseEnjoyment
 endFunction
 
+;SLSO
 int function GetFullEnjoyment()
 	return ActorFullEnjoyment
 endFunction
@@ -1329,7 +1386,7 @@ endFunction
 function Orgasm(float experience = 0.0)
 	if experience == -2
 		LastOrgasm = Math.Abs(RealTime[0] - 11)
-		OrgasmEffectSLSO(true)
+		DoOrgasm(true)
 	elseif ActorFullEnjoyment >= 90
 		if experience == -1
 			LastOrgasm = Math.Abs(RealTime[0] - 11)
@@ -1388,6 +1445,20 @@ function ApplyCum()
 			ActorLib.ApplyCum(ActorRef, CumID)
 		endIf
 	endIf
+endFunction
+
+function DisableOrgasm(bool bNoOrgasm)
+	if ActorRef
+		NoOrgasm = bNoOrgasm
+	endIf
+endFunction
+
+bool function IsOrgasmAllowed()
+	return !NoOrgasm && !Thread.DisableOrgasms
+endFunction
+
+bool function NeedsOrgasm()
+	return GetEnjoyment() >= 100 && Enjoyment >= 100
 endFunction
 
 int function GetPain()
@@ -1711,7 +1782,7 @@ function Initialize()
 	if ActorRef
 		; Stop events
 		ClearEvents()
-		RestoreActorDefaults()
+		; RestoreActorDefaults()
 		; Remove nudesuit if present
 		if ActorRef.GetItemCount(Config.NudeSuit) > 0
 			ActorRef.RemoveItem(Config.NudeSuit, ActorRef.GetItemCount(Config.NudeSuit), true)
@@ -1738,6 +1809,7 @@ function Initialize()
 	NoRagdoll      = false
 	NoUndress      = false
 	NoRedress      = false
+	NoOrgasm       = false
 	; Integers
 	Orgasms        = 0
 	BestRelation   = 0
@@ -1836,7 +1908,7 @@ event OnTranslationComplete()
 endEvent
 function OrgasmEffect()
 endFunction
-function OrgasmEffectSLSO(bool Force = true)
+function DoOrgasm(bool Forced = false)
 endFunction
 event ResetActor()
 endEvent

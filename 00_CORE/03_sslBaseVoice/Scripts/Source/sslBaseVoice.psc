@@ -1,6 +1,6 @@
 scriptname sslBaseVoice extends sslBaseObject
 
-import MfgConsoleFunc
+; import MfgConsoleFunc ; OLDRIM
 
 Sound property Hot auto
 Sound property Mild auto
@@ -38,18 +38,17 @@ function PlayMoan(Actor ActorRef, int Strength = 30, bool IsVictim = false, bool
 			SoundRef.Play(ActorRef)
 			Utility.WaitMenuMode(0.4)
 		else
-			; int Saved = SetPhonemeModifier(ActorRef, 0, 1)
-			SetPhonemeModifier(ActorRef, 0, 1, 20)
+			float Saved = sslBaseExpression.GetPhoneme(ActorRef, 1)
+			; SetPhonemeModifier(ActorRef, 0, 1, 20)
+			ActorRef.SetExpressionPhoneme(1, 0.2)
 			Utility.WaitMenuMode(0.1)
 			SoundRef.Play(ActorRef)
 			TransitUp(ActorRef, 20, 50)
 			Utility.WaitMenuMode(0.2)
 			TransitDown(ActorRef, 50, 20)
-			SetPhonemeModifier(ActorRef, 0, 1, 0)
-			; if Saved > 0
-			; 	Utility.WaitMenuMode(0.1)
-			; 	SetPhonemeModifier(ActorRef, 0, 1, Saved)
-			; endIf
+			Utility.WaitMenuMode(0.1)
+			; SetPhonemeModifier(ActorRef, 0, 1, (Saved*100) as int) ; OLDRIM
+			ActorRef.SetExpressionPhoneme(1, Saved as float) ; SKYRIM SE
 		endIf
 	endIf
 endFunction
@@ -87,13 +86,15 @@ endFunction
 function TransitUp(Actor ActorRef, int from, int to)
 	while from < to
 		from += 2
-		SetPhonemeModifier(ActorRef, 0, 1, from)
+		; SetPhonemeModifier(ActorRef, 0, 1, from) ; OLDRIM
+		ActorRef.SetExpressionPhoneme(1, (from as float / 100.0)) ; SKYRIM SE
 	endWhile
 endFunction
 function TransitDown(Actor ActorRef, int from, int to)
 	while from > to
 		from -= 2
-		SetPhonemeModifier(ActorRef, 0, 1, from)
+		; SetPhonemeModifier(ActorRef, 0, 1, from) ; OLDRIM
+		ActorRef.SetExpressionPhoneme(1, (from as float / 100.0)) ; SKYRIM SE
 	endWhile
 endFunction
 
