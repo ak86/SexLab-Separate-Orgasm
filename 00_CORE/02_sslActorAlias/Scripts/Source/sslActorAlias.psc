@@ -138,7 +138,7 @@ bool function SetActor(Actor ProspectRef)
 	IsTracked  = Config.ThreadLib.IsActorTracked(ActorRef)
 	IsPlayer   = ActorRef == PlayerRef
 	; Player and creature specific
-	if IsPlayer
+	If IsPlayer
 		Thread.HasPlayer = true
 	endIf
 	if IsCreature
@@ -781,7 +781,7 @@ state Animating
 			return
 		endIf
 		String File = "/SLSO/Config.json"
-		If Force != true
+		If Force != true && SeparateOrgasms
 			if LeadIn && JsonUtil.GetIntValue(File, "condition_leadin_orgasm") == 0
 				Log("Orgasm blocked, orgasms disabled at LeadIn/Foreplay Stage")
 				return
@@ -846,7 +846,7 @@ state Animating
 		if (Utility.RandomInt(0, 100) > (JsonUtil.GetIntValue(File, "sl_multiorgasmchance") + ((Skills[Stats.kLewd]*10) as int) - 5 * Orgasms)) || BaseSex != 1
 			LastOrgasm = Math.Abs(Utility.GetCurrentRealTime())
 			; Reset enjoyment build up, if using separate orgasms
-			if Config.SeparateOrgasms
+			if SeparateOrgasms
 				BaseEnjoyment = BaseEnjoyment - Enjoyment
 				BaseEnjoyment += Utility.RandomInt((BestRelation + 10), PapyrusUtil.ClampInt(((Skills[Stats.kLewd]*1.5) as int) + (BestRelation + 10), 10, 35))
 			endIf
@@ -862,11 +862,13 @@ state Animating
 		ModEvent.PushInt(eid, Orgasms)
 		ModEvent.Send(eid)
 		
-		int Seid = ModEvent.Create("SexLabOrgasmSeparate")
-		if Seid
-			ModEvent.PushForm(Seid, ActorRef)
-			ModEvent.PushInt(Seid, Thread.tid)
-			ModEvent.Send(Seid)
+		if SeparateOrgasms
+			int Seid = ModEvent.Create("SexLabOrgasmSeparate")
+			if Seid
+				ModEvent.PushForm(Seid, ActorRef)
+				ModEvent.PushInt(Seid, Thread.tid)
+				ModEvent.Send(Seid)
+			endif
 		endif
 
 		TrackedEvent("Orgasm")
@@ -1228,7 +1230,6 @@ int function GetEnjoyment()
 				Enjoyment = 100
 			endIf
 		endIf
-		; Log("Enjoyment["+Enjoyment+"] / BaseEnjoyment["+BaseEnjoyment+"] / FullEnjoyment["+(Enjoyment - BaseEnjoyment)+"]")
 	endIf
 	return Enjoyment - BaseEnjoyment
 endFunction
