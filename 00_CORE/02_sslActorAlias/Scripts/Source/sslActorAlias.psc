@@ -830,7 +830,7 @@ state Animating
 		elseIf Math.Abs(Utility.GetCurrentRealTime() - LastOrgasm) < 5.0
 			Log("Excessive OrgasmEffect Triggered")
 			return
-		elseIf !Forced
+		elseIf Force != true && SeparateOrgasms
 		;SLSO conditions to prevent orgasm
 			if LeadIn && JsonUtil.GetIntValue(File, "condition_leadin_orgasm") == 0
 				Log("Orgasm blocked, orgasms disabled at LeadIn/Foreplay Stage")
@@ -897,7 +897,7 @@ state Animating
 			;orgasm
 			LastOrgasm = Math.Abs(Utility.GetCurrentRealTime())
 			; Reset enjoyment build up, if using separate orgasms option
-			if Config.SeparateOrgasms
+			if SeparateOrgasms
 				BaseEnjoyment = BaseEnjoyment - Enjoyment
 				BaseEnjoyment += Utility.RandomInt((BestRelation + 10), PapyrusUtil.ClampInt(((Skills[Stats.kLewd]*1.5) as int) + (BestRelation + 10), 10, 35))
 			endIf
@@ -916,11 +916,13 @@ state Animating
 		ModEvent.Send(eid)
 		
 		; Send an slso separate orgasm event hook with actor and thread id
-		int Seid = ModEvent.Create("SexLabOrgasmSeparate")
-		if Seid
-			ModEvent.PushForm(Seid, ActorRef)
-			ModEvent.PushInt(Seid, Thread.tid)
-			ModEvent.Send(Seid)
+		if SeparateOrgasms
+			int Seid = ModEvent.Create("SexLabOrgasmSeparate")
+			if Seid
+				ModEvent.PushForm(Seid, ActorRef)
+				ModEvent.PushInt(Seid, Thread.tid)
+				ModEvent.Send(Seid)
+			endif
 		endif
 
 		TrackedEvent("Orgasm")
@@ -1283,7 +1285,6 @@ int function GetEnjoyment()
 				Enjoyment = 100
 			endIf
 		endIf
-		; Log("Enjoyment["+Enjoyment+"] / BaseEnjoyment["+BaseEnjoyment+"] / FullEnjoyment["+(Enjoyment - BaseEnjoyment)+"]")
 	endIf
 	return Enjoyment - BaseEnjoyment
 endFunction
