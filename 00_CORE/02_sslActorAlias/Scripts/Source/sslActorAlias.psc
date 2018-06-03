@@ -81,12 +81,14 @@ Faction slaExhibitionist
 Bool bslaExhibitionist
 Bool SLSOGetEnjoymentCheck1
 Bool SLSOGetEnjoymentCheck2
+Bool EstrusForcedEnjoymentMods
 ;Int AllowNonAggressorOrgasm
 Int slaExhibitionistNPCCount
 int BonusEnjoyment
 int ActorFullEnjoyment
 float sl_enjoymentrate
 float MasturbationMod
+float slaActorArousalMod
 float ExhibitionistMod
 float GenderMod
 Keyword zadDeviousBelt
@@ -562,19 +564,33 @@ state Prepare
 				endif
 			endif
 			
+		;Estrus, force enjoyment modifiers to 1+
+			bool EstrusAnim = false
+			if (Animation.HasTag("Estrus") || Animation.HasTag("Machine") || Animation.HasTag("Slime") || Animation.HasTag("Ooze"))
+				EstrusAnim = true
+			endif
+			
+			if EstrusAnim && JsonUtil.GetFloatValue(File, "sl_estrusforcedenjoyment") > 0
+				EstrusForcedEnjoymentMods = true
+			endif
+			
 		;apply masturbation modifier 
 			MasturbationMod = 1
-			if JsonUtil.GetIntValue(File, "sl_masturbation") == 1
-				if Thread.ActorCount == 1
-					;Log("masturbation_penalty FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment * (1 - 1 * (Skills[Stats.kLewd]) / 10)) as int+"]")
-					if Animation.HasTag("Estrus")				;Estrus, increase enjoyment with lewdness
-						MasturbationMod = 1 + 1 * (Skills[Stats.kLewd]) / 10
-					else										;normal, reduce enjoyment with lewdness
-						MasturbationMod = 1 - 1 * (Skills[Stats.kLewd]) / 10
-					endif
-					MasturbationMod = PapyrusUtil.ClampFloat(MasturbationMod, 0.1, 2.0)
+			if Thread.ActorCount == 1 && JsonUtil.GetIntValue(File, "sl_masturbation") == 1
+
+				;Log("masturbation_penalty FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment * (1 - 1 * (Skills[Stats.kLewd]) / 10)) as int+"]")
+				;Estrus, increase enjoyment with lewdness
+				if EstrusAnim == true
+					MasturbationMod = 1 + 1 * (Skills[Stats.kLewd]) / 10
+				;normal, reduce enjoyment with lewdness
+				else
+					MasturbationMod = 1 - 1 * (Skills[Stats.kLewd]) / 10
 				endif
+				MasturbationMod = PapyrusUtil.ClampFloat(MasturbationMod, 0.1, 2.0)
 			endif
+
+		;apply arousal modifier, 1=100%
+			slaActorArousalMod = 1
 
 		;apply gender modifier 
 			GenderMod = 1
@@ -830,7 +846,7 @@ state Animating
 		elseIf Math.Abs(Utility.GetCurrentRealTime() - LastOrgasm) < 5.0
 			Log("Excessive OrgasmEffect Triggered")
 			return
-		elseIf Force != true && SeparateOrgasms
+		elseIf Forced != true && SeparateOrgasms
 		;SLSO conditions to prevent orgasm
 			if LeadIn && JsonUtil.GetIntValue(File, "condition_leadin_orgasm") == 0
 				Log("Orgasm blocked, orgasms disabled at LeadIn/Foreplay Stage")
@@ -1296,7 +1312,7 @@ endFunction
 
 float function GetFullEnjoymentMod()
 	String File = "/SLSO/Config.json"
-	return 	100*MasturbationMod/ExhibitionistMod/GenderMod
+	return 	100*MasturbationMod/ExhibitionistMod/GenderMod*slaActorArousalMod
 endFunction
 
 int function CalculateFullEnjoyment()
@@ -1304,13 +1320,22 @@ int function CalculateFullEnjoyment()
 	int slaActorArousal = 0
 	String File = "/SLSO/Config.json"
 
-	if JsonUtil.GetIntValue(File, "sl_sla_arousal") == 2 || JsonUtil.GetIntValue(File, "sl_sla_arousal") == 3
+	if JsonUtil.GetIntValue(File, "sl_sla_arousal") == 2
 		if slaArousal != none
 			slaActorArousal = ActorRef.GetFactionRank(slaArousal)
 		endIf
 		if slaActorArousal < 0
 			slaActorArousal = 0
 		endIf
+	endIf
+	if JsonUtil.GetIntValue(File, "sl_sla_arousal") == 3
+		if slaArousal != none
+			slaActorArousalMod = ActorRef.GetFactionRank(slaArousal) * 2 / 100
+		endIf
+		if slaActorArousalMod < 0
+			slaActorArousalMod = 1
+		endIf
+		;set agressor arousal modifier to 100% so we dont get stuck in loop if animation requires aggressor orgasm to finish
 	endIf
 
 	int FullEnjoyment = (GetEnjoyment() + BaseEnjoyment + slaActorArousal + BonusEnjoyment)
@@ -1335,8 +1360,20 @@ int function CalculateFullEnjoyment()
 			ExhibitionistMod = (1 + 0.2 * slaExhibitionistNPCCount)
 		endif
 	endif
+	if IsAggressor && JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1
+		if slaActorArousalMod < 1
+			slaActorArousalMod = 1
+		endIf
+		if ExhibitionistMod < 1
+			ExhibitionistMod = 1
+		endIf
+	endIf
 	;Log("SL Enjoyment ["+Enjoyment+"] SL BaseEnjoyment["+BaseEnjoyment+"] SLArousal["+slaActorArousal+"]"+"] BonusEnjoyment["+BonusEnjoyment+"]"+"] FullEnjoyment["+FullEnjoyment+"]")
-	ActorFullEnjoyment = (FullEnjoyment * MasturbationMod / ExhibitionistMod / GenderMod * sl_enjoymentrate) as int
+	if  EstrusForcedEnjoymentMods
+		ActorFullEnjoyment = (FullEnjoyment * JsonUtil.GetFloatValue(File, "sl_estrusforcedenjoyment")) as int
+	else
+		ActorFullEnjoyment = (FullEnjoyment * MasturbationMod / ExhibitionistMod / GenderMod * sl_enjoymentrate * slaActorArousalMod) as int
+	endIf
 	return ActorFullEnjoyment
 endFunction
 
@@ -1344,7 +1381,7 @@ function BonusEnjoyment(actor Ref = none, int experience = 0)
 	if self.GetState() == "Animating"
 		int slaActorArousal = 0
 		String File = "/SLSO/Config.json"
-		if JsonUtil.GetIntValue(File, "sl_sla_arousal") == 1 || JsonUtil.GetIntValue(File, "sl_sla_arousal") == 3
+		if JsonUtil.GetIntValue(File, "sl_sla_arousal") == 1
 			if slaArousal != none
 				slaActorArousal = ActorRef.GetFactionRank(slaArousal)
 			endIf
@@ -1354,7 +1391,7 @@ function BonusEnjoyment(actor Ref = none, int experience = 0)
 		endIf
 		slaActorArousal = PapyrusUtil.ClampInt(slaActorArousal/20, 1, 5)
 		;Log("SLArousal mod["+slaActorArousal+"]"+"] BonusEnjoyment["+(BonusEnjoyment+slaActorArousal)+"] experience["+experience+"]")
-		if experience < 0
+		if experience < 0 && BonusEnjoyment + experience >= 0
 			;reduce enjoyment by fixed value
 			BonusEnjoyment += experience
 			;Log("reduce BonusEnjoyment["+BonusEnjoyment+"] experience["+experience+"]")
@@ -1816,24 +1853,12 @@ function Initialize()
 	BestRelation   = 0
 	BaseEnjoyment  = 0
 	Enjoyment      = 0
-	BonusEnjoyment      = 0
-	ActorFullEnjoyment      = 0
-	slaExhibitionistNPCCount      = 0
 	PathingFlag    = 0
 	; Floats
 	LastOrgasm     = 0.0
 	ActorScale     = 0.0
 	AnimScale      = 0.0
 	StartWait      = 0.1
-	MasturbationMod     = 1.0
-	ExhibitionistMod     = 1.0
-	GenderMod     = 1.0
-	; Factions
-	slaArousal     = None
-	slaExhibitionist     = None
-	bslaExhibitionist     = false
-	; Keywords
-	zadDeviousBelt = None
 	; Strings
 	EndAnimEvent   = "IdleForceDefaultState"
 	StartAnimEvent = ""
@@ -1844,6 +1869,26 @@ function Initialize()
 	StripOverride  = Utility.CreateBoolArray(0)
 	Equipment      = Utility.CreateFormArray(0)
 	; Make sure alias is emptied
+
+	;SLSO
+	; Flags
+	EstrusForcedEnjoymentMods = false
+	bslaExhibitionist    = false
+	; Integers
+	BonusEnjoyment      = 0
+	ActorFullEnjoyment      = 0
+	slaExhibitionistNPCCount      = 0
+	; Floats
+	MasturbationMod     = 1.0
+	slaActorArousalMod  = 1.0
+	ExhibitionistMod    = 1.0
+	GenderMod     = 1.0
+	; Factions
+	slaArousal 	         = None
+	slaExhibitionist     = None
+	; Keywords
+	zadDeviousBelt = None
+
 	TryToClear()
 endFunction
 

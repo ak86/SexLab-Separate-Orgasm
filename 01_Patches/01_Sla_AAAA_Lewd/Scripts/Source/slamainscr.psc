@@ -692,10 +692,16 @@ Event OnSexLabOrgasmSeparate(Form ActorRef, Int Thread)
 		If (victim == PlayerRef)
 			wasPlayerRaped = True
 		EndIf
-		slaUtil.UpdateActorExposure(victim, -10 + 2 * SexLab.Stats.GetSkillLevel(victim, SexLab.Stats.kLewd), "being rape victim")
+		;using default slso values
+		;lower arousal from beeing raped with lewdness lv3- SSL_Debaucherous
+		;raise arousal from beeing raped with lewdness lv4+ SSL_Nymphomaniac
+		slaUtil.UpdateActorExposure(victim, -10 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(victim, SexLab.Stats.kLewd), "being rape victim")
 	EndIf
 	
-	Int exposureValue = ((thisThread.TotalTime / GetAnimationDuration(thisThread)) * (-20.0 + 2 * SexLab.Stats.GetSkillLevel(akActor, SexLab.Stats.kLewd))) as Int
+	;using default slso values
+	;lower arousal with lewdness lv6-
+	;raise arousal with lewdness lv7+
+	Int exposureValue = ((thisThread.TotalTime / GetAnimationDuration(thisThread)) * (-20.0 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(akActor, SexLab.Stats.kLewd))) as Int
 	slaUtil.UpdateActorOrgasmDate(akActor)
 	slaUtil.UpdateActorExposure(akActor, exposureValue, "having orgasm")
 EndEvent
@@ -711,7 +717,7 @@ Event OnAnimationEnd(string eventName, string argString, float argNum, form send
 
 		sslThreadController thisThread = SexLab.HookController(argString)
 		
-	If (SexLab.config.SeparateOrgasms && !thisThread.HasPlayer) || !SexLab.config.SeparateOrgasms
+	If !SexLab.config.SeparateOrgasms || JsonUtil.GetIntValue("/SLSO/Config", "sl_default_always_orgasm") == 1 || (!thisThread.HasPlayer && JsonUtil.GetIntValue("/SLSO/Config", "sl_npcscene_always_orgasm") == 1)
 		Actor victim = SexLab.HookVictim(argString)
 		sslBaseAnimation animation = SexLab.HookAnimation(argString)
 		
@@ -757,8 +763,6 @@ Event OnAnimationEnd(string eventName, string argString, float argNum, form send
 				EndIf
 				
 				doesOrgasm = (canMalePosOrgasm && !actorHasDeviousBelt)
-				
-				
 			
 			;Same. --TTT
 			;ElseIf (actorList[i].GetLeveledActorBase().GetSex() == 1)
@@ -770,7 +774,6 @@ Event OnAnimationEnd(string eventName, string argString, float argNum, form send
 				EndIf
 				
 				doesOrgasm = (canFemalePosOrgasm && !actorHasDeviousBelt)
-				
 				
 			ElseIf (animation.getGender(i) % 3 == 2)
 				;Here be gender-neutral creatures
@@ -790,9 +793,9 @@ Event OnAnimationEnd(string eventName, string argString, float argNum, form send
 			EndIf
 			
 			If doesOrgasm
-					Int exposureValue = ((thisThread.TotalTime / GetAnimationDuration(thisThread)) * (-20.0 + 2 * SexLab.Stats.GetSkillLevel(actorList[i], SexLab.Stats.kLewd))) as Int
-					slaUtil.UpdateActorOrgasmDate(actorList[i])
-					slaUtil.UpdateActorExposure(actorList[i], exposureValue, "having orgasm")
+				Int exposureValue = ((thisThread.TotalTime / GetAnimationDuration(thisThread)) * (-20.0 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(actorList[i], SexLab.Stats.kLewd))) as Int
+				slaUtil.UpdateActorOrgasmDate(actorList[i])
+				slaUtil.UpdateActorExposure(actorList[i], exposureValue, "having orgasm")
 			Else
 				Debug.Trace(Self + ": [TTT_AAAA] " + actorList[i].GetLeveledActorBase().GetName() + " can not have orgasm")
 			EndIf
