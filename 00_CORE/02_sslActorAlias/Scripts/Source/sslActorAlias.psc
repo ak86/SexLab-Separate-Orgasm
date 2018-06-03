@@ -1330,7 +1330,7 @@ int function CalculateFullEnjoyment()
 	endIf
 	if JsonUtil.GetIntValue(File, "sl_sla_arousal") == 3
 		if slaArousal != none
-			slaActorArousalMod = ActorRef.GetFactionRank(slaArousal) * 2 / 100
+			slaActorArousalMod = (ActorRef.GetFactionRank(slaArousal) as float) * 2 / 100
 		endIf
 		if slaActorArousalMod < 0
 			slaActorArousalMod = 1
