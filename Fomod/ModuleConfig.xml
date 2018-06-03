@@ -7,7 +7,7 @@
 					<plugins order="Explicit">
 						<plugin name="CONFIG.json">
 							<description>
-								<![CDATA[Core mod, includes .esp with widgets, scripst, mcm and json config file with mod settings. Data\SKSE\Plugins\StorageUtilData\SLSO]]>
+								<![CDATA[Core mod, includes .esp with widgets, scripts, mcm and json config file with mod settings. Data\SKSE\Plugins\StorageUtilData\SLSO]]>
 							</description>
 							<conditionFlags>
 								<flag name="Config">Active</flag>
@@ -79,7 +79,7 @@
 					<plugins order="Explicit">			
 						<plugin name="Patch_SLA_AAAA_Lewd">
 							<description>
-								<![CDATA[SLAR Animation-Appropriate Arousal Adjustments 1.0.5 based patch to support creatures and other perversions. Includes new event to take into account SL separate orgasms. Changes SLA arousal loss during orgasms to use characters sexlab lewdness stat: (20 - 2*character lewdness[0-6]), the more char is nympho, the harder it to loose arousal. Characters with high lewdness(>5) would gain exposure, rather than lose, from being rape victim.]]>
+								<![CDATA[SLAR Animation-Appropriate Arousal Adjustments 1.0.5 based patch to support creatures and other perversions. Adds support for SLSO.]]>
 							</description>
 							<conditionFlags>
 								<flag name="Patch_SLA_AAAA_Lewd">Active</flag>

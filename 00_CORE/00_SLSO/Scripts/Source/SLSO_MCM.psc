@@ -96,6 +96,8 @@ function Page_Config()
 			AddToggleOptionST("sl_stage_enjoyment", "$sl_stage_enjoyment", JsonUtil.GetIntValue(File, "sl_stage_enjoyment"))
 			AddSliderOptionST("sl_enjoymentrate_female", "$sl_enjoymentrate_female", (JsonUtil.GetFloatValue(File, "sl_enjoymentrate_female")*100) as int)
 			AddSliderOptionST("sl_enjoymentrate_male", "$sl_enjoymentrate_male", (JsonUtil.GetFloatValue(File, "sl_enjoymentrate_male")*100) as int)
+			AddSliderOptionST("sl_estrusforcedenjoyment", "$sl_estrusforcedenjoyment", (JsonUtil.GetFloatValue(File, "sl_estrusforcedenjoyment")*100) as int)
+			AddSliderOptionST("sl_sla_orgasmexposuremodifier", "$sl_sla_orgasmexposuremodifier", JsonUtil.GetIntValue(File, "sl_sla_orgasmexposuremodifier"))
 			if JsonUtil.GetIntValue(File, "sl_sla_arousal") == 1
 				AddTextOptionST("sl_sla_arousal", "$sl_sla_arousal", "$sl_sla_arousal_s1")
 			elseif JsonUtil.GetIntValue(File, "sl_sla_arousal") == 2
@@ -285,6 +287,40 @@ endfunction
 ;=============================================================
 ;Sliders
 ;=============================================================
+
+state sl_estrusforcedenjoyment
+	event OnSliderOpenST()
+		SetSliderDialogStartValue((JsonUtil.GetFloatValue(File, "sl_estrusforcedenjoyment")*100) as int)
+		SetSliderDialogDefaultValue(200)
+		SetSliderDialogRange(0, 200)
+		SetSliderDialogInterval(1)
+	endEvent
+
+	event OnSliderAcceptST(float value)
+		JsonUtil.SetFloatValue(File, "sl_estrusforcedenjoyment", value/100)
+		SetSliderOptionValueST((JsonUtil.GetFloatValue(File, "sl_estrusforcedenjoyment")*100) as int)
+	endEvent
+	event OnHighlightST()
+		SetInfoText("$sl_estrusforcedenjoyment_description")
+	endEvent
+endState
+
+state sl_sla_orgasmexposuremodifier
+	event OnSliderOpenST()
+		SetSliderDialogStartValue(JsonUtil.GetIntValue(File, "sl_sla_orgasmexposuremodifier"))
+		SetSliderDialogDefaultValue(3)
+		SetSliderDialogRange(0, 5)
+		SetSliderDialogInterval(1)
+	endEvent
+
+	event OnSliderAcceptST(float value)
+		JsonUtil.SetIntValue(File, "sl_sla_orgasmexposuremodifier", value as int)
+		SetSliderOptionValueST(JsonUtil.GetIntValue(File, "sl_sla_orgasmexposuremodifier"))
+	endEvent
+	event OnHighlightST()
+		SetInfoText("$sl_sla_orgasmexposuremodifier_description")
+	endEvent
+endState
 
 state sl_enjoymentrate_male
 	event OnSliderOpenST()

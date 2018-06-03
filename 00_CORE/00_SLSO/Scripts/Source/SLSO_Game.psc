@@ -7,6 +7,7 @@ String File
 Bool IsAggressor
 Bool IsFemale
 Bool MentallyBroken
+Bool Forced
 Actor ActorRef
 Actor PartnerReference
 Float Vibrate
@@ -41,6 +42,14 @@ Function Setup(Int Thread_Id)
 ;		self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_orgasm"))
 		self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_bonusenjoyment"))
 	endif
+	;Estrus, increase enjoyment
+	if controller.Animation.HasTag("Estrus")\
+	|| controller.Animation.HasTag("Machine")\
+	|| controller.Animation.HasTag("Slime")\
+	|| controller.Animation.HasTag("Ooze")
+		Forced = true
+	endif
+
 	self.RegisterForModEvent("DeviceVibrateEffectStart", "OnVibrateStart")
 	self.RegisterForModEvent("DeviceVibrateEffectStop", "OnVibrateStop")
 	RegisterForSingleUpdate(1)
@@ -53,6 +62,7 @@ Function Shutdown()
 	ActorRef = none
 	PartnerReference = none
 	MentallyBroken = false
+	Forced = false
 	Vibrate = 0
 	GetModSelfSta = 0
 	GetModSelfMag = 0
@@ -226,6 +236,12 @@ Function Game(string var = "")
 	If Vibrate > 0
 		ActorRef.DamageActorValue("Stamina", ActorRef.GetBaseActorValue("Stamina")/(10+GetModSelfMag+FullEnjoymentMOD))
 		controller.ActorAlias(ActorRef).BonusEnjoyment(ActorRef, Vibrate as Int)
+		MentalBreak(ActorRef)
+	EndIf
+	
+	If Forced
+		ActorRef.DamageActorValue("Stamina", ActorRef.GetBaseActorValue("Stamina")/(10+GetModSelfMag+FullEnjoymentMOD))
+		controller.ActorAlias(ActorRef).BonusEnjoyment(ActorRef, 1)
 		MentalBreak(ActorRef)
 	EndIf
 	

@@ -147,7 +147,7 @@ state Animating
 		if !LeadIn && Stage >= StageCount\
 		&& (!Config.SeparateOrgasms || JsonUtil.GetIntValue("/SLSO/Config", "sl_default_always_orgasm") == 1 || (!HasPlayer && JsonUtil.GetIntValue("/SLSO/Config", "sl_npcscene_always_orgasm") == 1))
 			SendThreadEvent("OrgasmStart")
-			TriggerOrgasm()
+			TriggerOrgasm()		
 		endIf
 		; Begin loop
 		RegisterForSingleUpdate(0.5)
