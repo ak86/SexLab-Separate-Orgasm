@@ -292,7 +292,7 @@ state sl_estrusforcedenjoyment
 	event OnSliderOpenST()
 		SetSliderDialogStartValue((JsonUtil.GetFloatValue(File, "sl_estrusforcedenjoyment")*100) as int)
 		SetSliderDialogDefaultValue(200)
-		SetSliderDialogRange(0, 200)
+		SetSliderDialogRange(0, 500)
 		SetSliderDialogInterval(1)
 	endEvent
 
