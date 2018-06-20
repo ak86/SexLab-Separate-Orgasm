@@ -107,7 +107,7 @@ float Function GetMod(string var = "", actor PartnerRef = none)
 			mod = SexLab.Stats.GetSkillLevel(PartnerRef, "Foreplay")
 		endIf
 	elseif var == "Magicka"
-		mod = SexLab.Stats.GetSkillLevel(PartnerRef, "Lewd") - SexLab.Stats.GetSkillLevel(PartnerRef, "Pure")
+		mod = SexLab.Stats.GetSkillLevel(PartnerRef, "Lewd", 0.3) - SexLab.Stats.GetSkillLevel(PartnerRef, "Pure", 0.3)
 	else
 		Debug.Notification("error, SLSO widget GetMod has no var")
 	endif
@@ -203,7 +203,7 @@ Function Game(string var = "")
 				if ActorRef.GetActorValuePercentage("Magicka") > 0.10
 					;pleasure self if self priority
 					;lewdness based check
-					if (Utility.RandomInt(0, 100) < SexLab.Stats.GetSkillLevel(ActorRef, "Lewd")*10*1.5) && JsonUtil.GetIntValue(File, "game_pleasure_priority") == 1
+					if (Utility.RandomInt(0, 100) < SexLab.Stats.GetSkillLevel(ActorRef, "Lewd", 0.3)*10*1.5) && JsonUtil.GetIntValue(File, "game_pleasure_priority") == 1
 						ModEnjoyment(ActorRef, mod, FullEnjoymentMOD)
 				
 					;relationship based check
@@ -213,7 +213,7 @@ Function Game(string var = "")
 					
 					;pleasure self if partner priority
 					;lewdness based check
-					elseif (Utility.RandomInt(0, 100) < SexLab.Stats.GetSkillLevel(ActorRef, "Lewd")*10*1.5) && JsonUtil.GetIntValue(File, "game_pleasure_priority") == 0
+					elseif (Utility.RandomInt(0, 100) < SexLab.Stats.GetSkillLevel(ActorRef, "Lewd", 0.3)*10*1.5) && JsonUtil.GetIntValue(File, "game_pleasure_priority") == 0
 						ModEnjoyment(ActorRef, mod, FullEnjoymentMOD)
 
 					EndIf

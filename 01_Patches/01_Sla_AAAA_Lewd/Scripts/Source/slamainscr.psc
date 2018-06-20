@@ -695,13 +695,13 @@ Event OnSexLabOrgasmSeparate(Form ActorRef, Int Thread)
 		;using default slso values
 		;lower arousal from beeing raped with lewdness lv3- SSL_Debaucherous
 		;raise arousal from beeing raped with lewdness lv4+ SSL_Nymphomaniac
-		slaUtil.UpdateActorExposure(victim, -10 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(victim, SexLab.Stats.kLewd), "being rape victim")
+		slaUtil.UpdateActorExposure(victim, -10 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(victim, "Lewd", 0.3), "being rape victim")
 	EndIf
 	
 	;using default slso values
 	;lower arousal with lewdness lv6-
 	;raise arousal with lewdness lv7+
-	Int exposureValue = ((thisThread.TotalTime / GetAnimationDuration(thisThread)) * (-20.0 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(akActor, SexLab.Stats.kLewd))) as Int
+	Int exposureValue = ((thisThread.TotalTime / GetAnimationDuration(thisThread)) * (-20.0 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(akActor, "Lewd", 0.3))) as Int
 	slaUtil.UpdateActorOrgasmDate(akActor)
 	slaUtil.UpdateActorExposure(akActor, exposureValue, "having orgasm")
 EndEvent
@@ -743,7 +743,7 @@ Event OnAnimationEnd(string eventName, string argString, float argNum, form send
 			;	wasPlayerRaped = True
 			;EndIf
 			wasPlayerRaped = (victim == PlayerRef)
-			slaUtil.UpdateActorExposure(victim, -10 + 2 * SexLab.Stats.GetSkillLevel(victim, SexLab.Stats.kLewd), "being rape victim")
+			slaUtil.UpdateActorExposure(victim, -10 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier" * SexLab.Stats.GetSkillLevel(victim, "Lewd", 0.3), "being rape victim")
 		EndIf
 		
 		int i = 0	
@@ -793,7 +793,7 @@ Event OnAnimationEnd(string eventName, string argString, float argNum, form send
 			EndIf
 			
 			If doesOrgasm
-				Int exposureValue = ((thisThread.TotalTime / GetAnimationDuration(thisThread)) * (-20.0 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(actorList[i], SexLab.Stats.kLewd))) as Int
+				Int exposureValue = ((thisThread.TotalTime / GetAnimationDuration(thisThread)) * (-20.0 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(actorList[i], "Lewd", 0.3))) as Int
 				slaUtil.UpdateActorOrgasmDate(actorList[i])
 				slaUtil.UpdateActorExposure(actorList[i], exposureValue, "having orgasm")
 			Else
