@@ -1,7 +1,5 @@
 Scriptname SLSO_SpellVoiceScript extends activemagiceffect
 
-import MfgConsoleFunc
-
 SexLabFramework SexLab
 sslThreadController controller
 
