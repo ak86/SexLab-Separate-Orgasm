@@ -24,6 +24,7 @@ function Maintenance()
 		return
 	endif
 	
+	;register events
 	self.RegisterForModEvent("SexLabOrgasmSeparate", "Orgasm")
 	self.RegisterForModEvent("AnimationStart", "OnSexLabStart")
 	self.RegisterForModEvent("AnimationEnd", "OnSexLabEnd")
@@ -32,7 +33,7 @@ function Maintenance()
 	
 	Clear()
 	
-	;check and reset voices if needed
+	;check and reset normal voices if needed
 	if	((Game.GetFormFromFile(0x535D, "SLSO.esp") as formlist).GetAt(1) as formlist).GetSize() > 0
 		int i = 0
 		while i < ((Game.GetFormFromFile(0x535D, "SLSO.esp") as formlist).GetAt(1) as formlist).GetSize()
@@ -41,6 +42,21 @@ function Maintenance()
 				((Game.GetFormFromFile(0x63A3, "SLSO.esp") as formlist).GetAt(1) as formlist).Revert()
 				JsonUtil.SetIntValue(File, "sl_voice_player", 0)
 				JsonUtil.SetIntValue(File, "sl_voice_npc", 0)
+				return
+			endif
+		i = i + 1
+		endwhile
+	endif
+	
+	;check and reset victim voices if needed
+	if	((Game.GetFormFromFile(0x7935, "SLSO.esp") as formlist).GetAt(1) as formlist).GetSize() > 0
+		int i = 0
+		while i < ((Game.GetFormFromFile(0x7935, "SLSO.esp") as formlist).GetAt(1) as formlist).GetSize()
+			if ((Game.GetFormFromFile(0x7935, "SLSO.esp") as formlist).GetAt(1) as formlist).GetAt(i) == none
+				((Game.GetFormFromFile(0x7935, "SLSO.esp") as formlist).GetAt(1) as formlist).Revert()
+				((Game.GetFormFromFile(0x7938, "SLSO.esp") as formlist).GetAt(1) as formlist).Revert()
+				;JsonUtil.SetIntValue(File, "sl_voice_player", 0)
+				;JsonUtil.SetIntValue(File, "sl_voice_npc", 0)
 				return
 			endif
 		i = i + 1
@@ -61,10 +77,6 @@ function Clear()
 			ModEvent.PushInt(handle, i)
 			ModEvent.Send(handle)
 		endif
-		
-		;clear game() alias
-		;used to be filled in alias, now its ability
-		;((self.GetOwningQuest().GetAlias(i+5) as ReferenceAlias) as SLSO_Game).Shutdown()
 		i += 1
 	endwhile
 endFunction
@@ -77,6 +89,7 @@ Event Orgasm(Form ActorRef, Int Thread)
 EndEvent
 
 Event OnUpdateGameTime()
+	;reset orgasms and enjoyment after 1 hour
 	Player_orgasms_count = 0
 	Player_bonusenjoyment = 0
 EndEvent
@@ -88,8 +101,9 @@ EndEvent
 Event OnSexLabStart(string EventName, string argString, Float argNum, form sender)
 	sslThreadController controller = (self.GetOwningQuest() as SLSO_MCM).SexLab.GetController(argString as int)
 
+	;if thread has player, enable widgets
+	int i = 0
 	if controller.HasPlayer
-		int i = 0
 		while i < controller.ActorAlias.Length
 			if controller.ActorAlias[i].GetActorRef() != none
 				;add orgasms to player ince last animation if 1h hasnt passed
@@ -99,64 +113,43 @@ Event OnSexLabStart(string EventName, string argString, Float argNum, form sende
 				
 				;fill widget and game() alias
 				(self.GetOwningQuest().GetAlias(i+1) as ReferenceAlias).ForceRefTo(controller.ActorAlias[i].GetActorRef())
-;				(self.GetOwningQuest().GetAlias(i+1+5) as ReferenceAlias).ForceRefTo(controller.ActorAlias[i].GetActorRef())
 				
-				;animation speed and voice abilities
-				;attemp to force remove abilities, that may not have finished, if animation fired up right after previous has ended
-				controller.ActorAlias[i].GetActorRef().RemoveSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellAnimSync)
-				controller.ActorAlias[i].GetActorRef().RemoveSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellVoice)
-				controller.ActorAlias[i].GetActorRef().RemoveSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellGame)
-				;add abilities
-				controller.ActorAlias[i].GetActorRef().AddSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellAnimSync, false)
-				controller.ActorAlias[i].GetActorRef().AddSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellVoice, false)
-				controller.ActorAlias[i].GetActorRef().AddSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellGame, false)
-				
-				;start alias widget, game, abilities
+				;start alias widget
 				(self.GetOwningQuest().GetAlias(i+1)).RegisterForModEvent("SLSO_Start_widget", "Start_widget")
-			
-				;wait 1s for scripts and abilities setup and be ready for events
-				;there should be some sort of callback, but fuck that magic, waiting 1 sec is easier
-				utility.wait(1)
-				
-				;push event
-				int handle = ModEvent.Create("SLSO_start_widget")
-				if (handle)
-					ModEvent.PushInt(handle, i+1)
-					ModEvent.PushInt(handle, argString as int)
-					ModEvent.Send(handle)
-				endif
 			endif
 			i += 1
 		endwhile
-	else
-		int i = 0
-		while i < controller.ActorAlias.Length
-			if controller.ActorAlias[i].GetActorRef() != none
-				;animation speed and voice abilities
-				;attemp to force remove abilities, that may not have finished, if animation fired up right after previous has ended
-				controller.ActorAlias[i].GetActorRef().RemoveSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellAnimSync)
-				controller.ActorAlias[i].GetActorRef().RemoveSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellVoice)
-				controller.ActorAlias[i].GetActorRef().RemoveSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellGame)
-				;add abilities
-				controller.ActorAlias[i].GetActorRef().AddSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellAnimSync, false)
-				controller.ActorAlias[i].GetActorRef().AddSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellVoice, false)
-				controller.ActorAlias[i].GetActorRef().AddSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellGame, false)
-				
-				;wait 1s for scripts and abilities setup and be ready for events
-				;there should be some sort of callback, but fuck that magic, waiting 1 sec is easier
-				utility.wait(1)
-				
-				;push event
-				int handle = ModEvent.Create("SLSO_start_widget")
-				if (handle)
-					ModEvent.PushInt(handle, i+1)
-					ModEvent.PushInt(handle, argString as int)
-					ModEvent.Send(handle)
-				endif
-			endif
-			i += 1
-		endwhile
+		i = 0
 	endif
+	
+	;add game, voice, animsync abilities and start everything
+	while i < controller.ActorAlias.Length
+		if controller.ActorAlias[i].GetActorRef() != none
+			;game, animation speed and voice abilities
+			;attemp to force remove abilities, that may not have finished, if animation fired up right after previous has ended
+			controller.ActorAlias[i].GetActorRef().RemoveSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellAnimSync)
+			controller.ActorAlias[i].GetActorRef().RemoveSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellVoice)
+			controller.ActorAlias[i].GetActorRef().RemoveSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellGame)
+			
+			;add fresh abilities
+			controller.ActorAlias[i].GetActorRef().AddSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellAnimSync, false)
+			controller.ActorAlias[i].GetActorRef().AddSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellVoice, false)
+			controller.ActorAlias[i].GetActorRef().AddSpell((self.GetOwningQuest() as SLSO_MCM).SLSO_SpellGame, false)
+			
+			;wait 1s for scripts and abilities setup and be ready for events
+			;there should be some sort of callback, but fuck that magic, waiting 1 sec is easier
+			utility.wait(1)
+			
+			;push event to start everything
+			int handle = ModEvent.Create("SLSO_start_widget")
+			if (handle)
+				ModEvent.PushInt(handle, i+1)
+				ModEvent.PushInt(handle, argString as int)
+				ModEvent.Send(handle)
+			endif
+		endif
+		i += 1
+	endwhile
 EndEvent
 
 Event OnSexLabEnd(string EventName, string argString, Float argNum, form sender)
@@ -180,14 +173,6 @@ Event OnKeyDown(int keyCode)
 			(self.GetOwningQuest().GetAlias(3) as SLSO_Widget3Update).HideWidget()
 			(self.GetOwningQuest().GetAlias(4) as SLSO_Widget4Update).HideWidget()
 			(self.GetOwningQuest().GetAlias(5) as SLSO_Widget5Update).HideWidget()
-			
-				;actor[] sexActors = new actor[1]
-				;sslBaseAnimation[] anims
-				;anims = new sslBaseAnimation[1]
-				;sexActors[0] = self.GetActorRef()
-				;anims[0] = "ZaZAPCHorFA"
-
-			;(self.GetOwningQuest() as SLSO_MCM).SexLab.QuickStart(self.GetActorRef())
 		Else
 			JsonUtil.SetIntValue(File, "widget_enabled", 1)
 		EndIf

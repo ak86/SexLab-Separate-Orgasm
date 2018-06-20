@@ -93,7 +93,6 @@ Event OnUpdate()
 			if !IsSilent && IsFemale
 				if Voice > 0 && SoundContainer != none
 					;SexLab.Log(" voice set " + ActorRef.GetLeveledActorBase().GetName() + ", you should not see this after animation end")
-					TransitUp(20, 50)
 					
 					sound mySFX
 					Int RawFullEnjoyment = controller.ActorAlias(ActorRef).GetFullEnjoyment()
@@ -110,6 +109,14 @@ Event OnUpdate()
 						mySFX = (SoundContainer.GetAt(0) As formlist).GetAt(FullEnjoyment) As Sound
 					endif
 					
+
+					;if !controller.ActorAlias(ActorRef).IsCreature()
+					if Sexlab.Config.UseLipSync
+						controller.ActorAlias(ActorRef).GetVoice().TransitUp(ActorRef, 0, 50)
+;					else
+;						controller.ActorAlias(ActorRef).GetVoice().LipSync(ActorRef, PapyrusUtil.ClampInt(RawFullEnjoyment, 0, 100))
+					endif
+
 					if JsonUtil.GetIntValue(File, "sl_voice_playandwait") == 1
 						mySFX.PlayAndWait(ActorRef)
 						;SexLab.Log(" SLSO GAME() PlayAndWait: " +ActorRef.GetLeveledActorBase().GetName())
@@ -118,7 +125,10 @@ Event OnUpdate()
 						;SexLab.Log(" SLSO GAME() Play: " +ActorRef.GetLeveledActorBase().GetName())
 					endif
 					
-					TransitDown(50, 20)
+					if Sexlab.Config.UseLipSync
+						controller.ActorAlias(ActorRef).GetVoice().TransitDown(ActorRef, 50, 0)
+					endif
+					controller.ActorAlias(ActorRef).RefreshExpression()
 					RegisterForSingleUpdate(1)
 					return
 				elseif Voice != 0
@@ -136,20 +146,6 @@ EndEvent
 
 Event OnEffectFinish( Actor akTarget, Actor akCaster )
 EndEvent
-
-function TransitUp(int from, int to)
-	while from < to
-		from += 2
-		SetPhonemeModifier(ActorRef, 0, 1, from)
-	endWhile
-endFunction
-
-function TransitDown(int from, int to)
-	while from > to
-		from -= 2
-		SetPhonemeModifier(ActorRef, 0, 1, from)
-	endWhile
-endFunction
 
 function Remove()
 	If ActorRef != none

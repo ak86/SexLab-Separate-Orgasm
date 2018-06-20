@@ -363,7 +363,7 @@ state Ready
 			if IsVictim
 				BaseEnjoyment = Utility.RandomFloat(BestRelation, ((Skills[Stats.kLewd]*1.1) as int)) as int
 			elseIf IsAggressor
-				float OwnLewd = Stats.GetSkillLevel(ActorRef, Stats.kLewd)
+				float OwnLewd = Stats.GetSkillLevel(ActorRef, "Lewd", 0.3)
 				BaseEnjoyment = Utility.RandomFloat(OwnLewd, ((Skills[Stats.kLewd]*1.3) as int) + (OwnLewd*1.7)) as int
 			else
 				BaseEnjoyment = Utility.RandomFloat(BestRelation, ((Skills[Stats.kLewd]*1.5) as int) + (BestRelation*1.5)) as int
@@ -819,7 +819,7 @@ state Animating
 						Log("Orgasm blocked, ActorRef is victim, victim forbidden to orgasm")
 						return
 					elseif JsonUtil.GetIntValue(File, "condition_victim_orgasm") == 2
-						if (Stats.GetSkillLevel(ActorRef, Stats.kLewd)*10) as int < Utility.RandomInt(0, 100)
+						if (Skills[Stats.kLewd]*10) as int < Utility.RandomInt(0, 100)
 							Log("Orgasm blocked, ActorRef is victim, victim didn't pass lewd check to orgasm")
 							return
 						endIf
