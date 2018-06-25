@@ -743,7 +743,7 @@ Event OnAnimationEnd(string eventName, string argString, float argNum, form send
 			;	wasPlayerRaped = True
 			;EndIf
 			wasPlayerRaped = (victim == PlayerRef)
-			slaUtil.UpdateActorExposure(victim, -10 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier" * SexLab.Stats.GetSkillLevel(victim, "Lewd", 0.3), "being rape victim")
+			slaUtil.UpdateActorExposure(victim, -10 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(victim, "Lewd", 0.3), "being rape victim")
 		EndIf
 		
 		int i = 0	
