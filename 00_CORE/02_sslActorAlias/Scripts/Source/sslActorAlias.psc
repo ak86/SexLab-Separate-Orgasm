@@ -464,18 +464,18 @@ state Prepare
 			if Game.GetModByName("Devious Devices - Assets.esm") != 255
 				zadDeviousBelt = Game.GetFormFromFile(0x3330, "Devious Devices - Assets.esm") As Keyword
 			endif
-			
-			bool SLSO_GAME_validate = JsonUtil.GetIntValue(File, "game_enabled") != 1 && (Thread.HasPlayer || JsonUtil.GetIntValue(File, "game_npc_enabled", 0) == 1)
+
+			bool SLSO_GAME_enabled = (JsonUtil.GetIntValue(File, "game_enabled") == 1 && Thread.HasPlayer) || (JsonUtil.GetIntValue(File, "game_npc_enabled", 0) == 1 && !Thread.HasPlayer)
 		
 		;GetEnjoyment() condi checks
 		;to enable default sexlab enjoyment gains if true
-			if JsonUtil.GetIntValue(File, "sl_passive_enjoyment") == 1 || Thread.ActorCount > 2 || !SLSO_GAME_validate
+			if JsonUtil.GetIntValue(File, "sl_passive_enjoyment") == 1 || Thread.ActorCount > 2 || !SLSO_GAME_enabled
 				SLSOGetEnjoymentCheck1 = true
 			else
 				SLSOGetEnjoymentCheck1 = false
 			endIf
 			
-			if JsonUtil.GetIntValue(File, "sl_stage_enjoyment") == 1 || !SLSO_GAME_validate
+			if JsonUtil.GetIntValue(File, "sl_stage_enjoyment") == 1 || !SLSO_GAME_enabled
 				SLSOGetEnjoymentCheck2 = true
 			else
 				SLSOGetEnjoymentCheck2 = false
