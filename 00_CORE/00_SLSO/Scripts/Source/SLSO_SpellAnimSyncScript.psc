@@ -92,9 +92,11 @@ Event OnPlayerLoadGame()
 EndEvent
 
 Event OnEffectFinish( Actor akTarget, Actor akCaster )
-	If GetTargetActor() != none
+	If akTarget != none
 		;AnimSpeedHelper.ResetAll()
-		AnimSpeedHelper.SetAnimationSpeed(GetTargetActor(), 1, 0, 0)
+		;SexLab.Log(" SLSO AnimSpeed()(OnEffectFinish1) actor: " + akTarget.GetDisplayName() + " speed: " + AnimSpeedHelper.GetAnimationSpeed(akTarget,0))
+		AnimSpeedHelper.SetAnimationSpeed(akTarget, 1, 0, 0)
+		;SexLab.Log(" SLSO AnimSpeed()(OnEffectFinish2) actor: " + akTarget.GetDisplayName() + " speed: " + AnimSpeedHelper.GetAnimationSpeed(akTarget,0))
 	endIf
 EndEvent
 
