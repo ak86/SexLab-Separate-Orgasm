@@ -109,8 +109,8 @@ float Function GetMod(string var = "", actor PartnerRef = none)
 	else
 		Debug.Notification("error, SLSO widget GetMod has no var")
 	endif
-	;return Stamina 0..6
-	;return Magicka -6..+6
+	;return Stamina 0..6 							increases enjoyment, increases magicka damage(mentalbreak)
+	;return Magicka -6..+6							-6= pure, reduce own magicka action cost/mentalbreak damage; +6 lewd, increase own magicka action cost/mentalbreak damage
 	return PapyrusUtil.ClampFloat(mod, -6, 6)
 EndFunction
 
@@ -153,7 +153,7 @@ Function Game(string var = "")
 			if controller.ActorCount == 1 || Input.IsKeyPressed(JsonUtil.GetIntValue(File, "hotkey_utility"))
 				mod = GetModSelfMag
 				If GetTargetActor().GetActorValuePercentage("Magicka") > 0.10
-					GetTargetActor().DamageActorValue("Magicka", GetTargetActor().GetBaseActorValue("Magicka")/(10+mod)*0.5)
+					GetTargetActor().DamageActorValue("Magicka", GetTargetActor().GetBaseActorValue("Magicka")/(10-mod)*0.5)
 					controller.ActorAlias(GetTargetActor()).HoldOut()
 				EndIf
 
@@ -230,7 +230,7 @@ Function Game(string var = "")
 		;try to hold out orgasm if high relation with partner
 		If GetTargetActor().GetActorValuePercentage("Magicka") > 0.10 && (Utility.RandomInt(0, 100) < (25+controller.GetHighestPresentRelationshipRank(GetTargetActor())*10*2) && controller.ActorCount == 2)
 			If controller.ActorAlias(GetTargetActor()).GetFullEnjoyment() as float > 95
-				GetTargetActor().DamageActorValue("Magicka", GetTargetActor().GetBaseActorValue("Magicka")/(10+mod)) 
+				GetTargetActor().DamageActorValue("Magicka", GetTargetActor().GetBaseActorValue("Magicka")/(10-mod)) 
 				controller.ActorAlias(GetTargetActor()).HoldOut(3)
 			EndIf
 		EndIf
@@ -240,14 +240,14 @@ Function Game(string var = "")
 	
 	;DD vibrations
 	If Vibrate > 0
-		GetTargetActor().DamageActorValue("Stamina", GetTargetActor().GetBaseActorValue("Stamina")/(10+GetModSelfMag+FullEnjoymentMOD))
+		GetTargetActor().DamageActorValue("Stamina", GetTargetActor().GetBaseActorValue("Stamina")/(10-GetModSelfMag+FullEnjoymentMOD))
 		controller.ActorAlias(GetTargetActor()).BonusEnjoyment(GetTargetActor(), Vibrate as Int)
 		MentalBreak(GetTargetActor())
 	EndIf
 	
 	;EC forced masturbation
 	If Forced
-		GetTargetActor().DamageActorValue("Stamina", GetTargetActor().GetBaseActorValue("Stamina")/(10+GetModSelfMag+FullEnjoymentMOD))
+		GetTargetActor().DamageActorValue("Stamina", GetTargetActor().GetBaseActorValue("Stamina")/(10-GetModSelfMag+FullEnjoymentMOD))
 		controller.ActorAlias(GetTargetActor()).BonusEnjoyment(GetTargetActor(), 1)
 		MentalBreak(GetTargetActor())
 	EndIf
@@ -289,10 +289,10 @@ Function MentalBreak(Actor PartnerRef)
 			;1% * (base dmg(10) + own skill(0-6) + partner lewdness(-6+6)) * partner enjoyment% * orgasms(1+)
 			;PartnerRef.DamageActorValue("Magicka", \
 			;	PartnerRef.GetBaseActorValue("Magicka")/100\
-			;		*(10+GetModSelfSta+GetMod("Magicka",PartnerRef)/100)\
+			;		*(10-GetModSelfSta+GetMod("Magicka",PartnerRef)/100)\
 			;		*(controller.ActorAlias(PartnerRef) as sslActorAlias).GetFullEnjoyment()/100\
 			;		*(1+(controller.ActorAlias(PartnerRef) as sslActorAlias).GetOrgasmCount()))
-		PartnerRef.DamageActorValue("Magicka", PartnerRef.GetBaseActorValue("Magicka")/100*(10+GetModSelfSta+GetMod("Magicka",PartnerRef)/100)*((controller.ActorAlias(PartnerRef) as sslActorAlias).GetFullEnjoyment() as float)/100*(1+(controller.ActorAlias(PartnerRef) as sslActorAlias).GetOrgasmCount())*0.5)
+		PartnerRef.DamageActorValue("Magicka", PartnerRef.GetBaseActorValue("Magicka")/100*(10-GetModSelfSta+GetMod("Magicka",PartnerRef)/100)*((controller.ActorAlias(PartnerRef) as sslActorAlias).GetFullEnjoyment() as float)/100*(1+(controller.ActorAlias(PartnerRef) as sslActorAlias).GetOrgasmCount())*0.5)
 	endif
 EndFunction
 
