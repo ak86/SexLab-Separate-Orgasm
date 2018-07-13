@@ -55,6 +55,7 @@ int[] Flags
 Form[] Equipment
 bool[] StripOverride
 float[] Skills
+float[] OwnSkills
 
 bool UseScale
 float StartedAt
@@ -389,9 +390,10 @@ state Ready
 			endIf
 			; Get sex skills of partner/player
 			Skills       = Stats.GetSkillLevels(SkilledActor)
+			OwnSkills    = Stats.GetSkillLevels(ActorRef)
 			BestRelation = Thread.GetHighestPresentRelationshipRank(ActorRef)
 			if IsVictim
-				BaseEnjoyment = Utility.RandomFloat(BestRelation, ((Skills[Stats.kLewd]*1.1) as int)) as int
+				BaseEnjoyment = Utility.RandomFloat(BestRelation, ((OwnSkills[Stats.kLewd]*1.1) as int)) as int
 			elseIf IsAggressor
 				float OwnLewd = Stats.GetSkillLevel(ActorRef, "Lewd", 0.3)
 				BaseEnjoyment = Utility.RandomFloat(OwnLewd, ((Skills[Stats.kLewd]*1.3) as int) + (OwnLewd*1.7)) as int
@@ -555,7 +557,7 @@ state Prepare
 			endif
 		;apply modifier 
 			if JsonUtil.GetIntValue(File, "sl_exhibitionist") > 0
-				if bslaExhibitionist || Skills[Stats.kLewd] > 5
+				if bslaExhibitionist || OwnSkills[Stats.kLewd] > 5
 					;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
 					ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
 				elseif slaExhibitionistNPCCount > 1 && !IsAggressor
@@ -578,13 +580,13 @@ state Prepare
 			MasturbationMod = 1
 			if Thread.ActorCount == 1 && JsonUtil.GetIntValue(File, "sl_masturbation") == 1
 
-				;Log("masturbation_penalty FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment * (1 - 1 * (Skills[Stats.kLewd]) / 10)) as int+"]")
+				;Log("masturbation_penalty FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment * (1 - 1 * (OwnSkills[Stats.kLewd]) / 10)) as int+"]")
 				;Estrus, increase enjoyment with lewdness
 				if EstrusAnim == true
-					MasturbationMod = 1 + 1 * (Skills[Stats.kLewd]) / 10
+					MasturbationMod = 1 + 1 * (OwnSkills[Stats.kLewd]) / 10
 				;normal, reduce enjoyment with lewdness
 				else
-					MasturbationMod = 1 - 1 * (Skills[Stats.kLewd]) / 10
+					MasturbationMod = 1 - 1 * (OwnSkills[Stats.kLewd]) / 10
 				endif
 				MasturbationMod = PapyrusUtil.ClampFloat(MasturbationMod, 0.1, 2.0)
 			endif
@@ -870,7 +872,7 @@ state Animating
 						Log("Orgasm blocked, ActorRef is victim, victim forbidden to orgasm")
 						return
 					elseif JsonUtil.GetIntValue(File, "condition_victim_orgasm") == 2
-						if (Skills[Stats.kLewd]*10) as int < Utility.RandomInt(0, 100)
+						if (OwnSkills[Stats.kLewd]*10) as int < Utility.RandomInt(0, 100)
 							Log("Orgasm blocked, ActorRef is victim, victim didn't pass lewd check to orgasm")
 							return
 						endIf
@@ -909,13 +911,13 @@ state Animating
 				endif
 			endif
 		endif
-		if (Utility.RandomInt(0, 100) > (JsonUtil.GetIntValue(File, "sl_multiorgasmchance") + ((Skills[Stats.kLewd]*10) as int) - 5 * Orgasms)) || BaseSex != 1
+		if (Utility.RandomInt(0, 100) > (JsonUtil.GetIntValue(File, "sl_multiorgasmchance") + ((OwnSkills[Stats.kLewd]*10) as int) - 5 * Orgasms)) || BaseSex != 1
 			;orgasm
 			LastOrgasm = Math.Abs(Utility.GetCurrentRealTime())
 			; Reset enjoyment build up, if using separate orgasms option
 			if SeparateOrgasms
 				BaseEnjoyment = BaseEnjoyment - Enjoyment
-				BaseEnjoyment += Utility.RandomInt((BestRelation + 10), PapyrusUtil.ClampInt(((Skills[Stats.kLewd]*1.5) as int) + (BestRelation + 10), 10, 35))
+				BaseEnjoyment += Utility.RandomInt((BestRelation + 10), PapyrusUtil.ClampInt(((OwnSkills[Stats.kLewd]*1.5) as int) + (BestRelation + 10), 10, 35))
 			endIf
 			;reset slso enjoyment build up
 			BonusEnjoyment = 0
@@ -1274,10 +1276,6 @@ int function GetEnjoyment()
 			else
 				Enjoyment = (PapyrusUtil.ClampFloat(((RealTime[0] - StartedAt) + 1.0) / 5.0, 0.0, 40.0)) as int
 			endIf
-			if IsAggressor && Orgasms == 0 && JsonUtil.GetIntValue(File, "sl_agressor_bonus_enjoyment") == 1
-				Enjoyment += (PapyrusUtil.ClampFloat(((RealTime[0] - StartedAt) + 1.0) / 5.0, 0.0, 40.0)) as int
-				;Log("!IsSkilled, IsAggressor, Orgasms == 0, boosting enjoyment by "+(PapyrusUtil.ClampFloat(((RealTime[0] - StartedAt) + 1.0) / 5.0, 0.0, 40.0)) as int+"]")
-			endIf
 		endIf
 	else
 		if Position == 0
@@ -1289,10 +1287,6 @@ int function GetEnjoyment()
 				Enjoyment = BaseEnjoyment + CalcEnjoyment(SkillBonus, Skills, LeadIn, IsFemale, (RealTime[0] - StartedAt), Stage, StageCount)
 			else
 				Enjoyment = BaseEnjoyment + CalcEnjoyment(SkillBonus, Skills, LeadIn, IsFemale, (RealTime[0] - StartedAt), 0, StageCount)
-			endIf
-			if IsAggressor && Orgasms == 0 && JsonUtil.GetIntValue(File, "sl_agressor_bonus_enjoyment") == 1
-				Enjoyment += CalcEnjoyment(SkillBonus, Skills, LeadIn, IsFemale, (RealTime[0] - StartedAt), 0, 0)
-				;Log("IsSkilled, IsAggressor, Orgasms == 0, boosting enjoyment by "+CalcEnjoyment(SkillBonus, Skills, LeadIn, IsFemale, (RealTime[0] - StartedAt), 0, 0)+"]")
 			endIf
 			;Log("Enjoyment["+Enjoyment+"] / BaseEnjoyment["+BaseEnjoyment+"] / FullEnjoyment["+(Enjoyment - BaseEnjoyment)+"]")
 			if Enjoyment < 0
@@ -1352,7 +1346,7 @@ int function CalculateFullEnjoyment()
 			EndIf
 			iRef = iRef + 1
 		endWhile
-		if bslaExhibitionist || Skills[Stats.kLewd] > 5
+		if bslaExhibitionist || OwnSkills[Stats.kLewd] > 5
 			;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
 			ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
 		elseif slaExhibitionistNPCCount > 1 && !IsAggressor
@@ -1439,19 +1433,19 @@ function HoldOut(float experience = 0.0)
 	if Position == 0
 		if  IsFemale 
 			if (Animation.HasTag("Vaginal" || Animation.HasTag("Fisting") || Animation.HasTag("69")))
-				LastOrgasm = Math.Abs(RealTime[0] - 8 + Skills[Stats.kVaginal] + experience)
-				BonusEnjoyment(ActorRef, (- 1 - Skills[Stats.kVaginal]) as int)
+				LastOrgasm = Math.Abs(RealTime[0] - 8 + OwnSkills[Stats.kVaginal] + experience)
+				BonusEnjoyment(ActorRef, (- 1 - OwnSkills[Stats.kVaginal]) as int)
 			elseif(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))
-				LastOrgasm = Math.Abs(RealTime[0] - 8 + Skills[Stats.kAnal] + experience)
-				BonusEnjoyment(ActorRef, (-1 - Skills[Stats.kAnal]) as int)
+				LastOrgasm = Math.Abs(RealTime[0] - 8 + OwnSkills[Stats.kAnal] + experience)
+				BonusEnjoyment(ActorRef, (-1 - OwnSkills[Stats.kAnal]) as int)
 			else
 				LastOrgasm = Math.Abs(RealTime[0] - 8 + experience)
 				BonusEnjoyment(ActorRef, -1)
 			endIf
 		elseif IsMale
 			if (Animation.HasTag("Anal") || Animation.HasTag("Fisting"))
-				LastOrgasm = Math.Abs(RealTime[0] - 8 + Skills[Stats.kAnal] + experience)
-				BonusEnjoyment(ActorRef, (-1 - Skills[Stats.kAnal]) as int)
+				LastOrgasm = Math.Abs(RealTime[0] - 8 + OwnSkills[Stats.kAnal] + experience)
+				BonusEnjoyment(ActorRef, (-1 - OwnSkills[Stats.kAnal]) as int)
 			else
 				LastOrgasm = Math.Abs(RealTime[0] - 8 + experience)
 				BonusEnjoyment(ActorRef, -1)

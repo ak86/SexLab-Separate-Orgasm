@@ -77,7 +77,7 @@ function Page_Config()
 			
 			AddToggleOptionST("condition_aggressor_orgasm", "$condition_aggressor_orgasm", JsonUtil.GetIntValue(File, "condition_aggressor_orgasm"))
 			AddToggleOptionST("condition_player_aggressor_orgasm", "$condition_player_aggressor_orgasm", JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm"))
-			AddToggleOptionST("sl_agressor_bonus_enjoyment", "$sl_agressor_bonus_enjoyment", JsonUtil.GetIntValue(File, "sl_agressor_bonus_enjoyment"))
+			;AddToggleOptionST("sl_agressor_bonus_enjoyment", "$sl_agressor_bonus_enjoyment", JsonUtil.GetIntValue(File, "sl_agressor_bonus_enjoyment"))
 
 			if JsonUtil.GetIntValue(File, "condition_victim_orgasm") == 1
 				AddTextOptionST("condition_victim_orgasm", "$condition_victim_orgasm", "$condition_victim_orgasm_s1")
