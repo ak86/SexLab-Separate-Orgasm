@@ -534,35 +534,37 @@ state Prepare
 			ExhibitionistMod = 1
 			bslaExhibitionist = false
 			slaExhibitionistNPCCount = 0
-		;Check if actor sla exhibitionist
-			if Game.GetModByName("SexLabAroused.esm") != 255
-				slaExhibitionist = Game.GetFormFromFile(0x713DA, "SexLabAroused.esm") As Faction
-				if slaExhibitionist != none
-					if ActorRef.GetFactionRank(slaExhibitionist) >= 0
-						bslaExhibitionist = true
+			if !IsCreature
+			;Check if actor sla exhibitionist
+				if Game.GetModByName("SexLabAroused.esm") != 255
+					slaExhibitionist = Game.GetFormFromFile(0x713DA, "SexLabAroused.esm") As Faction
+					if slaExhibitionist != none
+						if ActorRef.GetFactionRank(slaExhibitionist) >= 0
+							bslaExhibitionist = true
+						endif
 					endif
+				endIf
+			;check npcs nearby for exhibitionist modifier
+				if JsonUtil.GetIntValue(File, "sl_exhibitionist") == 1
+					Cell akTargetCell = ActorRef.GetParentCell()
+					int iRef = 0
+					while iRef <= akTargetCell.getNumRefs(43) && slaExhibitionistNPCCount < 6 ;GetType() 62-char,44-lvchar,43-npc
+						Actor aNPC = akTargetCell.getNthRef(iRef, 43) as Actor
+						If aNPC!= none && aNPC.GetDistance(ActorRef) < 500 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
+							slaExhibitionistNPCCount += 1
+						EndIf
+						iRef = iRef + 1
+					endWhile
 				endif
-			endIf
-		;check npcs nearby for exhibitionist modifier
-			if JsonUtil.GetIntValue(File, "sl_exhibitionist") == 1
-				Cell akTargetCell = ActorRef.GetParentCell()
-				int iRef = 0
-				while iRef <= akTargetCell.getNumRefs(43) && slaExhibitionistNPCCount < 6 ;GetType() 62-char,44-lvchar,43-npc
-					Actor aNPC = akTargetCell.getNthRef(iRef, 43) as Actor
-					If aNPC!= none && aNPC.GetDistance(ActorRef) < 500 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
-						slaExhibitionistNPCCount += 1
-					EndIf
-					iRef = iRef + 1
-				endWhile
-			endif
-		;apply modifier 
-			if JsonUtil.GetIntValue(File, "sl_exhibitionist") > 0
-				if bslaExhibitionist || OwnSkills[Stats.kLewd] > 5
-					;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
-					ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
-				elseif slaExhibitionistNPCCount > 1 && !IsAggressor
-					;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + 0.2 * slaExhibitionistNPCCount)) as int+"]")
-					ExhibitionistMod = (1 + 0.2 * slaExhibitionistNPCCount)
+			;apply modifier 
+				if JsonUtil.GetIntValue(File, "sl_exhibitionist") > 0
+					if bslaExhibitionist || OwnSkills[Stats.kLewd] > 5
+						;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
+						ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
+					elseif slaExhibitionistNPCCount > 1 && !IsAggressor
+						;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + 0.2 * slaExhibitionistNPCCount)) as int+"]")
+						ExhibitionistMod = (1 + 0.2 * slaExhibitionistNPCCount)
+					endif
 				endif
 			endif
 			
@@ -1335,23 +1337,25 @@ int function CalculateFullEnjoyment()
 	int FullEnjoyment = (GetEnjoyment() + BaseEnjoyment + slaActorArousal + BonusEnjoyment)
 	
 	; realtime exhibitionism detection, very script heavy
-	if JsonUtil.GetIntValue(File, "sl_exhibitionist") == 2
-		Cell akTargetCell = ActorRef.GetParentCell()
-		int iRef = 0
-		slaExhibitionistNPCCount = 0
-		while iRef <= akTargetCell.getNumRefs(43) && slaExhibitionistNPCCount < 6 ;GetType() 62-char,44-lvchar,43-npc
-			Actor aNPC = akTargetCell.getNthRef(iRef, 43) as Actor
-			If aNPC!= none && aNPC.GetDistance(ActorRef) < 500 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
-				slaExhibitionistNPCCount += 1
-			EndIf
-			iRef = iRef + 1
-		endWhile
-		if bslaExhibitionist || OwnSkills[Stats.kLewd] > 5
-			;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
-			ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
-		elseif slaExhibitionistNPCCount > 1 && !IsAggressor
-			;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + 0.2 * slaExhibitionistNPCCount)) as int+"]")
-			ExhibitionistMod = (1 + 0.2 * slaExhibitionistNPCCount)
+	if !IsCreature
+		if JsonUtil.GetIntValue(File, "sl_exhibitionist") == 2
+			Cell akTargetCell = ActorRef.GetParentCell()
+			int iRef = 0
+			slaExhibitionistNPCCount = 0
+			while iRef <= akTargetCell.getNumRefs(43) && slaExhibitionistNPCCount < 6 ;GetType() 62-char,44-lvchar,43-npc
+				Actor aNPC = akTargetCell.getNthRef(iRef, 43) as Actor
+				If aNPC!= none && aNPC.GetDistance(ActorRef) < 500 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
+					slaExhibitionistNPCCount += 1
+				EndIf
+				iRef = iRef + 1
+			endWhile
+			if bslaExhibitionist || OwnSkills[Stats.kLewd] > 5
+				;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
+				ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
+			elseif slaExhibitionistNPCCount > 1 && !IsAggressor
+				;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + 0.2 * slaExhibitionistNPCCount)) as int+"]")
+				ExhibitionistMod = (1 + 0.2 * slaExhibitionistNPCCount)
+			endif
 		endif
 	endif
 	if IsAggressor && JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1
