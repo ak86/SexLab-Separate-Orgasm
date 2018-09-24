@@ -317,7 +317,7 @@ state Ready
 		ActorRef.SetPosition(Loc[0], Loc[1], Loc[2])
 		ActorRef.SetAngle(Loc[3], Loc[4], Loc[5])
 		AttachMarker()
-		Utility.Wait(1.0) ; DEV TMP
+		;Utility.Wait(1.0) ; DEV TMP
 		; Pick a voice if needed
 		if !Voice && !IsForcedSilent
 			if IsCreature
@@ -469,7 +469,7 @@ endState
 
 state Prepare
 	event OnUpdate()
-		Utility.Wait(5.0) ; DEV TMP
+		;Utility.Wait(5.0) ; DEV TMP
 
 		ClearEffects()
 		GetPositionInfo()
@@ -1616,7 +1616,7 @@ function Strip()
 	else
 		Strip = Config.GetStrip(IsFemale, Thread.UseLimitedStrip(), IsType[0], IsVictim)
 	endIf
-	Log("Strip: "+Strip)
+	;Log("Strip: "+Strip)
 	; Stripped storage
 	Form ItemRef
 	Form[] Stripped = new Form[34]
