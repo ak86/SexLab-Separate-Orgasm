@@ -1012,6 +1012,7 @@ function StopAnimating(bool Quick = false, string ResetAnim = "IdleForceDefaultS
 		Debug.SendAnimationEvent(ActorRef, "FNISDefault")
 		Debug.SendAnimationEvent(ActorRef, "IdleReturnToDefault")
 		Debug.SendAnimationEvent(ActorRef, "ForceFurnExit")
+		Debug.SendAnimationEvent(ActorRef, "ReturnDefaultState")
 		if ResetAnim != "IdleForceDefaultState" && ResetAnim != ""
 			ActorRef.Moveto(ActorRef)
 			ActorRef.PushActorAway(ActorRef, 0.75)

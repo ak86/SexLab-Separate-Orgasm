@@ -518,6 +518,15 @@ Bool Function IsActorNakedVanilla(Actor akRef)
 EndFunction
 
 Bool Function IsActorNakedExtended(Actor akRef)
+
+	Armor ArmorCheck = akRef.GetWornForm(0x00000004) as Armor
+	Keyword kEroticArmor = Keyword.GetKeyword("EroticArmor")
+
+	if(ArmorCheck.HasKeyword(kEroticArmor))
+;  		Debug.Notification("Erotic Armor found")
+		Return True
+	endif
+
 	Form[] itemList = GetEquippedArmors(akRef)
 	
 	int i = 0
