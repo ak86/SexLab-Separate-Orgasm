@@ -351,8 +351,7 @@ state Ready
 			ResolveStrapon()
 			; Debug.SendAnimationEvent(ActorRef, "SOSFastErect")
 			; Suppress High Heels
-			; SKYRIM SE DISABLED
-			;/ if IsFemale && Config.RemoveHeelEffect && ActorRef.GetWornForm(0x00000080)
+			if IsFemale && Config.RemoveHeelEffect && ActorRef.GetWornForm(0x00000080)
 				; Remove NiOverride High Heels
 				if Config.HasNiOverride && NiOverride.HasNodeTransformPosition(ActorRef, false, IsFemale, "NPC", "internal")
 					float[] pos = NiOverride.GetNodeTransformPosition(ActorRef, false, IsFemale, "NPC", "internal")
@@ -369,7 +368,7 @@ state Ready
 					Log(HDTHeelSpell, "RemoveHeelEffect (HDTHeelSpell)")
 					ActorRef.RemoveSpell(HDTHeelSpell)
 				endIf
-			endIf /;
+			endIf
 			; Pick an expression if needed
 			if !Expression && Config.UseExpressions
 				Expression = Config.ExpressionSlots.PickByStatus(ActorRef, IsVictim, IsType[0] && !IsVictim)
@@ -550,7 +549,7 @@ state Prepare
 					int iRef = 0
 					while iRef <= akTargetCell.getNumRefs(43) && slaExhibitionistNPCCount < 6 ;GetType() 62-char,44-lvchar,43-npc
 						Actor aNPC = akTargetCell.getNthRef(iRef, 43) as Actor
-						If aNPC!= none && aNPC.GetDistance(ActorRef) < 500 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
+						If aNPC!= none && aNPC.GetDistance(ActorRef) < 1000 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
 							slaExhibitionistNPCCount += 1
 						EndIf
 						iRef = iRef + 1
@@ -559,8 +558,10 @@ state Prepare
 			;apply modifier 
 				if JsonUtil.GetIntValue(File, "sl_exhibitionist") > 0
 					if bslaExhibitionist || OwnSkills[Stats.kLewd] > 5
+						slaExhibitionistNPCCount = PapyrusUtil.ClampInt(slaExhibitionistNPCCount, 0, 7)
 						;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
-						ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
+						;ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
+						ExhibitionistMod =  (1.6 - 0.2 * slaExhibitionistNPCCount)
 					elseif slaExhibitionistNPCCount > 1 && !IsAggressor
 						;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + 0.2 * slaExhibitionistNPCCount)) as int+"]")
 						ExhibitionistMod = (1 + 0.2 * slaExhibitionistNPCCount)
@@ -913,7 +914,8 @@ state Animating
 				endif
 			endif
 		endif
-		if (Utility.RandomInt(0, 100) > (JsonUtil.GetIntValue(File, "sl_multiorgasmchance") + ((OwnSkills[Stats.kLewd]*10) as int) - 5 * Orgasms)) || BaseSex != 1
+		;if (Utility.RandomInt(0, 100) > (JsonUtil.GetIntValue(File, "sl_multiorgasmchance") + ((OwnSkills[Stats.kLewd]*10) as int) - 10 * Orgasms)) || BaseSex != 1
+		if (Utility.RandomInt(0, 100) > (JsonUtil.GetIntValue(File, "sl_multiorgasmchance") + ((OwnSkills[Stats.kLewd] * JsonUtil.GetIntValue(File, "sl_multiorgasmchance_curve")) as int) - 10 * Orgasms)) || BaseSex != 1
 			;orgasm
 			LastOrgasm = Math.Abs(Utility.GetCurrentRealTime())
 			; Reset enjoyment build up, if using separate orgasms option
@@ -1013,8 +1015,7 @@ state Animating
 		if !IsCreature && !ActorRef.IsDead()
 			Unstrip()
 			; Add back high heel effects
-			; SKYRIM SE DISABLED
-			;/ if Config.RemoveHeelEffect
+			if Config.RemoveHeelEffect
 				; HDT High Heel
 				if HDTHeelSpell && ActorRef.GetWornForm(0x00000080) && !ActorRef.HasSpell(HDTHeelSpell)
 					ActorRef.AddSpell(HDTHeelSpell)
@@ -1023,7 +1024,7 @@ state Animating
 				if Config.HasNiOverride && NiOverride.RemoveNodeTransformPosition(ActorRef, false, IsFemale, "NPC", "SexLab.esm")
 					NiOverride.UpdateNodeTransform(ActorRef, false, IsFemale, "NPC")
 				endIf
-			endIf /;
+			endIf
 		endIf
 		; Free alias slot
 		Clear()
@@ -1236,6 +1237,7 @@ function SetVictim(bool Victimize)
 	IsVictim = Victimize
 endFunction
 
+;SLSO
 bool function IsVictim()
 	return IsVictim
 endFunction
@@ -1252,6 +1254,11 @@ bool function IsSilent()
 	return IsSilent
 endFunction
 
+string function GetActorName()
+	return ActorName
+endFunction
+;--------------
+
 string function GetActorKey()
 	return ActorKey
 endFunction
@@ -1262,10 +1269,6 @@ function SetAdjustKey(string KeyVar)
 		Position  = Thread.Positions.Find(ActorRef)
 	endIf
 endfunction
-
-string function GetActorName()
-	return ActorName
-endFunction
 
 int function GetEnjoyment()
 	String File = "/SLSO/Config.json"
@@ -1289,7 +1292,7 @@ int function GetEnjoyment()
 			if SLSOGetEnjoymentCheck2
 				Enjoyment = BaseEnjoyment + CalcEnjoyment(SkillBonus, Skills, LeadIn, IsFemale, (RealTime[0] - StartedAt), Stage, StageCount)
 			else
-				Enjoyment = BaseEnjoyment + CalcEnjoyment(SkillBonus, Skills, LeadIn, IsFemale, (RealTime[0] - StartedAt), 0, StageCount)
+				Enjoyment = BaseEnjoyment + CalcEnjoyment(SkillBonus, Skills, LeadIn, IsFemale, (RealTime[0] - StartedAt), 1, StageCount)
 			endIf
 			;Log("Enjoyment["+Enjoyment+"] / BaseEnjoyment["+BaseEnjoyment+"] / FullEnjoyment["+(Enjoyment - BaseEnjoyment)+"]")
 			if Enjoyment < 0
@@ -1345,14 +1348,16 @@ int function CalculateFullEnjoyment()
 			slaExhibitionistNPCCount = 0
 			while iRef <= akTargetCell.getNumRefs(43) && slaExhibitionistNPCCount < 6 ;GetType() 62-char,44-lvchar,43-npc
 				Actor aNPC = akTargetCell.getNthRef(iRef, 43) as Actor
-				If aNPC!= none && aNPC.GetDistance(ActorRef) < 500 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
+				If aNPC!= none && aNPC.GetDistance(ActorRef) < 1000 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
 					slaExhibitionistNPCCount += 1
 				EndIf
 				iRef = iRef + 1
 			endWhile
 			if bslaExhibitionist || OwnSkills[Stats.kLewd] > 5
+				slaExhibitionistNPCCount = PapyrusUtil.ClampInt(slaExhibitionistNPCCount, 0, 7)
 				;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
-				ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
+				;ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
+				ExhibitionistMod =  (1.6 - 0.2 * slaExhibitionistNPCCount)
 			elseif slaExhibitionistNPCCount > 1 && !IsAggressor
 				;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + 0.2 * slaExhibitionistNPCCount)) as int+"]")
 				ExhibitionistMod = (1 + 0.2 * slaExhibitionistNPCCount)
@@ -1617,7 +1622,7 @@ function Strip()
 	else
 		Strip = Config.GetStrip(IsFemale, Thread.UseLimitedStrip(), IsType[0], IsVictim)
 	endIf
-	;Log("Strip: "+Strip)
+	; Log("Strip: "+Strip)
 	; Stripped storage
 	Form ItemRef
 	Form[] Stripped = new Form[34]

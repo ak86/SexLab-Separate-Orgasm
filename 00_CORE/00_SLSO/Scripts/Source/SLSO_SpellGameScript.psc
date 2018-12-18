@@ -136,7 +136,7 @@ Function Game(string var = "")
 					PartnerRef = GetTargetActor()
 				;partner
 				elseif controller.ActorCount == 2
-					ModEnjoyment(none, mod, FullEnjoymentMOD)
+					ModEnjoyment(PartnerReference, mod, FullEnjoymentMOD)
 					PartnerRef = PartnerReference
 				else
 					return
@@ -162,8 +162,8 @@ Function Game(string var = "")
 				mod = GetModSelfSta
 				If GetTargetActor().GetActorValuePercentage("Stamina") > 0.10
 					GetTargetActor().DamageActorValue("Stamina", GetTargetActor().GetBaseActorValue("Stamina")/(10+mod)*0.5)
+					controller.ActorAlias(PartnerReference).HoldOut()
 					PartnerRef = PartnerReference
-					controller.ActorAlias(PartnerRef).HoldOut()
 				EndIf
 			Else
 				return
@@ -183,15 +183,18 @@ Function Game(string var = "")
 				if RelationshipRank < 0
 					mod = math.abs(RelationshipRank)
 					ModEnjoyment(GetTargetActor(), mod, FullEnjoymentMOD)
+					PartnerRef = GetTargetActor()
 				
 				;rough sex, nautrals-lovers﻿
 				else
 				;not broken, pleasure self
 					if GetTargetActor().GetActorValuePercentage("Magicka") > 0.10
 						ModEnjoyment(GetTargetActor(), mod, FullEnjoymentMOD)
+						PartnerRef = GetTargetActor()
 				;mental broken, pleasure partner
 					else
-						ModEnjoyment(none, mod, FullEnjoymentMOD)
+						ModEnjoyment(PartnerReference, mod, FullEnjoymentMOD)
+						PartnerRef = PartnerReference
 					EndIf
 				EndIf
 			Else
@@ -203,26 +206,29 @@ Function Game(string var = "")
 					;lewdness based check
 					if (Utility.RandomInt(0, 100) < SexLab.Stats.GetSkillLevel(GetTargetActor(), "Lewd", 0.3)*10*1.5) && JsonUtil.GetIntValue(File, "game_pleasure_priority") == 1
 						ModEnjoyment(GetTargetActor(), mod, FullEnjoymentMOD)
+						PartnerRef = GetTargetActor()
 				
 					;relationship based check
 					;try to pleasure other actor
 					elseif (Utility.RandomInt(0, 100) < (25+controller.GetHighestPresentRelationshipRank(GetTargetActor())*10*2)) && controller.ActorCount == 2
-						ModEnjoyment(none, mod, FullEnjoymentMOD)
+						ModEnjoyment(PartnerReference, mod, FullEnjoymentMOD)
+						PartnerRef = PartnerReference
 					
 					;pleasure self if partner priority
 					;lewdness based check
 					elseif (Utility.RandomInt(0, 100) < SexLab.Stats.GetSkillLevel(GetTargetActor(), "Lewd", 0.3)*10*1.5) && JsonUtil.GetIntValue(File, "game_pleasure_priority") == 0
 						ModEnjoyment(GetTargetActor(), mod, FullEnjoymentMOD)
+						PartnerRef = GetTargetActor()
 
 					EndIf
 					
 				;mentally broken, pleasure partner
 				else
 					MentallyBroken = true
-					ModEnjoyment(none, mod, FullEnjoymentMOD)
+					ModEnjoyment(PartnerReference, mod, FullEnjoymentMOD)
+					PartnerRef = PartnerReference
 				EndIf
 			EndIf
-			PartnerRef = PartnerReference
 		EndIf
 		
 		mod = GetModSelfMag
@@ -232,6 +238,7 @@ Function Game(string var = "")
 			If controller.ActorAlias(GetTargetActor()).GetFullEnjoyment() as float > 95
 				GetTargetActor().DamageActorValue("Magicka", GetTargetActor().GetBaseActorValue("Magicka")/(10-mod)) 
 				controller.ActorAlias(GetTargetActor()).HoldOut(3)
+				PartnerRef = GetTargetActor()
 			EndIf
 		EndIf
 	endif
