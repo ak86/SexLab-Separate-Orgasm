@@ -116,6 +116,7 @@ function Page_Config()
 			endif
 			AddToggleOptionST("sl_masturbation", "$sl_masturbation", JsonUtil.GetIntValue(File, "sl_masturbation"))
 			AddSliderOptionST("sl_multiorgasmchance", "$sl_multiorgasmchance", JsonUtil.GetIntValue(File, "sl_multiorgasmchance"))
+			AddSliderOptionST("sl_multiorgasmchance_curve", "$sl_multiorgasmchance_curve", JsonUtil.GetIntValue(File, "sl_multiorgasmchance_curve"))
 			AddSliderOptionST("sl_hot_voice_strength", "$sl_hot_voice_strength", JsonUtil.GetIntValue(File, "sl_hot_voice_strength"))
 			AddToggleOptionST("condition_player_orgasm", "$condition_player_orgasm", JsonUtil.GetIntValue(File, "condition_player_orgasm"))
 
@@ -383,6 +384,24 @@ state sl_multiorgasmchance
 	
 	event OnHighlightST()
 		SetInfoText("$sl_multiorgasmchance_description")
+	endEvent
+endState
+
+state sl_multiorgasmchance_curve
+	event OnSliderOpenST()
+		SetSliderDialogStartValue(JsonUtil.GetIntValue(File, "sl_multiorgasmchance_curve"))
+		SetSliderDialogDefaultValue(10)
+		SetSliderDialogRange(0, 200)
+		SetSliderDialogInterval(1)
+	endEvent
+
+	event OnSliderAcceptST(float value)
+		JsonUtil.SetIntValue(File, "sl_multiorgasmchance_curve", value as int)
+		SetSliderOptionValueST(JsonUtil.GetIntValue(File, "sl_multiorgasmchance_curve"))
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$sl_multiorgasmchance_curve_description")
 	endEvent
 endState
 

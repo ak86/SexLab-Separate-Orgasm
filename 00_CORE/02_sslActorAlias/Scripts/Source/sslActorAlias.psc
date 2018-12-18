@@ -141,7 +141,7 @@ bool function SetActor(Actor ProspectRef)
 	IsTracked  = Config.ThreadLib.IsActorTracked(ActorRef)
 	IsPlayer   = ActorRef == PlayerRef
 	; Player and creature specific
-	If IsPlayer
+	if IsPlayer
 		Thread.HasPlayer = true
 	endIf
 	if IsCreature
@@ -504,7 +504,7 @@ state Prepare
 					int iRef = 0
 					while iRef <= akTargetCell.getNumRefs(43) && slaExhibitionistNPCCount < 6 ;GetType() 62-char,44-lvchar,43-npc
 						Actor aNPC = akTargetCell.getNthRef(iRef, 43) as Actor
-						If aNPC!= none && aNPC.GetDistance(ActorRef) < 500 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
+						If aNPC!= none && aNPC.GetDistance(ActorRef) < 1000 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
 							slaExhibitionistNPCCount += 1
 						EndIf
 						iRef = iRef + 1
@@ -513,8 +513,10 @@ state Prepare
 			;apply modifier 
 				if JsonUtil.GetIntValue(File, "sl_exhibitionist") > 0
 					if bslaExhibitionist || OwnSkills[Stats.kLewd] > 5
+						slaExhibitionistNPCCount = PapyrusUtil.ClampInt(slaExhibitionistNPCCount, 0, 7)
 						;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
-						ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
+						;ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
+						ExhibitionistMod =  (1.6 - 0.2 * slaExhibitionistNPCCount)
 					elseif slaExhibitionistNPCCount > 1 && !IsAggressor
 						;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + 0.2 * slaExhibitionistNPCCount)) as int+"]")
 						ExhibitionistMod = (1 + 0.2 * slaExhibitionistNPCCount)
@@ -863,7 +865,8 @@ state Animating
 				endif
 			endif
 		endif
-		if (Utility.RandomInt(0, 100) > (JsonUtil.GetIntValue(File, "sl_multiorgasmchance") + ((OwnSkills[Stats.kLewd]*10) as int) - 5 * Orgasms)) || BaseSex != 1
+		;if (Utility.RandomInt(0, 100) > (JsonUtil.GetIntValue(File, "sl_multiorgasmchance") + ((OwnSkills[Stats.kLewd]*10) as int) - 10 * Orgasms)) || BaseSex != 1
+		if (Utility.RandomInt(0, 100) > (JsonUtil.GetIntValue(File, "sl_multiorgasmchance") + ((OwnSkills[Stats.kLewd] * JsonUtil.GetIntValue(File, "sl_multiorgasmchance_curve")) as int) - 10 * Orgasms)) || BaseSex != 1
 			LastOrgasm = Math.Abs(Utility.GetCurrentRealTime())
 			; Reset enjoyment build up, if using separate orgasms
 			if SeparateOrgasms
@@ -1181,6 +1184,7 @@ function SetVictim(bool Victimize)
 	IsVictim = Victimize
 endFunction
 
+;SLSO
 bool function IsVictim()
 	return IsVictim
 endFunction
@@ -1197,6 +1201,11 @@ bool function IsSilent()
 	return IsSilent
 endFunction
 
+string function GetActorName()
+	return ActorName
+endFunction
+;--------------
+
 string function GetActorKey()
 	return ActorKey
 endFunction
@@ -1207,10 +1216,6 @@ function SetAdjustKey(string KeyVar)
 		Position  = Thread.Positions.Find(ActorRef)
 	endIf
 endfunction
-
-string function GetActorName()
-	return ActorName
-endFunction
 
 int function GetEnjoyment()
 	String File = "/SLSO/Config.json"
@@ -1247,6 +1252,7 @@ int function GetEnjoyment()
 	return Enjoyment - BaseEnjoyment
 endFunction
 
+;SLSO
 int function GetFullEnjoyment()
 	return ActorFullEnjoyment
 endFunction
@@ -1289,14 +1295,16 @@ int function CalculateFullEnjoyment()
 			slaExhibitionistNPCCount = 0
 			while iRef <= akTargetCell.getNumRefs(43) && slaExhibitionistNPCCount < 6 ;GetType() 62-char,44-lvchar,43-npc
 				Actor aNPC = akTargetCell.getNthRef(iRef, 43) as Actor
-				If aNPC!= none && aNPC.GetDistance(ActorRef) < 500 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
+				If aNPC!= none && aNPC.GetDistance(ActorRef) < 1000 && aNPC != ActorRef && aNPC.HasLOS(ActorRef)
 					slaExhibitionistNPCCount += 1
 				EndIf
 				iRef = iRef + 1
 			endWhile
 			if bslaExhibitionist || OwnSkills[Stats.kLewd] > 5
+				slaExhibitionistNPCCount = PapyrusUtil.ClampInt(slaExhibitionistNPCCount, 0, 7)
 				;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
-				ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
+				;ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
+				ExhibitionistMod =  (1.6 - 0.2 * slaExhibitionistNPCCount)
 			elseif slaExhibitionistNPCCount > 1 && !IsAggressor
 				;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + 0.2 * slaExhibitionistNPCCount)) as int+"]")
 				ExhibitionistMod = (1 + 0.2 * slaExhibitionistNPCCount)
@@ -1547,7 +1555,7 @@ function Strip()
 	else
 		Strip = Config.GetStrip(IsFemale, Thread.UseLimitedStrip(), IsType[0], IsVictim)
 	endIf
-	Log("Strip: "+Strip)
+	; Log("Strip: "+Strip)
 	; Stripped storage
 	Form ItemRef
 	Form[] Stripped = new Form[34]
