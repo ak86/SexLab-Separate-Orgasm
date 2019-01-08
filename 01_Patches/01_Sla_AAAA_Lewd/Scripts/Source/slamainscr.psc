@@ -660,24 +660,61 @@ Event OnCrosshairRefChange(ObjectReference ref)
 EndEvent
 
 
-
-
 Event OnStageStart(string eventName, string argString, float argNum, form sender)
 	Actor[] actorList = SexLab.HookActors(argString)
+	Actor[] targetactorList = actorList
+	Int howmuch
 	
 	If (actorList.length < 1)
 		return
 	EndIf
 	
 	sslThreadController thisThread = SexLab.HookController(argString)
-	
-	If (thisThread.animation.HasTag("Foreplay"))
-		int i = 0
-		While i < actorList.length
-			slaUtil.UpdateActorExposure(actorList[i], 1, "foreplay")
-			i += 1
-		EndWhile
-	EndIf
+	;use own skills for msturbation/group sex
+	;partner skills for duo
+	If (actorList.length == 2)
+		;SexLab.Log("SLA OnStageStart 2 actors, reversing")
+		;SexLab.Log("SLA OnStageStart 2 actors, reversing stage 1: actor1 " + targetactorList[0].GetLeveledActorBase().GetName() + " actor2 " + targetactorList[1].GetLeveledActorBase().GetName() )
+		;SexLab.Log("SLA OnStageStart 2 actors, reversing stage 1: actor1 " + actorList[0].GetLeveledActorBase().GetName() + " actor2 " + actorList[1].GetLeveledActorBase().GetName() )
+		targetactorList =  new Actor [2]
+		targetactorList[0] = actorList[1]
+		targetactorList[1] = actorList[0]
+		;SexLab.Log("SLA OnStageStart 2 actors, reversing stage 2: actor1 " + targetactorList[0].GetLeveledActorBase().GetName() + " actor2 " + targetactorList[1].GetLeveledActorBase().GetName() )
+		;SexLab.Log("SLA OnStageStart 2 actors, reversing stage 2: actor1 " + actorList[0].GetLeveledActorBase().GetName() + " actor2 " + actorList[1].GetLeveledActorBase().GetName() )
+	endif
+	int i = 0
+	While i < actorList.length
+		;force actor ExposureRate to 1
+		;float ExposureRateBackup = slaUtil.GetActorExposureRate(targetactorList[i])
+		;slaUtil.SetActorExposureRate(targetactorList[i], 1.0)
+		If ((thisThread.animation.HasTag("Foreplay") && thisThread.LeadIn) || thisThread.animation.HasTag("Masturbation"))
+			howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Foreplay")
+			slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Foreplay")
+			;SexLab.Log("SLA OnStageStart Foreplay, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+		EndIf
+		If (!(thisThread.LeadIn || thisThread.animation.HasTag("Masturbation")))
+			If (thisThread.animation.HasTag("Vaginal"))
+				howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Vaginal")
+				slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Vaginal")
+				;SexLab.Log("SLA OnStageStart Vaginal, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+			ElseIf (thisThread.animation.HasTag("Oral"))
+				howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Oral")
+				slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Oral")
+				;SexLab.Log("SLA OnStageStart Oral, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+			ElseIf (thisThread.animation.HasTag("Anal"))
+				howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Anal")
+				slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Anal")
+				;SexLab.Log("SLA OnStageStart Anal, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+			ElseIf (thisThread.animation.HasTag("Bestiality"))
+				howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Lewd", 0.3)
+				slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Bestiality")
+				;SexLab.Log("SLA OnStageStart Bestiality, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+			EndIf
+			;restore actor ExposureRate
+			;slaUtil.SetActorExposureRate(targetactorList[i], ExposureRateBackup)
+		EndIf
+		i += 1
+	EndWhile
 	
 	;;This if actorList.Find code by BeamerMiasma replaces the single ArouseNPCsWithinRadius(actorList[0]
 	If (actorList.Find(PlayerRef) >= 0)
