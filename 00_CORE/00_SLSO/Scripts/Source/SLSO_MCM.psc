@@ -97,6 +97,7 @@ function Page_Config()
 			AddSliderOptionST("sl_enjoymentrate_female", "$sl_enjoymentrate_female", (JsonUtil.GetFloatValue(File, "sl_enjoymentrate_female")*100) as int)
 			AddSliderOptionST("sl_enjoymentrate_male", "$sl_enjoymentrate_male", (JsonUtil.GetFloatValue(File, "sl_enjoymentrate_male")*100) as int)
 			AddSliderOptionST("sl_estrusforcedenjoyment", "$sl_estrusforcedenjoyment", (JsonUtil.GetFloatValue(File, "sl_estrusforcedenjoyment")*100) as int)
+			AddSliderOptionST("sl_sla_orgasmexposureloss", "$sl_sla_orgasmexposureloss", JsonUtil.GetIntValue(File, "sl_sla_orgasmexposureloss"))
 			AddSliderOptionST("sl_sla_orgasmexposuremodifier", "$sl_sla_orgasmexposuremodifier", JsonUtil.GetIntValue(File, "sl_sla_orgasmexposuremodifier"))
 			if JsonUtil.GetIntValue(File, "sl_sla_arousal") == 1
 				AddTextOptionST("sl_sla_arousal", "$sl_sla_arousal", "$sl_sla_arousal_s1")
@@ -303,6 +304,23 @@ state sl_estrusforcedenjoyment
 	endEvent
 	event OnHighlightST()
 		SetInfoText("$sl_estrusforcedenjoyment_description")
+	endEvent
+endState
+
+state sl_sla_orgasmexposureloss
+	event OnSliderOpenST()
+		SetSliderDialogStartValue(JsonUtil.GetIntValue(File, "sl_sla_orgasmexposureloss"))
+		SetSliderDialogDefaultValue(-20)
+		SetSliderDialogRange(-100, 0)
+		SetSliderDialogInterval(1)
+	endEvent
+
+	event OnSliderAcceptST(float value)
+		JsonUtil.SetIntValue(File, "sl_sla_orgasmexposureloss", value as int)
+		SetSliderOptionValueST(JsonUtil.GetIntValue(File, "sl_sla_orgasmexposureloss"))
+	endEvent
+	event OnHighlightST()
+		SetInfoText("$sl_sla_orgasmexposureloss_description")
 	endEvent
 endState
 

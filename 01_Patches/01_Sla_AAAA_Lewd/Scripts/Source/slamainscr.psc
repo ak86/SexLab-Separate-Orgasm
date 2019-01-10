@@ -661,6 +661,7 @@ EndEvent
 
 
 Event OnStageStart(string eventName, string argString, float argNum, form sender)
+	sslThreadController controller = SexLab.GetController(argString as int)
 	Actor[] actorList = SexLab.HookActors(argString)
 	Actor[] targetactorList = actorList
 	Int howmuch
@@ -684,34 +685,38 @@ Event OnStageStart(string eventName, string argString, float argNum, form sender
 	endif
 	int i = 0
 	While i < actorList.length
-		;force actor ExposureRate to 1
-		;float ExposureRateBackup = slaUtil.GetActorExposureRate(targetactorList[i])
-		;slaUtil.SetActorExposureRate(targetactorList[i], 1.0)
-		If ((thisThread.animation.HasTag("Foreplay") && thisThread.LeadIn) || thisThread.animation.HasTag("Masturbation"))
-			howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Foreplay")
-			slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Foreplay")
-			;SexLab.Log("SLA OnStageStart Foreplay, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
-		EndIf
-		If (!(thisThread.LeadIn || thisThread.animation.HasTag("Masturbation")))
-			If (thisThread.animation.HasTag("Vaginal"))
-				howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Vaginal")
-				slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Vaginal")
-				;SexLab.Log("SLA OnStageStart Vaginal, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
-			ElseIf (thisThread.animation.HasTag("Oral"))
-				howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Oral")
-				slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Oral")
-				;SexLab.Log("SLA OnStageStart Oral, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
-			ElseIf (thisThread.animation.HasTag("Anal"))
-				howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Anal")
-				slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Anal")
-				;SexLab.Log("SLA OnStageStart Anal, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
-			ElseIf (thisThread.animation.HasTag("Bestiality"))
-				howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Lewd", 0.3)
-				slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Bestiality")
-				;SexLab.Log("SLA OnStageStart Bestiality, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+		If ((controller.ActorAlias(targetactorList[i]) as sslActorAlias).GetOrgasmCount() == 0)
+			;force actor ExposureRate to 1
+			float ExposureRateBackup = slaUtil.GetActorExposureRate(targetactorList[i])
+			slaUtil.SetActorExposureRate(targetactorList[i], 1.0)
+			
+			If ((thisThread.animation.HasTag("Foreplay") && thisThread.LeadIn) || thisThread.animation.HasTag("Masturbation"))
+				howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Foreplay")
+				slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Foreplay")
+				;SexLab.Log("SLA OnStageStart Foreplay, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
 			EndIf
-			;restore actor ExposureRate
-			;slaUtil.SetActorExposureRate(targetactorList[i], ExposureRateBackup)
+			
+			If (!(thisThread.LeadIn || thisThread.animation.HasTag("Masturbation")))
+				If (thisThread.animation.HasTag("Vaginal"))
+					howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Vaginal")
+					slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Vaginal")
+					;SexLab.Log("SLA OnStageStart Vaginal, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+				ElseIf (thisThread.animation.HasTag("Oral"))
+					howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Oral")
+					slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Oral")
+					;SexLab.Log("SLA OnStageStart Oral, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+				ElseIf (thisThread.animation.HasTag("Anal"))
+					howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Anal")
+					slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Anal")
+					;SexLab.Log("SLA OnStageStart Anal, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+				ElseIf (thisThread.animation.HasTag("Bestiality"))
+					howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Lewd", 0.3)
+					slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Bestiality")
+					;SexLab.Log("SLA OnStageStart Bestiality, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+				EndIf
+				;restore actor ExposureRate
+				slaUtil.SetActorExposureRate(targetactorList[i], ExposureRateBackup)
+			EndIf
 		EndIf
 		i += 1
 	EndWhile
@@ -741,13 +746,13 @@ Event OnSexLabOrgasmSeparate(Form ActorRef, Int Thread)
 		;using default slso values
 		;lower arousal from beeing raped with lewdness lv3- SSL_Debaucherous
 		;raise arousal from beeing raped with lewdness lv4+ SSL_Nymphomaniac
-		slaUtil.UpdateActorExposure(victim, -10 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(victim, "Lewd", 0.3), "being rape victim")
+		slaUtil.UpdateActorExposure(victim, JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposureloss")/2 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(victim, "Lewd", 0.3), "being rape victim")
 	EndIf
 	
 	;using default slso values
 	;lower arousal with lewdness lv6-
 	;raise arousal with lewdness lv7+
-	Int exposureValue = ((thisThread.TotalTime / GetAnimationDuration(thisThread)) * (-20.0 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(akActor, "Lewd", 0.3))) as Int
+	Int exposureValue = ((thisThread.TotalTime / GetAnimationDuration(thisThread)) * (JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposureloss") + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(akActor, "Lewd", 0.3))) as Int
 	slaUtil.UpdateActorOrgasmDate(akActor)
 	slaUtil.UpdateActorExposure(akActor, exposureValue, "having orgasm")
 EndEvent
@@ -789,7 +794,7 @@ Event OnAnimationEnd(string eventName, string argString, float argNum, form send
 			;	wasPlayerRaped = True
 			;EndIf
 			wasPlayerRaped = (victim == PlayerRef)
-			slaUtil.UpdateActorExposure(victim, -10 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(victim, "Lewd", 0.3), "being rape victim")
+			slaUtil.UpdateActorExposure(victim, JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposureloss")/2 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(victim, "Lewd", 0.3), "being rape victim")
 		EndIf
 		
 		int i = 0	
@@ -839,7 +844,7 @@ Event OnAnimationEnd(string eventName, string argString, float argNum, form send
 			EndIf
 			
 			If doesOrgasm
-				Int exposureValue = ((thisThread.TotalTime / GetAnimationDuration(thisThread)) * (-20.0 + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(actorList[i], "Lewd", 0.3))) as Int
+				Int exposureValue = ((thisThread.TotalTime / GetAnimationDuration(thisThread)) * (JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposureloss") + JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_orgasmexposuremodifier") * SexLab.Stats.GetSkillLevel(actorList[i], "Lewd", 0.3))) as Int
 				slaUtil.UpdateActorOrgasmDate(actorList[i])
 				slaUtil.UpdateActorExposure(actorList[i], exposureValue, "having orgasm")
 			Else
