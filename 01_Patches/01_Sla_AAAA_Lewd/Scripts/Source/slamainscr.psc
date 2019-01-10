@@ -714,9 +714,9 @@ Event OnStageStart(string eventName, string argString, float argNum, form sender
 					slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Bestiality")
 					;SexLab.Log("SLA OnStageStart Bestiality, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
 				EndIf
-				;restore actor ExposureRate
-				slaUtil.SetActorExposureRate(targetactorList[i], ExposureRateBackup)
 			EndIf
+			;restore actor ExposureRate
+			slaUtil.SetActorExposureRate(targetactorList[i], ExposureRateBackup)
 		EndIf
 		i += 1
 	EndWhile
