@@ -259,7 +259,12 @@ Function Game(string var = "")
 		MentalBreak(GetTargetActor())
 	EndIf
 
-	;end animation if male actor out of sta(not aggressor) or orgasmed
+	;skip to last animation stage if male actor:
+	;out of sta(not aggressor)
+	;or
+	;orgasmed
+	;and
+	;solo or duo anim
 	If ((JsonUtil.GetIntValue(File, "game_no_sta_endanim") == 1 && GetTargetActor().GetActorValuePercentage("Stamina") < 0.10 && !IsAggressor)\
 	|| (JsonUtil.GetIntValue(File, "game_male_orgasm_endanim") == 1 && !IsFemale && (controller.ActorAlias(GetTargetActor()) as sslActorAlias).GetOrgasmCount() > 0))\
 	&& ((Position != 0 && controller.ActorCount <= 2) || controller.ActorCount == 1)\
