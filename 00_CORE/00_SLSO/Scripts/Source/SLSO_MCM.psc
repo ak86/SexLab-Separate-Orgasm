@@ -86,6 +86,14 @@ function Page_Config()
 			else
 				AddTextOptionST("condition_victim_orgasm", "$condition_victim_orgasm", "$condition_victim_orgasm_s0")
 			endif
+			
+			if JsonUtil.GetIntValue(File, "condition_victim_arousal") == 1
+				AddTextOptionST("condition_victim_arousal", "$condition_victim_arousal", "$condition_victim_arousal_s1")
+			elseif JsonUtil.GetIntValue(File, "condition_victim_arousal") == 2
+				AddTextOptionST("condition_victim_arousal", "$condition_victim_arousal", "$condition_victim_arousal_s2")
+			else
+				AddTextOptionST("condition_victim_arousal", "$condition_victim_arousal", "$condition_victim_arousal_s0")
+			endif
 
 			AddEmptyOption()
 
@@ -108,6 +116,7 @@ function Page_Config()
 			else
 				AddTextOptionST("sl_sla_arousal", "$sl_sla_arousal", "$sl_sla_arousal_s0")
 			endif
+			AddToggleOptionST("sl_sla_stage_arousal", "$sl_sla_stage_arousal", JsonUtil.GetIntValue(File, "sl_sla_stage_arousal"))
 			if JsonUtil.GetIntValue(File, "sl_exhibitionist") == 1
 				AddTextOptionST("sl_exhibitionist", "$sl_exhibitionist", "$sl_exhibitionist_s1")
 			elseif JsonUtil.GetIntValue(File, "sl_exhibitionist") == 2
@@ -658,6 +667,21 @@ state sl_sla_arousal
 	endEvent
 endState
 
+state sl_sla_stage_arousal
+	event OnSelectST()
+		if JsonUtil.GetIntValue(File, "sl_sla_stage_arousal") == 1
+			JsonUtil.SetIntValue(File, "sl_sla_stage_arousal", 0)
+		else
+			JsonUtil.SetIntValue(File, "sl_sla_stage_arousal", 1)
+		endif
+		SetToggleOptionValueST(JsonUtil.GetIntValue(File, "sl_sla_stage_arousal"))
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$sl_sla_stage_arousal_description")
+	endEvent
+endState
+
 state sl_exhibitionist
 	event OnSelectST()
 		String value
@@ -904,6 +928,27 @@ state condition_victim_orgasm
 	
 	event OnHighlightST()
 		SetInfoText("$condition_victim_orgasm_description")
+	endEvent
+endState
+
+state condition_victim_arousal
+	event OnSelectST()
+		String value
+		if JsonUtil.GetIntValue(File, "condition_victim_arousal") == 1
+			JsonUtil.SetIntValue(File, "condition_victim_arousal", 2)
+			value = "$condition_victim_arousal_s2"
+		elseif JsonUtil.GetIntValue(File, "condition_victim_arousal") == 2
+			JsonUtil.SetIntValue(File, "condition_victim_arousal", 0)
+			value = "$condition_victim_arousal_s0"
+		else
+			JsonUtil.SetIntValue(File, "condition_victim_arousal", 1)
+			value = "$condition_victim_arousal_s1"
+		endif
+		SetTextOptionValueST(value)
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$condition_victim_arousal_description")
 	endEvent
 endState
 

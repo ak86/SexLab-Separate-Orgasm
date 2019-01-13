@@ -661,71 +661,101 @@ EndEvent
 
 
 Event OnStageStart(string eventName, string argString, float argNum, form sender)
-	sslThreadController controller = SexLab.GetController(argString as int)
-	Actor[] actorList = SexLab.HookActors(argString)
-	Actor[] targetactorList = actorList
-	Int howmuch
-	
-	If (actorList.length < 1)
-		return
-	EndIf
-	
-	sslThreadController thisThread = SexLab.HookController(argString)
-	;use own skills for msturbation/group sex
-	;partner skills for duo
-	If (actorList.length == 2)
-		;SexLab.Log("SLA OnStageStart 2 actors, reversing")
-		;SexLab.Log("SLA OnStageStart 2 actors, reversing stage 1: actor1 " + targetactorList[0].GetLeveledActorBase().GetName() + " actor2 " + targetactorList[1].GetLeveledActorBase().GetName() )
-		;SexLab.Log("SLA OnStageStart 2 actors, reversing stage 1: actor1 " + actorList[0].GetLeveledActorBase().GetName() + " actor2 " + actorList[1].GetLeveledActorBase().GetName() )
-		targetactorList =  new Actor [2]
-		targetactorList[0] = actorList[1]
-		targetactorList[1] = actorList[0]
-		;SexLab.Log("SLA OnStageStart 2 actors, reversing stage 2: actor1 " + targetactorList[0].GetLeveledActorBase().GetName() + " actor2 " + targetactorList[1].GetLeveledActorBase().GetName() )
-		;SexLab.Log("SLA OnStageStart 2 actors, reversing stage 2: actor1 " + actorList[0].GetLeveledActorBase().GetName() + " actor2 " + actorList[1].GetLeveledActorBase().GetName() )
-	endif
-	int i = 0
-	While i < actorList.length
-		If ((controller.ActorAlias(targetactorList[i]) as sslActorAlias).GetOrgasmCount() == 0)
-			;force actor ExposureRate to 1
-			float ExposureRateBackup = slaUtil.GetActorExposureRate(targetactorList[i])
-			slaUtil.SetActorExposureRate(targetactorList[i], 1.0)
-			
-			If ((thisThread.animation.HasTag("Foreplay") && thisThread.LeadIn) || thisThread.animation.HasTag("Masturbation"))
-				howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Foreplay")
-				slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Foreplay")
-				;SexLab.Log("SLA OnStageStart Foreplay, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+	If JsonUtil.GetIntValue("/SLSO/Config", "sl_sla_stage_arousal") == 1
+		sslThreadController controller = SexLab.GetController(argString as int)
+		Actor[] actorList = SexLab.HookActors(argString)
+		Actor[] targetactorList = actorList
+		Int howmuch
+		
+		If (actorList.length < 1)
+			return
+		EndIf
+		
+		sslThreadController thisThread = SexLab.HookController(argString)
+		;use own skills for msturbation/group sex
+		;use partner skills for duo
+		If (actorList.length == 2)
+			;SexLab.Log("SLA OnStageStart 2 actors, reversing")
+			;SexLab.Log("SLA OnStageStart 2 actors, reversing before 1: actor1 " + targetactorList[0].GetLeveledActorBase().GetName() + " actor2 " + targetactorList[1].GetLeveledActorBase().GetName() )
+			;SexLab.Log("SLA OnStageStart 2 actors, reversing before 1: actor1 " + actorList[0].GetLeveledActorBase().GetName() + " actor2 " + actorList[1].GetLeveledActorBase().GetName() )
+			targetactorList =  new Actor [2]
+			targetactorList[0] = actorList[1]
+			targetactorList[1] = actorList[0]
+			;SexLab.Log("SLA OnStageStart 2 actors, reversing after 2: actor1 " + targetactorList[0].GetLeveledActorBase().GetName() + " actor2 " + targetactorList[1].GetLeveledActorBase().GetName() )
+			;SexLab.Log("SLA OnStageStart 2 actors, reversing after 2: actor1 " + actorList[0].GetLeveledActorBase().GetName() + " actor2 " + actorList[1].GetLeveledActorBase().GetName() )
+		endif	
+		
+		;check for stop further arousal gains for both actors if leading male is orgasmed
+		bool nomore = false
+		int i = 0
+		While i < actorList.length 
+			int pos = controller.GetPosition(actorList[i])
+			;SexLab.Log(actorList[i].GetLeveledActorBase().GetName() + " gender: " + (controller.ActorAlias(actorList[i]) as sslActorAlias).GetGender() + " pos: " + pos + " malepos: " + controller.Animation.MalePosition(pos))
+			If (((controller.ActorAlias(actorList[i]) as sslActorAlias).GetOrgasmCount() > 0) && ((controller.ActorAlias(actorList[i]) as sslActorAlias).GetGender() != 1) && controller.Animation.MalePosition(pos))
+				;SexLab.Log("Male position actor " + actorList[i].GetLeveledActorBase().GetName() + " has cummed, further arousal gain stopped for both actors")
+				nomore = true
 			EndIf
-			
-			If (!(thisThread.LeadIn || thisThread.animation.HasTag("Masturbation")))
-				If (thisThread.animation.HasTag("Vaginal"))
-					howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Vaginal")
-					slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Vaginal")
-					;SexLab.Log("SLA OnStageStart Vaginal, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
-				ElseIf (thisThread.animation.HasTag("Oral"))
-					howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Oral")
-					slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Oral")
-					;SexLab.Log("SLA OnStageStart Oral, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
-				ElseIf (thisThread.animation.HasTag("Anal"))
-					howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Anal")
-					slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Anal")
-					;SexLab.Log("SLA OnStageStart Anal, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
-				ElseIf (thisThread.animation.HasTag("Bestiality"))
-					howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Lewd", 0.3)
-					slaUtil.UpdateActorExposure(targetactorList[i], howmuch, "Bestiality")
-					;SexLab.Log("SLA OnStageStart Bestiality, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+			i += 1
+		EndWhile
+		
+		i = 0
+		While i < actorList.length
+			If ((controller.ActorAlias(targetactorList[i]) as sslActorAlias).GetOrgasmCount() == 0 && !nomore)
+				Actor victim = SexLab.HookVictim(argString)
+				int exposuremult = 1
+				If (victim != None && victim == targetactorList[i] && JsonUtil.GetIntValue("/SLSO/Config", "condition_victim_arousal") != 1)
+					;check level, cap multiplier to -+300%
+					exposuremult = PapyrusUtil.ClampInt((SexLab.Stats.GetSkillLevel(victim, "Lewd", 0.3) - 3), -3, 3)
+					
+					If (JsonUtil.GetIntValue("/SLSO/Config", "condition_victim_arousal") == 0)
+						exposuremult = 0
+					ElseIf (exposuremult == 0)
+						exposuremult = 1
+					EndIf
+				EndIf
+				
+				If (exposuremult != 0)
+					;force actor ExposureRate to 1
+					float ExposureRateBackup = slaUtil.GetActorExposureRate(targetactorList[i])
+					slaUtil.SetActorExposureRate(targetactorList[i], 1.0)
+					If ((thisThread.animation.HasTag("Foreplay") && thisThread.LeadIn) || thisThread.animation.HasTag("Masturbation"))
+						howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Foreplay")
+						slaUtil.UpdateActorExposure(targetactorList[i], howmuch*exposuremult, "Foreplay")
+						;SexLab.Log("SLA OnStageStart Foreplay, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+					EndIf
+					
+					If (!(thisThread.LeadIn || thisThread.animation.HasTag("Masturbation")))
+						If (thisThread.animation.HasTag("Vaginal"))
+							howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Vaginal")
+							slaUtil.UpdateActorExposure(targetactorList[i], howmuch*exposuremult, "Vaginal")
+							;SexLab.Log("SLA OnStageStart Vaginal, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+						ElseIf (thisThread.animation.HasTag("Oral"))
+							howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Oral")
+							slaUtil.UpdateActorExposure(targetactorList[i], howmuch*exposuremult, "Oral")
+							;SexLab.Log("SLA OnStageStart Oral, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+						ElseIf (thisThread.animation.HasTag("Anal"))
+							howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Anal")
+							slaUtil.UpdateActorExposure(targetactorList[i], howmuch*exposuremult, "Anal")
+							;SexLab.Log("SLA OnStageStart Anal, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+						ElseIf (thisThread.animation.HasTag("Bestiality"))
+							howmuch = 1 + SexLab.Stats.GetSkillLevel(actorList[i], "Lewd", 0.3)
+							slaUtil.UpdateActorExposure(targetactorList[i], howmuch*exposuremult, "Bestiality")
+							;SexLab.Log("SLA OnStageStart Bestiality, Raise " + targetactorList[i].GetLeveledActorBase().GetName() + " arousal by " + howmuch + " from " + actorList[i].GetLeveledActorBase().GetName())
+						EndIf
+					EndIf
+					;restore actor ExposureRate
+					slaUtil.SetActorExposureRate(targetactorList[i], ExposureRateBackup)
 				EndIf
 			EndIf
-			;restore actor ExposureRate
-			slaUtil.SetActorExposureRate(targetactorList[i], ExposureRateBackup)
+			i += 1
+		EndWhile
+		
+		;;This if actorList.Find code by BeamerMiasma replaces the single ArouseNPCsWithinRadius(actorList[0]
+		If (actorList.Find(PlayerRef) >= 0)
+			ArouseNPCsWithinRadius(PlayerRef, arousalSearchRadius)
+		Else
+			ArouseNPCsWithinRadius(actorList[0], arousalSearchRadius)
 		EndIf
-		i += 1
-	EndWhile
-	
-	;;This if actorList.Find code by BeamerMiasma replaces the single ArouseNPCsWithinRadius(actorList[0]
-	If (actorList.Find(PlayerRef) >= 0)
-		ArouseNPCsWithinRadius(PlayerRef, arousalSearchRadius)
-	Else
-		ArouseNPCsWithinRadius(actorList[0], arousalSearchRadius)
 	EndIf
 	
 EndEvent
