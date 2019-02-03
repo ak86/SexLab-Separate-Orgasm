@@ -170,6 +170,7 @@ function Page_Config()
 			AddKeyMapOptionST("hotkey_edge", "$hotkey_edge", JsonUtil.GetIntValue(File, "hotkey_edge"))
 ;			AddKeyMapOptionST("hotkey_orgasm", "$hotkey_orgasm", JsonUtil.GetIntValue(File, "hotkey_orgasm"))
 			AddKeyMapOptionST("hotkey_utility", "$hotkey_utility", JsonUtil.GetIntValue(File, "hotkey_utility"))
+			AddKeyMapOptionST("hotkey_pausegame", "$hotkey_pausegame", JsonUtil.GetIntValue(File, "hotkey_pausegame"))
 			AddKeyMapOptionST("hotkey_widget", "$hotkey_widget", JsonUtil.GetIntValue(File, "hotkey_widget"))
 endfunction
 
@@ -1103,6 +1104,35 @@ state hotkey_utility
 
 	event OnHighlightST()
 		SetInfoText("$hotkey_utility_description")
+	endEvent
+endState
+
+state hotkey_pausegame
+	event OnKeyMapChangeST(int newKeyCode, string conflictControl, string conflictName)
+		UnregisterForAllKeys()
+		bool continue = true
+ 
+		; Check for conflict
+		if conflictControl != ""
+			string msg
+			if conflictName != ""
+				msg = "This key is already mapped to:\n'" + conflictControl + "'\n(" + conflictName + ")\n\n Are you sure you want to continue?"
+			else
+				msg = "This key is already mapped to:\n'" + conflictControl + "'\n\n Are you sure you want to continue?"
+			endIf
+			continue = ShowMessage(msg, true, "Yes", "No")
+		endIf
+
+		; Set allowed key change
+		if continue
+			JsonUtil.SetIntValue(File, "hotkey_pausegame", newKeyCode)
+			SetKeyMapOptionValueST(JsonUtil.GetIntValue(File, "hotkey_pausegame"))
+		endIf
+		RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_pausegame"))
+	endEvent
+
+	event OnHighlightST()
+		SetInfoText("$hotkey_pausegame_description")
 	endEvent
 endState
 

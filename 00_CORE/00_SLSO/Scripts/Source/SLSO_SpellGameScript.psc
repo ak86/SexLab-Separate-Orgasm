@@ -8,6 +8,7 @@ Bool IsAggressor
 Bool IsFemale
 Bool MentallyBroken
 Bool Forced
+Bool PauseGame
 Actor PartnerReference
 Float Vibrate
 float GetModSelfSta
@@ -22,6 +23,7 @@ Event OnEffectStart( Actor akTarget, Actor akCaster )
 	SexLab = Quest.GetQuest("SexLabQuestFramework") as SexLabFramework
 	RegisterForModEvent("SLSO_Start_widget", "Start_widget")
 	RegisterForModEvent("AnimationEnd", "OnSexLabEnd")
+	self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_pausegame"))
 EndEvent
 
 Event Start_widget(Int Widget_Id, Int Thread_Id)
@@ -31,6 +33,7 @@ Event Start_widget(Int Widget_Id, Int Thread_Id)
 	
 	;check if game enabled
 	if JsonUtil.GetIntValue(File, "game_enabled") == 1 && (controller.HasPlayer || JsonUtil.GetIntValue(File, "game_npc_enabled", 0) == 1)
+		PauseGame = false
 		IsAggressor = controller.IsAggressor(GetTargetActor())
 		IsFemale = controller.ActorAlias(GetTargetActor()).GetGender() == 1
 		
@@ -77,7 +80,7 @@ Event OnUpdate()
 	;float bench = game.GetRealHoursPassed()
 	if controller.ActorAlias(GetTargetActor()).GetActorRef() != none
 		if controller.ActorAlias(GetTargetActor()).GetState() == "Animating"
-			If JsonUtil.GetIntValue(File, "game_enabled") == 1
+			If JsonUtil.GetIntValue(File, "game_enabled") == 1 && !PauseGame
 				Game()
 			EndIf
 			
@@ -345,15 +348,27 @@ EndEvent
 ;----------------------------------------------------------------------------
 
 Event OnKeyDown(int keyCode)
-	if controller.ActorAlias(GetTargetActor()).GetActorRef() != none && JsonUtil.GetIntValue(File, "game_enabled") == 1
-		If JsonUtil.GetIntValue(File, "hotkey_bonusenjoyment") == keyCode
-			Game("Stamina")
-;		ElseIf JsonUtil.GetIntValue(File, "hotkey_orgasm") == keyCode
-;			if Input.IsKeyPressed(JsonUtil.GetIntValue(File, "hotkey_utility"))
-;				controller.ActorAlias(GetTargetActor()).Orgasm()
-;			endif
-		ElseIf JsonUtil.GetIntValue(File, "hotkey_edge") == keyCode
-			Game("Magicka")
+	if !Utility.IsInMenuMode()
+		if controller.ActorAlias(GetTargetActor()).GetActorRef() != none
+			If JsonUtil.GetIntValue(File, "hotkey_pausegame") == keyCode && Input.IsKeyPressed(JsonUtil.GetIntValue(File, "hotkey_utility"))
+				if PauseGame
+					PauseGame = false
+					Debug.Notification("SLSO game paused: " + PauseGame)
+				else
+					PauseGame = true
+					Debug.Notification("SLSO game paused: " + PauseGame)
+				endif
+			ElseIf JsonUtil.GetIntValue(File, "game_enabled") == 1
+				If JsonUtil.GetIntValue(File, "hotkey_bonusenjoyment") == keyCode
+					Game("Stamina")
+		;		ElseIf JsonUtil.GetIntValue(File, "hotkey_orgasm") == keyCode
+		;			if Input.IsKeyPressed(JsonUtil.GetIntValue(File, "hotkey_utility"))
+		;				controller.ActorAlias(GetTargetActor()).Orgasm()
+		;			endif
+				ElseIf JsonUtil.GetIntValue(File, "hotkey_edge") == keyCode
+					Game("Magicka")
+				EndIf
+			EndIf
 		EndIf
 	EndIf
 EndEvent

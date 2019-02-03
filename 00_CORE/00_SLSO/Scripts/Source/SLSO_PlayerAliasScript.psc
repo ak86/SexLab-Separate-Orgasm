@@ -165,16 +165,18 @@ EndEvent
 
 
 Event OnKeyDown(int keyCode)
-	If JsonUtil.GetIntValue(File, "hotkey_widget") == keyCode
-		If JsonUtil.GetIntValue(File, "widget_enabled") == 1
-			JsonUtil.SetIntValue(File, "widget_enabled", 0)
-			(self.GetOwningQuest().GetAlias(1) as SLSO_Widget1Update).HideWidget()
-			(self.GetOwningQuest().GetAlias(2) as SLSO_Widget2Update).HideWidget()
-			(self.GetOwningQuest().GetAlias(3) as SLSO_Widget3Update).HideWidget()
-			(self.GetOwningQuest().GetAlias(4) as SLSO_Widget4Update).HideWidget()
-			(self.GetOwningQuest().GetAlias(5) as SLSO_Widget5Update).HideWidget()
-		Else
-			JsonUtil.SetIntValue(File, "widget_enabled", 1)
+	If !Utility.IsInMenuMode()
+		If JsonUtil.GetIntValue(File, "hotkey_widget") == keyCode && Input.IsKeyPressed(JsonUtil.GetIntValue(File, "hotkey_utility"))
+			If JsonUtil.GetIntValue(File, "widget_enabled") == 1
+				JsonUtil.SetIntValue(File, "widget_enabled", 0)
+				(self.GetOwningQuest().GetAlias(1) as SLSO_Widget1Update).HideWidget()
+				(self.GetOwningQuest().GetAlias(2) as SLSO_Widget2Update).HideWidget()
+				(self.GetOwningQuest().GetAlias(3) as SLSO_Widget3Update).HideWidget()
+				(self.GetOwningQuest().GetAlias(4) as SLSO_Widget4Update).HideWidget()
+				(self.GetOwningQuest().GetAlias(5) as SLSO_Widget5Update).HideWidget()
+			Else
+				JsonUtil.SetIntValue(File, "widget_enabled", 1)
+			EndIf
 		EndIf
 	EndIf
 EndEvent
