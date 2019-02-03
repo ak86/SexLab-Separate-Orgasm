@@ -688,15 +688,17 @@ Event OnStageStart(string eventName, string argString, float argNum, form sender
 		;check for stop further arousal gains for both actors if leading male is orgasmed
 		bool nomore = false
 		int i = 0
-		While i < actorList.length 
-			int pos = controller.GetPosition(actorList[i])
-			;SexLab.Log(actorList[i].GetLeveledActorBase().GetName() + " gender: " + (controller.ActorAlias(actorList[i]) as sslActorAlias).GetGender() + " pos: " + pos + " malepos: " + controller.Animation.MalePosition(pos))
-			If (((controller.ActorAlias(actorList[i]) as sslActorAlias).GetOrgasmCount() > 0) && ((controller.ActorAlias(actorList[i]) as sslActorAlias).GetGender() != 1) && controller.Animation.MalePosition(pos))
-				;SexLab.Log("Male position actor " + actorList[i].GetLeveledActorBase().GetName() + " has cummed, further arousal gain stopped for both actors")
-				nomore = true
-			EndIf
-			i += 1
-		EndWhile
+		if (actorList.length <= 2)
+			While i < actorList.length 
+				int pos = controller.GetPosition(actorList[i])
+				;SexLab.Log(actorList[i].GetLeveledActorBase().GetName() + " gender: " + (controller.ActorAlias(actorList[i]) as sslActorAlias).GetGender() + " pos: " + pos + " malepos: " + controller.Animation.MalePosition(pos))
+				If (((controller.ActorAlias(actorList[i]) as sslActorAlias).GetOrgasmCount() > 0) && ((controller.ActorAlias(actorList[i]) as sslActorAlias).GetGender() != 1) && controller.Animation.MalePosition(pos))
+					;SexLab.Log("Male position actor " + actorList[i].GetLeveledActorBase().GetName() + " has cummed, further arousal gain stopped for both actors")
+					nomore = true
+				EndIf
+				i += 1
+			EndWhile
+		endif	
 		
 		i = 0
 		While i < actorList.length

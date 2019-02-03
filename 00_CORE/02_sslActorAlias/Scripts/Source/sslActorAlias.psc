@@ -351,16 +351,25 @@ state Ready
 			ResolveStrapon()
 			; Debug.SendAnimationEvent(ActorRef, "SOSFastErect")
 			; Suppress High Heels
-			if IsFemale && Config.RemoveHeelEffect && ActorRef.GetWornForm(0x00000080)
+			bool isRealFemale = true
+			if BaseRef.GetSex() == 0
+				isRealFemale = false 
+			elseif BaseRef.GetSex() == 1
+				isRealFemale = true
+			else
+				isRealFemale = IsFemale
+			endif
+			Log(isRealFemale, "isRealFemale")
+			if isRealFemale && Config.RemoveHeelEffect && ActorRef.GetWornForm(0x00000080)
 				; Remove NiOverride High Heels
-				if Config.HasNiOverride && NiOverride.HasNodeTransformPosition(ActorRef, false, IsFemale, "NPC", "internal")
-					float[] pos = NiOverride.GetNodeTransformPosition(ActorRef, false, IsFemale, "NPC", "internal")
+				if Config.HasNiOverride && NiOverride.HasNodeTransformPosition(ActorRef, false, isRealFemale, "NPC", "internal")
+					float[] pos = NiOverride.GetNodeTransformPosition(ActorRef, false, isRealFemale, "NPC", "internal")
 					Log(pos, "RemoveHeelEffect (NiOverride)")
 					pos[0] = -pos[0]
 					pos[1] = -pos[1]
 					pos[2] = -pos[2]
-					NiOverride.AddNodeTransformPosition(ActorRef, false, IsFemale, "NPC", "SexLab.esm", pos)
-					NiOverride.UpdateNodeTransform(ActorRef, false, IsFemale, "NPC")
+					NiOverride.AddNodeTransformPosition(ActorRef, false, isRealFemale, "NPC", "SexLab.esm", pos)
+					NiOverride.UpdateNodeTransform(ActorRef, false, isRealFemale, "NPC")
 				endIf
 				; Remove HDT High Heels
 				HDTHeelSpell = Config.GetHDTSpell(ActorRef)
