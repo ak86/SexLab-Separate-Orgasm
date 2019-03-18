@@ -863,17 +863,17 @@ state Animating
 		elseIf Forced != true && SeparateOrgasms
 		;SLSO conditions to prevent orgasm
 			if LeadIn && JsonUtil.GetIntValue(File, "condition_leadin_orgasm") == 0
-				Log("Orgasm blocked, orgasms disabled at LeadIn/Foreplay Stage")
+				Log(ActorName + " Orgasm blocked, orgasms disabled at LeadIn/Foreplay Stage")
 				return
 			endIf
-			if IsPlayer && JsonUtil.GetIntValue(File, "condition_player_orgasm") == 0
+			if IsPlayer && (JsonUtil.GetIntValue(File, "condition_player_orgasm") == 0)
 				Log("Orgasm blocked, player is forbidden to orgasm")
 				return
 			endIf
 			if JsonUtil.GetIntValue(File, "condition_ddbelt_orgasm") == 0
 				if zadDeviousBelt != none
 					if ActorRef.WornHasKeyword(zadDeviousBelt)
-						Log("Orgasm blocked, ActorRef has DD belt prevent orgasming")
+						Log("Orgasm blocked, " + ActorName + " has DD belt prevent orgasming")
 						return
 					EndIf
 				endIf
@@ -881,11 +881,11 @@ state Animating
 			if !Animation.HasTag("Estrus")
 				if IsVictim
 					if JsonUtil.GetIntValue(File, "condition_victim_orgasm") == 0
-						Log("Orgasm blocked, ActorRef is victim, victim forbidden to orgasm")
+						Log("Orgasm blocked, " + ActorName + " is victim, victim forbidden to orgasm")
 						return
 					elseif JsonUtil.GetIntValue(File, "condition_victim_orgasm") == 2
 						if (OwnSkills[Stats.kLewd]*10) as int < Utility.RandomInt(0, 100)
-							Log("Orgasm blocked, ActorRef is victim, victim didn't pass lewd check to orgasm")
+							Log("Orgasm blocked, " + ActorName + " is victim, victim didn't pass lewd check to orgasm")
 							return
 						endIf
 					endIf
@@ -894,20 +894,34 @@ state Animating
 					if !(Animation.HasTag("69") || Animation.HasTag("Masturbation")) || Thread.Positions.Length == 2
 						if  IsFemale && JsonUtil.GetIntValue(File, "condition_female_orgasm") == 1
 							if Position == 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Cunnilingus") || Animation.HasTag("Fisting") || Animation.HasTag("Lesbian"))
-								Log("Orgasm blocked, female pos 0, conditions not met, no HasTag(Vaginal,Anal,Cunnilingus,Fisting)")
+								Log(ActorName + " Orgasm blocked, female pos 0, conditions not met, no HasTag(Vaginal,Anal,Cunnilingus,Fisting)")
 								return
 							endIf
 						elseif IsMale && JsonUtil.GetIntValue(File, "condition_male_orgasm") == 1
 							if Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))
-								Log("Orgasm blocked, male pos 0, conditions not met, no HasTag(Anal,Fisting)")
+								Log(ActorName + " Orgasm blocked, male pos 0, conditions not met, no HasTag(Anal,Fisting)")
 								return
 							elseif Position != 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Boobjob") || Animation.HasTag("Blowjob") || Animation.HasTag("Handjob") || Animation.HasTag("Footjob"))
-								Log("Orgasm blocked, male pos > 0, conditions not met, no HasTag(Vaginal,Anal,Boobjob,Blowjob,Handjob,Footjob)")
+								Log(ActorName + " Orgasm blocked, male pos > 0, conditions not met, no HasTag(Vaginal,Anal,Boobjob,Blowjob,Handjob,Footjob)")
 								return
 							endIf
 						endIf
 					endIf
 				endIf
+				if StorageUtil.GetIntValue(ActorRef, "slso_forbid_orgasm") == 1
+					Log("Orgasm blocked, " + ActorName + " is forbidden to orgasm (by other mod)")
+					return
+				endIf
+			endIf
+			if StorageUtil.GetIntValue(ActorRef, "slso_forbid_orgasm﻿") == 1
+				Log("Orgasm blocked, " + ActorName + " is forbidden to orgasm")
+				int Seid = ModEvent.Create("SexLabOrgasmSeparateDenied")
+				if Seid
+					ModEvent.PushForm(Seid, ActorRef)
+					ModEvent.PushInt(Seid, Thread.tid)
+					ModEvent.Send(Seid)
+				endif
+				return
 			endIf
 		endIf
 		
@@ -957,7 +971,7 @@ state Animating
 		endif
 
 		TrackedEvent("Orgasm")
-		Log("Orgasms["+Orgasms+"] Enjoyment ["+Enjoyment+"] BaseEnjoyment["+BaseEnjoyment+"] FullEnjoyment["+ActorFullEnjoyment+"]")
+		Log(ActorName + "- Orgasms["+Orgasms+"] Enjoyment ["+Enjoyment+"] BaseEnjoyment["+BaseEnjoyment+"] FullEnjoyment["+ActorFullEnjoyment+"]")
 		if Config.OrgasmEffects
 			; Shake camera for player
 			if IsPlayer && Game.GetCameraState() >= 8
