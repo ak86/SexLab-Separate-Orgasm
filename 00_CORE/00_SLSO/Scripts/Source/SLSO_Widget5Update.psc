@@ -146,6 +146,9 @@ Function UpdateWidget(Actor akActor, Float Enjoyment)
 	If akActor == none
 		return
 	EndIf
+	If Display_widget == true && akActor == Game.Getplayer()
+		Game.EnablePlayerControls()
+	EndIf
 	if EnjoymentValue != ""
 		EnjoymentValue = "E:" + StringUtil.Substring(controller.ActorAlias(self.GetActorRef()).GetFullEnjoymentMod(), 0, 5) + "%"
 	endif
