@@ -913,7 +913,7 @@ state Animating
 					return
 				endIf
 			endIf
-			if StorageUtil.GetIntValue(ActorRef, "slso_forbid_orgasm﻿") == 1
+			if StorageUtil.GetIntValue(ActorRef, "slso_forbid_orgasm") == 1
 				Log("Orgasm blocked, " + ActorName + " is forbidden to orgasm")
 				int Seid = ModEvent.Create("SexLabOrgasmSeparateDenied")
 				if Seid

@@ -188,7 +188,7 @@ Function Game(string var = "")
 					ModEnjoyment(GetTargetActor(), mod, FullEnjoymentMOD)
 					PartnerRef = GetTargetActor()
 				
-				;rough sex, nautrals-lovers﻿
+				;rough sex, nautrals-lovers
 				else
 				;not broken, pleasure self
 					if GetTargetActor().GetActorValuePercentage("Magicka") > 0.10
