@@ -44,17 +44,26 @@ Event Start_widget(Int Widget_Id, Int Thread_Id)
 		Position  = controller.Positions.Find(GetTargetActor())
 		RelationshipRank = controller.GetLowestPresentRelationshipRank(GetTargetActor())
 
-		if controller.ActorCount > 1
-			PartnerReference = controller.ActorAlias(controller.Positions[sslUtility.IndexTravel(controller.Positions.Find(GetTargetActor()), controller.ActorCount)]).GetActorRef()
-			GetModPartSta = GetMod("Stamina", PartnerReference)
-			GetModPartMag = GetMod("Magicka", PartnerReference) 
-		endif
-
+		;SexLab.Log("SLSO partner OLD pre: " + PartnerReference.GetDisplayName())
+		;if controller.ActorCount > 1
+		;	PartnerReference = controller.ActorAlias(controller.Positions[sslUtility.IndexTravel(controller.Positions.Find(GetTargetActor()), controller.ActorCount)]).GetActorRef()
+		;	;GetModPartSta = GetMod("Stamina", PartnerReference)
+		;	;GetModPartMag = GetMod("Magicka", PartnerReference) 
+		;endif
+		;SexLab.Log("SLSO partner OLD post: " + PartnerReference.GetDisplayName())
+		
+		Change_Partner()
+		
 		if controller.ActorAlias(GetTargetActor()).GetActorRef() == Game.GetPlayer()
 ;			SexLab.Log(" SLSO Setup() Player, enabling hotkeys")
 			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_edge"))
 ;			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_orgasm"))
 			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_bonusenjoyment"))
+			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_1"))
+			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_2"))
+			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_3"))
+			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_4"))
+			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_5"))
 		endif
 		;Estrus, increase enjoyment
 		if controller.Animation.HasTag("Estrus")\
@@ -330,6 +339,32 @@ Function Remove()
 	endIf
 EndFunction
 
+Function Change_Partner(int partnerid = 0)
+	partnerid = partnerid - 1
+	Actor PartnerReference1
+	;SexLab.Log("SLSO is victim: " + GetTargetActor().GetDisplayName() +" " + IsVictim)
+	;SexLab.Log("SLSO partner pre: " + PartnerReference.GetDisplayName())
+	if controller.ActorCount > 1
+		if partnerid < 0
+			;SexLab.Log("Change_Partner initial setup " + partnerid)
+			PartnerReference = controller.ActorAlias(controller.Positions[sslUtility.IndexTravel(controller.Positions.Find(GetTargetActor()), controller.ActorCount)]).GetActorRef()
+		else
+			PartnerReference1 = controller.ActorAlias[partnerid].GetActorRef()
+			;SexLab.Log("Change_Partner change partner " + PartnerReference1.GetDisplayName())
+			if PartnerReference1 == none || PartnerReference1 == PartnerReference || PartnerReference1 == GetTargetActor() || PartnerReference1 == Game.GetPlayer()
+				return
+			endif
+			PartnerReference = PartnerReference1
+			;SexLab.Log("Change_Partner partner changed to: " + PartnerReference.GetDisplayName() + " pos (" + partnerid + ")")
+			Debug.Notification("SLSO changed focus to: " + PartnerReference.GetDisplayName())
+		endif
+		;SexLab.Log("Change_Partner partner set to: " + PartnerReference.GetDisplayName() + " pos (" + partnerid + ")")
+		GetModPartSta = GetMod("Stamina", PartnerReference)
+		GetModPartMag = GetMod("Magicka", PartnerReference) 
+	endif
+	;SexLab.Log("SLSO partner post: " + PartnerReference.GetDisplayName())
+EndFunction
+
 ;----------------------------------------------------------------------------
 ;DD events
 ;----------------------------------------------------------------------------
@@ -361,6 +396,7 @@ Event OnKeyDown(int keyCode)
 					Debug.Notification("SLSO game paused: " + PauseGame)
 				endif
 			ElseIf JsonUtil.GetIntValue(File, "game_enabled") == 1
+				;Debug.Notification("SLSO OnKeyDown : " + keyCode)
 				If JsonUtil.GetIntValue(File, "hotkey_bonusenjoyment") == keyCode
 					Game("Stamina")
 		;		ElseIf JsonUtil.GetIntValue(File, "hotkey_orgasm") == keyCode
@@ -369,6 +405,20 @@ Event OnKeyDown(int keyCode)
 		;			endif
 				ElseIf JsonUtil.GetIntValue(File, "hotkey_edge") == keyCode
 					Game("Magicka")
+				ElseIf Input.IsKeyPressed(JsonUtil.GetIntValue(File, "hotkey_utility"))
+					;If !IsVictim
+						If JsonUtil.GetIntValue(File, "hotkey_select_actor_1") == keyCode
+							Change_Partner(1)
+						ElseIf JsonUtil.GetIntValue(File, "hotkey_select_actor_2") == keyCode
+							Change_Partner(2)
+						ElseIf JsonUtil.GetIntValue(File, "hotkey_select_actor_3") == keyCode
+							Change_Partner(3)
+						ElseIf JsonUtil.GetIntValue(File, "hotkey_select_actor_4") == keyCode
+							Change_Partner(4)
+						ElseIf JsonUtil.GetIntValue(File, "hotkey_select_actor_5") == keyCode
+							Change_Partner(5)
+						EndIf
+					;EndIf
 				EndIf
 			EndIf
 		EndIf
