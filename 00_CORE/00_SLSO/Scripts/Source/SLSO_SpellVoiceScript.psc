@@ -1,15 +1,15 @@
 Scriptname SLSO_SpellVoiceScript extends activemagiceffect
 
-SexLabFramework SexLab
-sslThreadController controller
+SexLabFramework Property SexLab auto
+sslThreadController Property controller auto
 
-String File
-Bool IsVictim
-Bool IsPlayer
-Bool IsSilent
-Bool IsFemale
-Int Voice
-FormList SoundContainer
+String Property File auto
+Bool Property IsVictim auto
+Bool Property IsPlayer auto
+Bool Property IsSilent auto
+Bool Property IsFemale auto
+Int Property Voice auto
+FormList Property SoundContainer auto
 
 Event OnEffectStart( Actor akTarget, Actor akCaster )
 	IsPlayer = akTarget == Game.GetPlayer()
@@ -94,11 +94,11 @@ Event OnUpdate()
 					Int RawFullEnjoyment = controller.ActorAlias(GetTargetActor()).GetFullEnjoyment()
 					Int FullEnjoyment = PapyrusUtil.ClampInt(RawFullEnjoyment/10, 0, 10) + 1
 						
-					if FullEnjoyment > 9			;orgasm
+					if FullEnjoyment > 9																					;orgasm
 						mySFX = (SoundContainer.GetAt(1) As formlist).GetAt(0) As Sound
-					elseif IsVictim					;pain
+					elseif IsVictim && FullEnjoyment < JsonUtil.GetIntValue(File, "sl_voice_painswitch")					;pain
 						mySFX = (SoundContainer.GetAt(2) As formlist).GetAt(0) As Sound
-					else							;normal
+					else																									;normal
 						if (SoundContainer.GetAt(0) As formlist).GetSize() != 10 || JsonUtil.GetIntValue(File, "sl_voice_enjoymentbased") != 1
 							FullEnjoyment = 0
 						endif

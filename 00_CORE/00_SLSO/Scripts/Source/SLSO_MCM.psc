@@ -238,6 +238,7 @@ function Page_Sound_System()
 		AddHeaderOption("$Sound_System_VoicePacks_Selection_Header")
 		AddToggleOptionST("sl_voice_enjoymentbased", "$sl_voice_enjoymentbased", JsonUtil.GetIntValue(File, "sl_voice_enjoymentbased"))
 		AddToggleOptionST("sl_voice_playandwait", "$sl_voice_playandwait", JsonUtil.GetIntValue(File, "sl_voice_playandwait"))
+		AddSliderOptionST("sl_voice_painswitch", "$sl_voice_painswitch", JsonUtil.GetIntValue(File, "sl_voice_painswitch") * 10)
 		AddSliderOptionST("sl_voice_player", "$PC_voice_pack", JsonUtil.GetIntValue(File, "sl_voice_player"))
 		AddSliderOptionST("sl_voice_npc", "$NPC_voice_pack", JsonUtil.GetIntValue(File, "sl_voice_npc"))
 	
@@ -1640,6 +1641,24 @@ endState
 ;=============================================================
 ;Sliders
 ;=============================================================
+
+state sl_voice_painswitch
+	event OnSliderOpenST()
+		SetSliderDialogStartValue(JsonUtil.GetIntValue(File, "sl_voice_painswitch"))
+		SetSliderDialogDefaultValue(8)
+		SetSliderDialogRange(0, 10)
+		SetSliderDialogInterval(1)
+	endEvent
+
+	event OnSliderAcceptST(float value)
+		JsonUtil.SetIntValue(File, "sl_voice_painswitch", value as int)
+		SetSliderOptionValueST((value * 10) as int)
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$sl_voice_painswitch_description")
+	endEvent
+endState
 
 state sl_voice_player
 	event OnSliderOpenST()

@@ -1,13 +1,13 @@
 Scriptname SLSO_SpellAnimSyncScript extends activemagiceffect
 
-SexLabFramework SexLab
-sslThreadController controller
+SexLabFramework Property SexLab auto
+sslThreadController Property controller auto
 
 Actor ActorSync	; for animation speed control
-String File
-Float Base_speed
-Float Min_speed
-Float Max_speed
+String Property File auto
+Float Property Base_speed auto
+Float Property Min_speed auto
+Float Property Max_speed auto
 
 Event OnEffectStart( Actor akTarget, Actor akCaster )
 	File = "/SLSO/Config.json"

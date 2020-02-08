@@ -1,22 +1,23 @@
 Scriptname SLSO_SpellGameScript Extends activemagiceffect
 
-SexLabFramework SexLab
-sslThreadController controller
+SexLabFramework Property SexLab auto
+sslThreadController Property controller auto
 
-String File
-Bool IsAggressor
-Bool IsFemale
-Bool MentallyBroken
-Bool Forced
-Bool PauseGame
-Actor PartnerReference
-Float Vibrate
-float GetModSelfSta
-float GetModSelfMag
-float GetModPartSta
-float GetModPartMag
-int Position
-int RelationshipRank
+String Property File auto
+Bool Property IsAggressor auto
+Bool Property IsVictim auto
+Bool Property IsFemale auto
+Bool Property MentallyBroken auto
+Bool Property Forced auto
+Bool Property PauseGame auto
+Actor Property PartnerReference auto
+Float Property Vibrate auto
+float Property GetModSelfSta auto
+float Property GetModSelfMag auto
+float Property GetModPartSta auto
+float Property GetModPartMag auto
+int Property Position auto
+int Property RelationshipRank auto
 
 Event OnEffectStart( Actor akTarget, Actor akCaster )
 	File = "/SLSO/Config.json"
@@ -35,6 +36,7 @@ Event Start_widget(Int Widget_Id, Int Thread_Id)
 	if JsonUtil.GetIntValue(File, "game_enabled") == 1 && (controller.HasPlayer || JsonUtil.GetIntValue(File, "game_npc_enabled", 0) == 1)
 		PauseGame = false
 		IsAggressor = controller.IsAggressor(GetTargetActor())
+		IsVictim = controller.IsVictim(GetTargetActor())
 		IsFemale = controller.ActorAlias(GetTargetActor()).GetGender() == 1
 		
 		GetModSelfSta = GetMod("Stamina", GetTargetActor())
@@ -42,17 +44,26 @@ Event Start_widget(Int Widget_Id, Int Thread_Id)
 		Position  = controller.Positions.Find(GetTargetActor())
 		RelationshipRank = controller.GetLowestPresentRelationshipRank(GetTargetActor())
 
-		if controller.ActorCount > 1
-			PartnerReference = controller.ActorAlias(controller.Positions[sslUtility.IndexTravel(controller.Positions.Find(GetTargetActor()), controller.ActorCount)]).GetActorRef()
-			GetModPartSta = GetMod("Stamina", PartnerReference)
-			GetModPartMag = GetMod("Magicka", PartnerReference) 
-		endif
-
+		;SexLab.Log("SLSO partner OLD pre: " + PartnerReference.GetDisplayName())
+		;if controller.ActorCount > 1
+		;	PartnerReference = controller.ActorAlias(controller.Positions[sslUtility.IndexTravel(controller.Positions.Find(GetTargetActor()), controller.ActorCount)]).GetActorRef()
+		;	;GetModPartSta = GetMod("Stamina", PartnerReference)
+		;	;GetModPartMag = GetMod("Magicka", PartnerReference) 
+		;endif
+		;SexLab.Log("SLSO partner OLD post: " + PartnerReference.GetDisplayName())
+		
+		Change_Partner()
+		
 		if controller.ActorAlias(GetTargetActor()).GetActorRef() == Game.GetPlayer()
 ;			SexLab.Log(" SLSO Setup() Player, enabling hotkeys")
 			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_edge"))
 ;			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_orgasm"))
 			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_bonusenjoyment"))
+			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_1"))
+			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_2"))
+			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_3"))
+			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_4"))
+			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_5"))
 		endif
 		;Estrus, increase enjoyment
 		if controller.Animation.HasTag("Estrus")\
@@ -191,7 +202,7 @@ Function Game(string var = "")
 				;rough sex, nautrals-lovers
 				else
 				;not broken, pleasure self
-					if GetTargetActor().GetActorValuePercentage("Magicka") > 0.10
+					if GetTargetActor().GetActorValuePercentage("Magicka") > 0.10 || controller.ActorCount > 2
 						ModEnjoyment(GetTargetActor(), mod, FullEnjoymentMOD)
 						PartnerRef = GetTargetActor()
 				;mental broken, pleasure partner
@@ -204,7 +215,7 @@ Function Game(string var = "")
 				;not aggressor
 				
 				;mentally not broken, pleasure self
-				if GetTargetActor().GetActorValuePercentage("Magicka") > 0.10
+				if GetTargetActor().GetActorValuePercentage("Magicka") > 0.10 || controller.ActorCount > 2
 					;pleasure self if self priority
 					;lewdness based check
 					if (Utility.RandomInt(0, 100) < SexLab.Stats.GetSkillLevel(GetTargetActor(), "Lewd", 0.3)*10*1.5) && JsonUtil.GetIntValue(File, "game_pleasure_priority") == 1
@@ -328,17 +339,43 @@ Function Remove()
 	endIf
 EndFunction
 
+Function Change_Partner(int partnerid = 0)
+	partnerid = partnerid - 1
+	Actor PartnerReference1
+	;SexLab.Log("SLSO is victim: " + GetTargetActor().GetDisplayName() +" " + IsVictim)
+	;SexLab.Log("SLSO partner pre: " + PartnerReference.GetDisplayName())
+	if controller.ActorCount > 1
+		if partnerid < 0
+			;SexLab.Log("Change_Partner initial setup " + partnerid)
+			PartnerReference = controller.ActorAlias(controller.Positions[sslUtility.IndexTravel(controller.Positions.Find(GetTargetActor()), controller.ActorCount)]).GetActorRef()
+		else
+			PartnerReference1 = controller.ActorAlias[partnerid].GetActorRef()
+			;SexLab.Log("Change_Partner change partner " + PartnerReference1.GetDisplayName())
+			if PartnerReference1 == none || PartnerReference1 == PartnerReference || PartnerReference1 == GetTargetActor() || PartnerReference1 == Game.GetPlayer()
+				return
+			endif
+			PartnerReference = PartnerReference1
+			;SexLab.Log("Change_Partner partner changed to: " + PartnerReference.GetDisplayName() + " pos (" + partnerid + ")")
+			Debug.Notification("SLSO changed focus to: " + PartnerReference.GetDisplayName())
+		endif
+		;SexLab.Log("Change_Partner partner set to: " + PartnerReference.GetDisplayName() + " pos (" + partnerid + ")")
+		GetModPartSta = GetMod("Stamina", PartnerReference)
+		GetModPartMag = GetMod("Magicka", PartnerReference) 
+	endif
+	;SexLab.Log("SLSO partner post: " + PartnerReference.GetDisplayName())
+EndFunction
+
 ;----------------------------------------------------------------------------
 ;DD events
 ;----------------------------------------------------------------------------
 Event OnVibrateStart(string eventName, string argString, float argNum, form sender)
-	If argString == GetTargetActor().GetName()
+	If argString == GetTargetActor().GetDisplayName()
 		Vibrate = argNum
 	EndIf
 EndEvent
 
 Event OnVibrateStop(string eventName, string argString, float argNum, form sender)
-	If argString == GetTargetActor().GetName()
+	If argString == GetTargetActor().GetDisplayName()
 		Vibrate = 0
 	EndIf
 EndEvent
@@ -359,6 +396,7 @@ Event OnKeyDown(int keyCode)
 					Debug.Notification("SLSO game paused: " + PauseGame)
 				endif
 			ElseIf JsonUtil.GetIntValue(File, "game_enabled") == 1
+				;Debug.Notification("SLSO OnKeyDown : " + keyCode)
 				If JsonUtil.GetIntValue(File, "hotkey_bonusenjoyment") == keyCode
 					Game("Stamina")
 		;		ElseIf JsonUtil.GetIntValue(File, "hotkey_orgasm") == keyCode
@@ -367,6 +405,20 @@ Event OnKeyDown(int keyCode)
 		;			endif
 				ElseIf JsonUtil.GetIntValue(File, "hotkey_edge") == keyCode
 					Game("Magicka")
+				ElseIf Input.IsKeyPressed(JsonUtil.GetIntValue(File, "hotkey_utility"))
+					;If !IsVictim
+						If JsonUtil.GetIntValue(File, "hotkey_select_actor_1") == keyCode
+							Change_Partner(1)
+						ElseIf JsonUtil.GetIntValue(File, "hotkey_select_actor_2") == keyCode
+							Change_Partner(2)
+						ElseIf JsonUtil.GetIntValue(File, "hotkey_select_actor_3") == keyCode
+							Change_Partner(3)
+						ElseIf JsonUtil.GetIntValue(File, "hotkey_select_actor_4") == keyCode
+							Change_Partner(4)
+						ElseIf JsonUtil.GetIntValue(File, "hotkey_select_actor_5") == keyCode
+							Change_Partner(5)
+						EndIf
+					;EndIf
 				EndIf
 			EndIf
 		EndIf

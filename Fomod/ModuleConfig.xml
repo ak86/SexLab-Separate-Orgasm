@@ -77,15 +77,15 @@
 				</group>
 				<group name="3_Patches" type="SelectAny">
 					<plugins order="Explicit">			
-						<plugin name="Patch_SLA_AAAA_Lewd">
+						<plugin name="Patch_SLA">
 							<description>
 								<![CDATA[SLAR Animation-Appropriate Arousal Adjustments 1.0.5 based patch to support creatures and other perversions. Support for SLSO.]]>
 							</description>
 							<conditionFlags>
-								<flag name="Patch_SLA_AAAA_Lewd">Active</flag>
+								<flag name="Patch_SLA">Active</flag>
 							</conditionFlags>
 							<files>
-								<folder source="01_Patches\01_Sla_AAAA_Lewd" destination=""/>
+								<folder source="01_Patches\01_Sla" destination=""/>
 							</files>
 							<typeDescriptor>
 								<dependencyType>

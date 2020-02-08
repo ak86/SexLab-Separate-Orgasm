@@ -1,12 +1,12 @@
 ﻿<fomod>
-  <Name>SexLab Separate Orgasm SE</Name>
-  <Version>1.6.1</Version>
+  <Name>SexLab Separate Orgasm</Name>
+  <Version>1.6.2</Version>
   <Author>Ed86</Author>
   <Website>https://www.patreon.com/Ed86</Website>
   <Description>
   
 Requirements:
-Sex Animation Framework v1.63 Beta 7
+Sex Animation Framework
 SKYUI
 SKSE
 
