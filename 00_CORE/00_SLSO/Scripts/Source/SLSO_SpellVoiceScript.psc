@@ -94,11 +94,11 @@ Event OnUpdate()
 					Int RawFullEnjoyment = controller.ActorAlias(GetTargetActor()).GetFullEnjoyment()
 					Int FullEnjoyment = PapyrusUtil.ClampInt(RawFullEnjoyment/10, 0, 10) + 1
 						
-					if FullEnjoyment > 9			;orgasm
+					if FullEnjoyment > 9																					;orgasm
 						mySFX = (SoundContainer.GetAt(1) As formlist).GetAt(0) As Sound
-					elseif IsVictim					;pain
+					elseif IsVictim && FullEnjoyment < JsonUtil.GetIntValue(File, "sl_voice_painswitch")					;pain
 						mySFX = (SoundContainer.GetAt(2) As formlist).GetAt(0) As Sound
-					else							;normal
+					else																									;normal
 						if (SoundContainer.GetAt(0) As formlist).GetSize() != 10 || JsonUtil.GetIntValue(File, "sl_voice_enjoymentbased") != 1
 							FullEnjoyment = 0
 						endif
