@@ -1,15 +1,15 @@
 Scriptname SLSO_SpellVoiceScript extends activemagiceffect
 
-SexLabFramework SexLab
-sslThreadController controller
+SexLabFramework Property SexLab auto
+sslThreadController Property controller auto
 
-String File
-Bool IsVictim
-Bool IsPlayer
-Bool IsSilent
-Bool IsFemale
-Int Voice
-FormList SoundContainer
+String Property File auto
+Bool Property IsVictim auto
+Bool Property IsPlayer auto
+Bool Property IsSilent auto
+Bool Property IsFemale auto
+Int Property Voice auto
+FormList Property SoundContainer auto
 
 Event OnEffectStart( Actor akTarget, Actor akCaster )
 	IsPlayer = akTarget == Game.GetPlayer()

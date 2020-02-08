@@ -1,22 +1,23 @@
 Scriptname SLSO_SpellGameScript Extends activemagiceffect
 
-SexLabFramework SexLab
-sslThreadController controller
+SexLabFramework Property SexLab auto
+sslThreadController Property controller auto
 
-String File
-Bool IsAggressor
-Bool IsFemale
-Bool MentallyBroken
-Bool Forced
-Bool PauseGame
-Actor PartnerReference
-Float Vibrate
-float GetModSelfSta
-float GetModSelfMag
-float GetModPartSta
-float GetModPartMag
-int Position
-int RelationshipRank
+String Property File auto
+Bool Property IsAggressor auto
+Bool Property IsVictim auto
+Bool Property IsFemale auto
+Bool Property MentallyBroken auto
+Bool Property Forced auto
+Bool Property PauseGame auto
+Actor Property PartnerReference auto
+Float Property Vibrate auto
+float Property GetModSelfSta auto
+float Property GetModSelfMag auto
+float Property GetModPartSta auto
+float Property GetModPartMag auto
+int Property Position auto
+int Property RelationshipRank auto
 
 Event OnEffectStart( Actor akTarget, Actor akCaster )
 	File = "/SLSO/Config.json"
@@ -35,6 +36,7 @@ Event Start_widget(Int Widget_Id, Int Thread_Id)
 	if JsonUtil.GetIntValue(File, "game_enabled") == 1 && (controller.HasPlayer || JsonUtil.GetIntValue(File, "game_npc_enabled", 0) == 1)
 		PauseGame = false
 		IsAggressor = controller.IsAggressor(GetTargetActor())
+		IsVictim = controller.IsVictim(GetTargetActor())
 		IsFemale = controller.ActorAlias(GetTargetActor()).GetGender() == 1
 		
 		GetModSelfSta = GetMod("Stamina", GetTargetActor())
