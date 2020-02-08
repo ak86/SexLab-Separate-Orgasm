@@ -193,7 +193,7 @@ Function Game(string var = "")
 				;rough sex, nautrals-lovers
 				else
 				;not broken, pleasure self
-					if GetTargetActor().GetActorValuePercentage("Magicka") > 0.10
+					if GetTargetActor().GetActorValuePercentage("Magicka") > 0.10 || controller.ActorCount > 2
 						ModEnjoyment(GetTargetActor(), mod, FullEnjoymentMOD)
 						PartnerRef = GetTargetActor()
 				;mental broken, pleasure partner
@@ -206,7 +206,7 @@ Function Game(string var = "")
 				;not aggressor
 				
 				;mentally not broken, pleasure self
-				if GetTargetActor().GetActorValuePercentage("Magicka") > 0.10
+				if GetTargetActor().GetActorValuePercentage("Magicka") > 0.10 || controller.ActorCount > 2
 					;pleasure self if self priority
 					;lewdness based check
 					if (Utility.RandomInt(0, 100) < SexLab.Stats.GetSkillLevel(GetTargetActor(), "Lewd", 0.3)*10*1.5) && JsonUtil.GetIntValue(File, "game_pleasure_priority") == 1
@@ -334,13 +334,13 @@ EndFunction
 ;DD events
 ;----------------------------------------------------------------------------
 Event OnVibrateStart(string eventName, string argString, float argNum, form sender)
-	If argString == GetTargetActor().GetName()
+	If argString == GetTargetActor().GetDisplayName()
 		Vibrate = argNum
 	EndIf
 EndEvent
 
 Event OnVibrateStop(string eventName, string argString, float argNum, form sender)
-	If argString == GetTargetActor().GetName()
+	If argString == GetTargetActor().GetDisplayName()
 		Vibrate = 0
 	EndIf
 EndEvent
