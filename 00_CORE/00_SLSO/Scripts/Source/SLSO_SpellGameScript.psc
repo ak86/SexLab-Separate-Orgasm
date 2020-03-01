@@ -57,7 +57,7 @@ Event Start_widget(Int Widget_Id, Int Thread_Id)
 		if controller.ActorAlias(GetTargetActor()).GetActorRef() == Game.GetPlayer()
 ;			SexLab.Log(" SLSO Setup() Player, enabling hotkeys")
 			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_edge"))
-;			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_orgasm"))
+			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_orgasm"))
 			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_bonusenjoyment"))
 			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_1"))
 			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_2"))
@@ -146,14 +146,14 @@ Function Game(string var = "")
 			If GetTargetActor().GetActorValuePercentage("Stamina") > 0.10
 				;self
 				if (controller.ActorCount == 1 || Input.IsKeyPressed(JsonUtil.GetIntValue(File, "hotkey_utility")))
+					;SexLab.Log("raise enjoyment self: " + GetTargetActor().GetDisplayName())
 					ModEnjoyment(GetTargetActor(), mod, FullEnjoymentMOD)
 					PartnerRef = GetTargetActor()
 				;partner
-				elseif controller.ActorCount == 2
+				elseif controller.ActorCount > 1
+					;SexLab.Log("raise enjoyment partner: " + PartnerReference.GetDisplayName())
 					ModEnjoyment(PartnerReference, mod, FullEnjoymentMOD)
 					PartnerRef = PartnerReference
-				else
-					return
 				endif
 			EndIf
 		EndIf
@@ -166,22 +166,19 @@ Function Game(string var = "")
 		if MentallyBroken == false
 			if controller.ActorCount == 1 || Input.IsKeyPressed(JsonUtil.GetIntValue(File, "hotkey_utility"))
 				mod = GetModSelfMag
-				If GetTargetActor().GetActorValuePercentage("Magicka") > 0.10
+				if GetTargetActor().GetActorValuePercentage("Magicka") > 0.10
 					GetTargetActor().DamageActorValue("Magicka", GetTargetActor().GetBaseActorValue("Magicka")/(10-mod)*0.5)
 					controller.ActorAlias(GetTargetActor()).HoldOut()
-				EndIf
-
+				endif
 			;partner
-			Elseif controller.ActorCount == 2
+			elseif controller.ActorCount > 1
 				mod = GetModSelfSta
-				If GetTargetActor().GetActorValuePercentage("Stamina") > 0.10
+				if GetTargetActor().GetActorValuePercentage("Stamina") > 0.10
 					GetTargetActor().DamageActorValue("Stamina", GetTargetActor().GetBaseActorValue("Stamina")/(10+mod)*0.5)
 					controller.ActorAlias(PartnerReference).HoldOut()
 					PartnerRef = PartnerReference
-				EndIf
-			Else
-				return
-			EndIf
+				endif
+			endif
 		EndIf
 
 	;PC(auto/mentalbreak)/NPC
@@ -348,6 +345,9 @@ Function Change_Partner(int partnerid = 0)
 		if partnerid < 0
 			;SexLab.Log("Change_Partner initial setup " + partnerid)
 			PartnerReference = controller.ActorAlias(controller.Positions[sslUtility.IndexTravel(controller.Positions.Find(GetTargetActor()), controller.ActorCount)]).GetActorRef()
+			if controller.ActorAlias(GetTargetActor()).GetActorRef() == Game.GetPlayer()
+				SexLab.Log("SLSO " + GetTargetActor().GetDisplayName() + "'s current partner is " + PartnerReference.GetDisplayName())
+			endif
 		else
 			PartnerReference1 = controller.ActorAlias[partnerid].GetActorRef()
 			;SexLab.Log("Change_Partner change partner " + PartnerReference1.GetDisplayName())
@@ -356,7 +356,10 @@ Function Change_Partner(int partnerid = 0)
 			endif
 			PartnerReference = PartnerReference1
 			;SexLab.Log("Change_Partner partner changed to: " + PartnerReference.GetDisplayName() + " pos (" + partnerid + ")")
-			Debug.Notification("SLSO changed focus to: " + PartnerReference.GetDisplayName())
+			if controller.ActorAlias(GetTargetActor()).GetActorRef() == Game.GetPlayer()
+				SexLab.Log("SLSO " + GetTargetActor().GetDisplayName() + " changed focus to " + PartnerReference.GetDisplayName())
+				Debug.Notification(GetTargetActor().GetDisplayName() + " changed partner to " + PartnerReference.GetDisplayName())
+			endif
 		endif
 		;SexLab.Log("Change_Partner partner set to: " + PartnerReference.GetDisplayName() + " pos (" + partnerid + ")")
 		GetModPartSta = GetMod("Stamina", PartnerReference)
@@ -399,10 +402,14 @@ Event OnKeyDown(int keyCode)
 				;Debug.Notification("SLSO OnKeyDown : " + keyCode)
 				If JsonUtil.GetIntValue(File, "hotkey_bonusenjoyment") == keyCode
 					Game("Stamina")
-		;		ElseIf JsonUtil.GetIntValue(File, "hotkey_orgasm") == keyCode
-		;			if Input.IsKeyPressed(JsonUtil.GetIntValue(File, "hotkey_utility"))
-		;				controller.ActorAlias(GetTargetActor()).Orgasm()
-		;			endif
+;				ElseIf JsonUtil.GetIntValue(File, "hotkey_orgasm") == keyCode
+;					if Input.IsKeyPressed(JsonUtil.GetIntValue(File, "hotkey_utility"))
+;						controller.ActorAlias(GetTargetActor()).Orgasm(0)		;normal orgasm, >90 enjoyment
+;					endif
+;				ElseIf JsonUtil.GetIntValue(File, "hotkey_orgasm") == keyCode
+;					if Input.IsKeyPressed(JsonUtil.GetIntValue(File, "hotkey_utility"))
+;						controller.ActorAlias(GetTargetActor()).Orgasm(-2)		;forced orgasm, skip slso checks
+;					endif
 				ElseIf JsonUtil.GetIntValue(File, "hotkey_edge") == keyCode
 					Game("Magicka")
 				ElseIf Input.IsKeyPressed(JsonUtil.GetIntValue(File, "hotkey_utility"))
