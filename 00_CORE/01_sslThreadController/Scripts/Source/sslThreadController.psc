@@ -229,12 +229,12 @@ state Animating
 									
 									if Belted == false
 										int minStage = 1
-										; If there are more than 2 stages, do not include first (often transition)
-										if StageCount > 3
-											minStage = 2
 										; If there are more than 5 stages, do not include first 2
-										elseIf StageCount > 5
+										if StageCount > 5
 											minStage = 3
+										; If there are more than 3 stages, do not include first 1(often transition)
+										elseIf StageCount > 3
+											minStage = 2
 										endIf
 
 										ToStage = Utility.RandomInt(minStage, maxStage)
