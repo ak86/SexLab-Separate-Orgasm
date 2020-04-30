@@ -480,7 +480,7 @@ state Prepare
 		
 		;GetEnjoyment() condi checks
 		;to enable default sexlab enjoyment gains if true
-			if JsonUtil.GetIntValue(File, "sl_passive_enjoyment") == 1 || Thread.ActorCount > 2 || !SLSO_GAME_enabled
+			if JsonUtil.GetIntValue(File, "sl_passive_enjoyment") == 1 || !SLSO_GAME_enabled
 				SLSOGetEnjoymentCheck1 = true
 			else
 				SLSOGetEnjoymentCheck1 = false
