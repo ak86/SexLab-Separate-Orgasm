@@ -76,9 +76,6 @@ EndEvent
 
 Event OnSexLabEnd(string EventName, string argString, Float argNum, form sender)
 	if controller == SexLab.GetController(argString as int)
-		UnRegisterForUpdate()
-		UnregisterForAllModEvents()
-		UnregisterForAllKeys()
 		Remove()
 	endif
 EndEvent
@@ -145,7 +142,12 @@ EndEvent
 
 function Remove()
 	If GetTargetActor() != none
+		UnRegisterForUpdate()
+		UnregisterForAllModEvents()
+		UnregisterForAllKeys()
 		SLSO_MCM SLSO = Quest.GetQuest("SLSO") as SLSO_MCM
-		GetTargetActor().RemoveSpell(SLSO.SLSO_SpellVoice)
-	endIf
+		If GetTargetActor().HasSpell(SLSO.SLSO_SpellVoice)
+			GetTargetActor().RemoveSpell(SLSO.SLSO_SpellVoice)
+		EndIf
+	EndIf
 endFunction

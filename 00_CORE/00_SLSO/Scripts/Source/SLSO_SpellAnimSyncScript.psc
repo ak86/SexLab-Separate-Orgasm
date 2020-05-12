@@ -11,10 +11,17 @@ Float Property Max_speed auto
 
 Event OnEffectStart( Actor akTarget, Actor akCaster )
 	File = "/SLSO/Config.json"
-	if JsonUtil.GetIntValue(File, "game_animation_speed_control", 0) != 0
-		SexLab = Quest.GetQuest("SexLabQuestFramework") as SexLabFramework
-		RegisterForModEvent("SLSO_Start_widget", "Start_widget")
-		RegisterForModEvent("AnimationEnd", "OnSexLabEnd")
+	
+	if (SKSE.GetPluginVersion("animspeed plugin") > 0)
+		if JsonUtil.GetIntValue(File, "game_animation_speed_control", 0) != 0
+			SexLab = Quest.GetQuest("SexLabQuestFramework") as SexLabFramework
+			RegisterForModEvent("SLSO_Start_widget", "Start_widget")
+			RegisterForModEvent("AnimationEnd", "OnSexLabEnd")
+			
+			;SexLab.Log(" SLSO AnimSpeed() AnimSpeedHelper installed: " + SKSE.GetPluginVersion("animspeed plugin"))
+		else
+			Remove()
+		endif
 	else
 		Remove()
 	endif
@@ -57,9 +64,6 @@ EndEvent
 
 Event OnSexLabEnd(string EventName, string argString, Float argNum, form sender)
 	if controller == SexLab.GetController(argString as int)
-		UnRegisterForUpdate()
-		UnregisterForAllModEvents()
-		UnregisterForAllKeys()
 		Remove()
 	endif
 EndEvent
@@ -93,16 +97,23 @@ EndEvent
 
 Event OnEffectFinish( Actor akTarget, Actor akCaster )
 	If akTarget != none
-		;AnimSpeedHelper.ResetAll()
-		;SexLab.Log(" SLSO AnimSpeed()(OnEffectFinish1) actor: " + akTarget.GetDisplayName() + " speed: " + AnimSpeedHelper.GetAnimationSpeed(akTarget,0))
-		AnimSpeedHelper.SetAnimationSpeed(akTarget, 1, 0, 0)
-		;SexLab.Log(" SLSO AnimSpeed()(OnEffectFinish2) actor: " + akTarget.GetDisplayName() + " speed: " + AnimSpeedHelper.GetAnimationSpeed(akTarget,0))
-	endIf
+		if (SKSE.GetPluginVersion("animspeed plugin") > 0)
+			;AnimSpeedHelper.ResetAll()
+			;SexLab.Log(" SLSO AnimSpeed()(OnEffectFinish1) actor: " + akTarget.GetDisplayName() + " speed: " + AnimSpeedHelper.GetAnimationSpeed(akTarget,0))
+			AnimSpeedHelper.SetAnimationSpeed(akTarget, 1, 0, 0)
+			;SexLab.Log(" SLSO AnimSpeed()(OnEffectFinish2) actor: " + akTarget.GetDisplayName() + " speed: " + AnimSpeedHelper.GetAnimationSpeed(akTarget,0))
+		endif
+	EndIf
 EndEvent
 
 function Remove()
 	If GetTargetActor() != none
+		UnRegisterForUpdate()
+		UnregisterForAllModEvents()
+		UnregisterForAllKeys()
 		SLSO_MCM SLSO = Quest.GetQuest("SLSO") as SLSO_MCM
-		GetTargetActor().RemoveSpell(SLSO.SLSO_SpellAnimSync)
-	endIf
+		If GetTargetActor().HasSpell(SLSO.SLSO_SpellAnimSync)
+			GetTargetActor().RemoveSpell(SLSO.SLSO_SpellAnimSync)
+		EndIf
+	EndIf
 endFunction
