@@ -332,8 +332,10 @@ Function Remove()
 		UnregisterForAllModEvents()
 		UnregisterForAllKeys()
 		SLSO_MCM SLSO = Quest.GetQuest("SLSO") as SLSO_MCM
-		GetTargetActor().RemoveSpell(SLSO.SLSO_SpellGame)
-	endIf
+		If GetTargetActor().HasSpell(SLSO.SLSO_SpellGame)
+			GetTargetActor().RemoveSpell(SLSO.SLSO_SpellGame)
+		EndIf
+	EndIf
 EndFunction
 
 Function Change_Partner(int partnerid = 0)
