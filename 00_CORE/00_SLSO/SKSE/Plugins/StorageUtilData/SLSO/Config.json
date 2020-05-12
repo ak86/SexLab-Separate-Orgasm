@@ -32,7 +32,7 @@
 		"game_animation_speed_control_max" : 100,
 		"game_animation_speed_control_min" : 50,
 		"game_enabled" : 1,
-		"game_enjoyment_reduction_chance" : 1,
+		"game_enjoyment_reduction_chance" : 0,
 		"game_male_orgasm_endanim" : 0,
 		"game_no_sta_endanim" : 0,
 		"game_npc_enabled" : 1,
