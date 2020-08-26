@@ -736,13 +736,12 @@ state Animating
 				if !IsFemale
 					Voice.PlayMoan(ActorRef, ActorFullEnjoyment, IsVictim, UseLipSync)
 					;Log("  !IsFemale " + ActorName)
-					RefreshExpression()
 				elseif ((JsonUtil.GetIntValue(File, "sl_voice_player") == 0 && IsPlayer) || (JsonUtil.GetIntValue(File, "sl_voice_npc") == 0 && !IsPlayer))
 					Voice.PlayMoan(ActorRef, ActorFullEnjoyment, IsVictim, UseLipSync)
 					;Log("  IsFemale " + ActorName)
-					RefreshExpression()
 				endIf
 			endIf
+			RefreshExpression()
 		endIf
 		; Loop
 		LoopDelay += (VoiceDelay * 0.35)
@@ -1404,46 +1403,56 @@ int function CalculateFullEnjoyment()
 	return ActorFullEnjoyment
 endFunction
 
-function BonusEnjoyment(actor Ref = none, int experience = 0)
+function BonusEnjoyment(actor Ref = none, int fixedvalue = 0)
 	if self.GetState() == "Animating"
-		int slaActorArousal = 0
-		String File = "/SLSO/Config.json"
-		if JsonUtil.GetIntValue(File, "sl_sla_arousal") == 1
-			if slaArousal != none
-				slaActorArousal = ActorRef.GetFactionRank(slaArousal)
-			endIf
-			if slaActorArousal < 0
-				slaActorArousal = 0
-			endIf
-		endIf
-		slaActorArousal = PapyrusUtil.ClampInt(slaActorArousal/20, 1, 5)
-		;Log("SLArousal mod["+slaActorArousal+"]"+"] BonusEnjoyment["+(BonusEnjoyment+slaActorArousal)+"] experience["+experience+"]")
-		if experience < 0 && BonusEnjoyment + experience >= 0
-			;reduce enjoyment by fixed value
-			BonusEnjoyment += experience
-			;Log("reduce BonusEnjoyment["+BonusEnjoyment+"] experience["+experience+"]")
-		elseif Ref == ActorRef && experience > 0
-			;increase enjoyment by fixed value
-			BonusEnjoyment += experience
-			;Log("increase BonusEnjoyment["+BonusEnjoyment+"] experience["+experience+"]")
-		elseif Ref == ActorRef || Thread.ActorCount != 2
-			;increase own enjoyment
-			if BaseSex == 0
-				BonusEnjoyment	+=slaActorArousal
-			elseif JsonUtil.GetIntValue(File, "condition_female_orgasm_bonus") != 1
-				BonusEnjoyment	+=slaActorArousal
-			else
-				BonusEnjoyment	+=slaActorArousal + GetOrgasmCount()
+		if Ref == none || Ref == ActorRef
+			if Ref == none 
+				;Log("Ref is none, setting to self")
+				Ref = ActorRef
 			endif
-			;Log(" BonusEnjoyment from self/other actor or animation has more than 2 actors: increase own enjoyment")
-		elseif Thread.ActorCount == 2
-			;increase partner enjoyment, + fixed value 
-			if Thread.ActorAlias(Thread.Positions[sslUtility.IndexTravel(Position, Thread.ActorCount)]) != none && Thread.ActorAlias(Thread.Positions[sslUtility.IndexTravel(Position, Thread.ActorCount)]) != none
-				Thread.ActorAlias(Thread.Positions[sslUtility.IndexTravel(Position, Thread.ActorCount)]).BonusEnjoyment(Thread.ActorAlias(Thread.Positions[sslUtility.IndexTravel(Position, Thread.ActorCount)]).GetActorRef(), experience)
-				;Log(" BonusEnjoyment triggered, sending event to other actor")
+			
+			if fixedvalue != 0
+				;reduce enjoyment by fixed value
+				if fixedvalue < 0
+					BonusEnjoyment += fixedvalue
+					
+				;increase enjoyment by fixed value
+				else
+					BonusEnjoyment += fixedvalue
+				endif
+				
+				;Log("change [" +Ref.GetDisplayName()+ "] BonusEnjoyment[" +BonusEnjoyment+ "] by fixed value[" +fixedvalue+ "]")
+				
+			;increase enjoyment based on arousal
+			else
+				;Log("change [" +Ref.GetDisplayName()+ "]")
+				int slaActorArousal = 0
+				String File = "/SLSO/Config.json"
+				if JsonUtil.GetIntValue(File, "sl_sla_arousal") == 1
+					if slaArousal != none
+						slaActorArousal = ActorRef.GetFactionRank(slaArousal)
+					endIf
+					if slaActorArousal < 0
+						slaActorArousal = 0
+					endIf
+				endIf
+				
+				slaActorArousal = PapyrusUtil.ClampInt(slaActorArousal/20, 1, 5)
+				;Log("change [" +Ref.GetDisplayName()+ "] enjoyment by [" +slaActorArousal+ "] arousal mod")
+				if BaseSex == 0
+					BonusEnjoyment +=slaActorArousal
+				elseif JsonUtil.GetIntValue(File, "condition_female_orgasm_bonus") != 1
+					BonusEnjoyment +=slaActorArousal
+				else
+				Log("female [" +Ref.GetDisplayName()+ "] bonus enjoyment [" +GetOrgasmCount()+ "]")
+					BonusEnjoyment +=slaActorArousal + GetOrgasmCount()
+				endif
 			endIf
-		else
-			Log(" SLSO BonusEnjoyment: Something went wrong")
+		
+		;increase target enjoyment
+		elseif Thread.ActorAlias(Ref) != none
+			;Log("change target [" +Ref.GetDisplayName()+ "] enjoyment by [" +fixedvalue+ "]")
+			Thread.ActorAlias(Ref).BonusEnjoyment(Ref, fixedvalue)
 		endIf
 	endIf
 endFunction
