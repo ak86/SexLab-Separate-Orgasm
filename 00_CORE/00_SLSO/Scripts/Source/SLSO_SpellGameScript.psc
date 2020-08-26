@@ -289,7 +289,6 @@ Function ModEnjoyment(Actor PartnerRef, float mod, float FullEnjoymentMOD)
 ;with skills 3+ always raise enjoyment
 ;with skills 3- upto 30 chance to decrease enjoyment
 	GetTargetActor().DamageActorValue("Stamina", GetTargetActor().GetBaseActorValue("Stamina")/(10+mod+FullEnjoymentMOD))
-	;self
 	if PartnerRef != none
 		if mod < 3 && Utility.RandomInt(0, 100) < (3 - mod) * 10 && JsonUtil.GetIntValue(File, "game_enjoyment_reduction_chance") == 1
 			controller.ActorAlias(GetTargetActor()).BonusEnjoyment(PartnerRef, -1)
@@ -297,12 +296,7 @@ Function ModEnjoyment(Actor PartnerRef, float mod, float FullEnjoymentMOD)
 			controller.ActorAlias(GetTargetActor()).BonusEnjoyment(PartnerRef)
 		endif
 	else	
-	;partner
-		if mod < 3 && Utility.RandomInt(0, 100) < (3 - mod) * 10 && JsonUtil.GetIntValue(File, "game_enjoyment_reduction_chance") == 1
-			controller.ActorAlias(GetTargetActor()).BonusEnjoyment(none, -1)
-		else
-			controller.ActorAlias(GetTargetActor()).BonusEnjoyment()
-		endif
+		SexLab.Log(" SLSO GAME():ModEnjoyment: something wrong, PartnerRef is none")
 	endif
 EndFunction
 
