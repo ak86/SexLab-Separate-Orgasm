@@ -24,7 +24,7 @@ Event OnEffectStart( Actor akTarget, Actor akCaster )
 	SexLab = Quest.GetQuest("SexLabQuestFramework") as SexLabFramework
 	RegisterForModEvent("SLSO_Start_widget", "Start_widget")
 	RegisterForModEvent("AnimationEnd", "OnSexLabEnd")
-	self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_pausegame"))
+	RegisterKey(JsonUtil.GetIntValue(File, "hotkey_pausegame"))
 EndEvent
 
 Event Start_widget(Int Widget_Id, Int Thread_Id)
@@ -56,14 +56,14 @@ Event Start_widget(Int Widget_Id, Int Thread_Id)
 		
 		if controller.ActorAlias(GetTargetActor()).GetActorRef() == Game.GetPlayer()
 ;			SexLab.Log(" SLSO Setup() Player, enabling hotkeys")
-			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_edge"))
-			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_orgasm"))
-			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_bonusenjoyment"))
-			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_1"))
-			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_2"))
-			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_3"))
-			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_4"))
-			self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_5"))
+			RegisterKey(JsonUtil.GetIntValue(File, "hotkey_edge"))
+			RegisterKey(JsonUtil.GetIntValue(File, "hotkey_orgasm"))
+			RegisterKey(JsonUtil.GetIntValue(File, "hotkey_bonusenjoyment"))
+			RegisterKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_1"))
+			RegisterKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_2"))
+			RegisterKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_3"))
+			RegisterKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_4"))
+			RegisterKey(JsonUtil.GetIntValue(File, "hotkey_select_actor_5"))
 		endif
 		;Estrus, increase enjoyment
 		if controller.Animation.HasTag("Estrus")\
@@ -382,6 +382,11 @@ EndEvent
 ;----------------------------------------------------------------------------
 ;Hotkeys
 ;----------------------------------------------------------------------------
+Function RegisterKey(int RKey = 0)
+	If (RKey != 0)
+		self.RegisterForKey(RKey)
+	EndIf
+EndFunction
 
 Event OnKeyDown(int keyCode)
 	if !Utility.IsInMenuMode()

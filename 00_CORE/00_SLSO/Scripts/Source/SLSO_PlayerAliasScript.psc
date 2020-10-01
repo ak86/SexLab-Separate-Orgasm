@@ -29,7 +29,7 @@ function Maintenance()
 	self.RegisterForModEvent("AnimationStart", "OnSexLabStart")
 	self.RegisterForModEvent("AnimationEnd", "OnSexLabEnd")
 	self.RegisterForSingleUpdateGameTime(1)								;1 game hour
-	self.RegisterForKey(JsonUtil.GetIntValue(File, "hotkey_widget"))
+	RegisterKey(JsonUtil.GetIntValue(File, "hotkey_widget"))
 	
 	Clear()
 	
@@ -163,6 +163,12 @@ Event OnSexLabEnd(string EventName, string argString, Float argNum, form sender)
 	endif
 EndEvent
 
+
+Function RegisterKey(int RKey = 0)
+	If (RKey != 0)
+		self.RegisterForKey(RKey)
+	EndIf
+EndFunction
 
 Event OnKeyDown(int keyCode)
 	If !Utility.IsInMenuMode()
