@@ -1,7 +1,5 @@
 scriptname sslBaseVoice extends sslBaseObject
 
-; import MfgConsoleFunc ; OLDRIM
-
 Sound property Hot auto
 Sound property Mild auto
 Sound property Medium auto
@@ -31,24 +29,86 @@ bool property Creature hidden
 	endFunction
 endProperty
 
+function MoveLips(Actor ActorRef, Sound SoundRef = none, float Strength = 1.0) global
+	if !ActorRef
+		return
+	endIf
+	
+	bool HasMFG = SexLabUtil.GetConfig().HasMFGFix
+	int p
+	float[] Phoneme = new float[32]
+	int i
+	; Get Phoneme
+	while i <= 15
+		Phoneme[i] = sslBaseExpression.GetPhoneme(ActorRef, i) ; 0.0 - 1.0
+		if Phoneme[i] >= Phoneme[p] ; seems to be required to prevet issues
+			p = i
+		endIf
+		i += 1
+	endWhile
+	float SavedP = Phoneme[p] ;sslBaseExpression.GetPhoneme(ActorRef, p)
+	float ReferenceP = SavedP
+	if ReferenceP > (1.0 - (0.2 * Strength))
+		ReferenceP = (1.0 - (0.2 * Strength))
+	endIf
+	int MinP = ((ReferenceP - (0.1 * Strength))*100) as int
+	int MaxP = ((ReferenceP + (0.3 * Strength))*100) as int
+	if MinP < 0
+		MinP = 0
+	elseIf MinP > 98
+		MinP = 98
+	endIf
+	if (MaxP - MinP) < 2
+		MaxP = MinP + 2
+	endIf
+;	if ((SavedP * 100) - MinP) > 2
+;		TransitDown(ActorRef, (SavedP * 100) as int, MinP)
+;	endIf
+	if HasMFG
+		MfgConsoleFunc.SetPhonemeModifier(ActorRef, 0, p, MinP)
+	else
+		ActorRef.SetExpressionPhoneme(p, (MinP as float)*0.01)
+	endIf
+	Utility.Wait(0.1)
+	int Instance = -1
+	if SoundRef != none
+		Instance = SoundRef.Play(ActorRef)
+	endIf
+;	TransitUp(ActorRef, MinP, MaxP)
+	if HasMFG
+		MfgConsoleFunc.SetPhonemeModifier(ActorRef, 0, p, MaxP)
+	else
+		ActorRef.SetExpressionPhoneme(p, (MaxP as float)*0.01)
+	endIf
+	Utility.Wait(1.8)
+;	if (MaxP - (SavedP * 100)) > 2
+;		TransitDown(ActorRef, MaxP, (SavedP * 100) as int)
+;	endIf
+;	Utility.Wait(0.1)
+	if HasMFG
+		MfgConsoleFunc.SetPhonemeModifier(ActorRef, 0, p, (SavedP*100) as int)
+	else
+		ActorRef.SetExpressionPhoneme(p, SavedP as float)
+	endIf
+;	if Instance != -1
+;		Sound.StopInstance(Instance)
+;	endIf
+	Utility.Wait(0.2)
+	;Debug.Trace("SEXLAB - MoveLips("+ActorRef+", "+SoundRef+", "+Strength+") -- SavedP:"+SavedP+", MinP:"+MinP+", MaxP:"+MaxP)
+endFunction
+
 function PlayMoan(Actor ActorRef, int Strength = 30, bool IsVictim = false, bool UseLipSync = false)
+	if !ActorRef
+		return
+	endIf
+	
 	Sound SoundRef = GetSound(Strength, IsVictim)
 	if SoundRef
 		if !UseLipSync
 			SoundRef.Play(ActorRef)
 			Utility.WaitMenuMode(0.4)
 		else
-			float Saved = sslBaseExpression.GetPhoneme(ActorRef, 1)
-			; SetPhonemeModifier(ActorRef, 0, 1, 20)
-			ActorRef.SetExpressionPhoneme(1, 0.2)
-			Utility.WaitMenuMode(0.1)
-			SoundRef.Play(ActorRef)
-			TransitUp(ActorRef, 20, 50)
-			Utility.WaitMenuMode(0.2)
-			TransitDown(ActorRef, 50, 20)
-			Utility.WaitMenuMode(0.1)
-			; SetPhonemeModifier(ActorRef, 0, 1, (Saved*100) as int) ; OLDRIM
-			ActorRef.SetExpressionPhoneme(1, Saved as float) ; SKYRIM SE
+			MoveLips(ActorRef, SoundRef, (Strength as float / 100.0))
 		endIf
 	endIf
 endFunction
@@ -58,6 +118,10 @@ function Moan(Actor ActorRef, int Strength = 30, bool IsVictim = false)
 endFunction
 
 function MoanNoWait(Actor ActorRef, int Strength = 30, bool IsVictim = false, float Volume = 1.0)
+	if !ActorRef
+		return
+	endIf
+	
 	if Volume > 0.0
 		Sound SoundRef = GetSound(Strength, IsVictim)
 		if SoundRef
@@ -78,24 +142,69 @@ Sound function GetSound(int Strength, bool IsVictim = false)
 endFunction
 
 function LipSync(Actor ActorRef, int Strength, bool ForceUse = false)
+	if !ActorRef
+		return
+	endIf
+	
 	if (ForceUse || Config.UseLipSync) && Game.GetCameraState() != 3
 		ActorRef.Say(LipSync)
 	endIf
 endFunction
 
-function TransitUp(Actor ActorRef, int from, int to)
-	while from < to
-		from += 2
-		; SetPhonemeModifier(ActorRef, 0, 1, from) ; OLDRIM
-		ActorRef.SetExpressionPhoneme(1, (from as float / 100.0)) ; SKYRIM SE
-	endWhile
+function TransitUp(Actor ActorRef, int from, int to) global
+	if !ActorRef
+		return
+	endIf
+
+	int value = from
+	bool HasMFG = SexLabUtil.GetConfig().HasMFGFix
+	if HasMFG
+		MfgConsoleFunc.SetPhonemeModifier(ActorRef, 0, 1, from) ; OLDRIM
+		Utility.Wait(0.1)
+		while value < (to + 2)
+			value += 2
+			MfgConsoleFunc.SetPhonemeModifier(ActorRef, 0, 1, from) ; OLDRIM
+			Utility.Wait(0.02)
+		endWhile
+		MfgConsoleFunc.SetPhonemeModifier(ActorRef, 0, 1, to) ; OLDRIM
+	else
+		ActorRef.SetExpressionPhoneme(1, (from as float / 100.0))
+		Utility.Wait(0.1)
+		while value < (to + 2)
+			value += 2
+			ActorRef.SetExpressionPhoneme(1, (value as float / 100.0))
+			Utility.Wait(0.02)
+		endWhile
+		ActorRef.SetExpressionPhoneme(1, (to as float / 100.0))
+	endIf
 endFunction
-function TransitDown(Actor ActorRef, int from, int to)
-	while from > to
-		from -= 2
-		; SetPhonemeModifier(ActorRef, 0, 1, from) ; OLDRIM
+
+function TransitDown(Actor ActorRef, int from, int to) global
+	if !ActorRef
+		return
+	endIf
+
+	int value = from
+	bool HasMFG = SexLabUtil.GetConfig().HasMFGFix
+	if HasMFG
+		MfgConsoleFunc.SetPhonemeModifier(ActorRef, 0, 1, from) ; OLDRIM
+		Utility.Wait(0.1)
+		while value > (to - 2)
+			value -= 2
+			MfgConsoleFunc.SetPhonemeModifier(ActorRef, 0, 1, value) ; OLDRIM
+			Utility.Wait(0.02)
+		endWhile
+		MfgConsoleFunc.SetPhonemeModifier(ActorRef, 0, 1, to) ; OLDRIM
+	else
 		ActorRef.SetExpressionPhoneme(1, (from as float / 100.0)) ; SKYRIM SE
-	endWhile
+		Utility.Wait(0.1)
+		while value > (to - 2)
+			value -= 2
+			ActorRef.SetExpressionPhoneme(1, (value as float / 100.0)) ; SKYRIM SE
+			Utility.Wait(0.02)
+		endWhile
+		ActorRef.SetExpressionPhoneme(1, (to as float / 100.0)) ; SKYRIM SE
+	endIf	
 endFunction
 
 bool function CheckGender(int CheckGender)

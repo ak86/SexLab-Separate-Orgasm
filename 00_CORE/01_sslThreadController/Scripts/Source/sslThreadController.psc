@@ -2,7 +2,6 @@ scriptname sslThreadController extends sslThreadModel
 { Animation Thread Controller: Runs manipulation logic of thread based on information from model. Access only through functions; NEVER create a property directly to this. }
 
 ; TODO: SetFirstAnimation() - allow custom defined starter anims instead of random
-; TODO: ctrl+shift+u - 180 degree rotation
 
 import PapyrusUtil
 
@@ -54,7 +53,7 @@ state Prepare
 		endIf
 		Log(AdjustKey, "Adjustment Profile")
 		; Begin actor prep
-		SyncEvent(kPrepareActor, 30.0)
+		SyncEvent(kPrepareActor, 40.0)
 	endFunction
 
 	function PrepareDone()
@@ -78,7 +77,13 @@ state Prepare
 				CenterLocation[5] = CenterRef.GetAngleZ()
 			endIf /;
 			; Set starting adjusted actor
-			AdjustPos   = (ActorCount > 1) as int
+			AdjustPos   = FindSlot(Config.TargetRef)
+			if AdjustPos == -1
+				AdjustPos   = (ActorCount > 1) as int
+				if FindSlot(PlayerRef) >= 0 && Positions[AdjustPos] != PlayerRef
+					Config.TargetRef = Positions[AdjustPos]
+				endIf
+			endIf
 			AdjustAlias = PositionAlias(AdjustPos)
 			; Get localized config options
 			BaseDelay = Config.SFXDelay
@@ -126,9 +131,15 @@ state Advancing
 			endIf
 			return
 		endIf
-		SyncEvent(kSyncActor, 10.0)
+		SyncEvent(kSyncActor, 15.0)
 	endFunction
 	function SyncDone()
+		if Stage > 1 && Stage > (StageCount * 0.5)
+			string[] Tags = Animation.GetRawTags()
+			IsType[6]  = IsType[6] || Females > 0 && Tags.Find("Vaginal") != -1
+			IsType[7]  = IsType[7] || Tags.Find("Anal")   != -1 || (Females == 0 && Tags.Find("Vaginal") != -1)
+			IsType[8]  = IsType[8] || Tags.Find("Oral")   != -1
+		endIf
 		RegisterForSingleUpdate(0.1)
 	endFunction
 	event OnUpdate()
@@ -176,7 +187,7 @@ state Animating
 		endIf
 		; Play SFX
 		if SoundFX && SFXTimer < RealTime[0]
-			SoundFX.Play(CenterRef)
+			SoundFX.Play(GetCenterFX())
 			SFXTimer = RealTime[0] + SFXDelay
 		endIf
 		; Loop
@@ -195,59 +206,7 @@ state Animating
 
 	function GoToStage(int ToStage)
 		UnregisterForUpdate()
-		String File = "/SLSO/Config.json"
-		int maxStage = StageCount - 1
-		; if possible do not proceed to last stage until after orgasm
-		if StageCount > 2
-			maxStage = StageCount - 2
-		endIf
-		if Stage > maxStage
-			if Config.SeparateOrgasms && HasPlayer && GetVictim() != none && (JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1 || JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1)
-
-				int i = ActorCount
-				while i > 0
-					i -= 1
-					if ActorAlias[i].GetRef() != none
-						if ActorAlias[i].IsAggressor() && ((ActorAlias[i].GetRef() != GetPlayer() && JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1) || (ActorAlias[i].GetRef() == GetPlayer() && JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1))
-							if ((ActorAlias[i].IsCreature() && JsonUtil.GetIntValue(File, "game_enabled") == 1) || !ActorAlias[i].IsCreature())
-								if ActorAlias[i].GetOrgasmCount() < 1
-									Bool Belted = false
-									
-									if JsonUtil.GetIntValue(File, "condition_ddbelt_orgasm") == 0
-										Keyword zadDeviousBelt = None
-										int DDa = Game.GetModByName("Devious Devices - Assets.esm")
-										
-										if(DDa != 255)
-											zadDeviousBelt = Game.GetFormFromFile(0x3330, "Devious Devices - Assets.esm") As Keyword
-											if (ActorAlias[i].GetRef() as Actor).WornHasKeyword(zadDeviousBelt)
-												Belted = true
-												i = 0
-												;Log("Aggressor is DD belted, ending animation")
-											EndIf
-										EndIf
-									EndIf
-									
-									if Belted == false
-										int minStage = 1
-										; If there are more than 5 stages, do not include first 2
-										if StageCount > 5
-											minStage = 3
-										; If there are more than 3 stages, do not include first 1(often transition)
-										elseIf StageCount > 3
-											minStage = 2
-										endIf
-
-										ToStage = Utility.RandomInt(minStage, maxStage)
-										i = 0
-										Log("Victim found, aggressor is not satisfied, setting stage to " + ToStage)
-									endif
-								endIf
-							endIf
-						endIf
-					endIf
-				endWhile
-			endIf
-		endIf
+		ToStage = SLSO_Animating_GoToStage(ToStage)
 		Stage = ToStage
 		Action("Advancing")
 	endFunction
@@ -260,7 +219,11 @@ state Animating
 		if !backwards
 			GoToStage((Stage + 1))
 		elseIf backwards && Stage > 1
-			GoToStage((Stage - 1))
+			if Config.IsAdjustStagePressed()
+				GoToStage(1)
+			else
+				GoToStage((Stage - 1))
+			endIf
 		endIf
 	endFunction
 
@@ -303,7 +266,7 @@ state Animating
 		Actor AdjustActor = Positions[AdjustPos]
 		Actor MovedActor  = Positions[NewPos]
 		if MovedActor == AdjustActor
-			Log("MovedActor["+NewPos+"] == AdjustActor["+AdjustPos+"] -- "+Positions, "ChangePositions() Errror")
+			Log("MovedActor["+NewPos+"] == AdjustActor["+AdjustPos+"] -- "+Positions, "ChangePositions() Error")
 			RegisterForSingleUpdate(0.2)
 			return
 		endIf
@@ -371,7 +334,11 @@ state Animating
 
 	function RotateScene(bool backwards = false)
 		UnregisterForUpdate()
-		float Amount = SignFloat(backwards, 15.0)
+		float Amount = 15.0
+		if Config.IsAdjustStagePressed()
+			Amount = 180.0
+		endIf
+		Amount = SignFloat(backwards, Amount)
 		PlayHotkeyFX(1, !backwards)
 		CenterLocation[5] = CenterLocation[5] + Amount
 		if CenterLocation[5] >= 360.0
@@ -387,6 +354,12 @@ state Animating
 		int k = Config.RotateScene
 		while Input.IsKeyPressed(k)
 			PlayHotkeyFX(1, !backwards)
+			if Config.IsAdjustStagePressed()
+				Amount = 180.0
+			else
+				Amount = 15.0
+			endIf
+			Amount = SignFloat(backwards, Amount)
 			CenterLocation[5] = CenterLocation[5] + Amount
 			if CenterLocation[5] >= 360.0
 				CenterLocation[5] = CenterLocation[5] - 360.0
@@ -420,6 +393,9 @@ state Animating
 			AdjustPos = sslUtility.IndexTravel(Positions.Find(AdjustAlias.ActorRef), ActorCount, backwards)
 			AdjustAlias = ActorAlias(Positions[AdjustPos])
 			Actor AdjustActor = AdjustAlias.ActorRef
+			if AdjustActor != PlayerRef
+				Config.TargetRef = AdjustActor
+			endIf
 			Config.SelectedSpell.Cast(AdjustActor, AdjustActor)
 			PlayHotkeyFX(0, !backwards)
 			string msg = "Adjusting Position For: "+AdjustActor.GetLeveledActorBase().GetName()
@@ -455,25 +431,117 @@ state Animating
 	function MoveScene()
 		; Stop animation loop
 		UnregisterForUpdate()
-		; Enable Controls
-		sslActorAlias Slot = ActorAlias(PlayerRef)
-		Slot.UnlockActor()
-		Slot.StopAnimating(true)
-		PlayerRef.StopTranslation()
-		; Debug.SendAnimationEvent(PlayerRef, "IdleForceDefaultState")
-		; Lock hotkeys and wait 7 seconds
-		Debug.Notification("Player movement unlocked - repositioning scene in 7 seconds...")
-		Utility.Wait(10.0)
-		; Disable Controls
-		Slot.LockActor()
-		; Give player time to settle incase airborne
-		Utility.Wait(1.0)
-		; Recenter on coords to avoid stager + resync animations
-		if !CenterOnBed(true, 300.0)
-			CenterOnObject(PlayerRef, true)
+		; Processing Furnitures
+		int PreFurnitureStatus = BedTypeID
+		if UsingBed && CenterRef.IsActivationBlocked()
+			SetFurnitureIgnored(false)
 		endIf
-		; Return to animation loop
-		ResetPositions()
+		; Enable Controls
+		sslActorAlias PlayerSlot = ActorAlias(PlayerRef)
+		if Config.GetThreadControlled() == self || PlayerRef.IsInFaction(Config.AnimatingFaction) && PlayerRef.GetFactionRank(Config.AnimatingFaction) != 0
+			if PlayerSlot && PlayerSlot != none
+				PlayerSlot.UnlockActor()
+				PlayerSlot.StopAnimating(true)
+				PlayerRef.StopTranslation()
+			else
+				Config.DisableThreadControl(self)
+				PlayerRef.SetFactionRank(Config.AnimatingFaction, 0)
+			endIf
+			Debug.Notification("Player movement unlocked - repositioning scene in 12 seconds...")
+			UnregisterForUpdate()
+			int i
+			while i < ActorCount
+				sslActorAlias ActorSlot = ActorAlias[i]
+				if ActorSlot != none && ActorSlot != PlayerSlot
+					ActorSlot.UnlockActor()
+					ActorSlot.StopAnimating(true)
+					ActorSlot.ActorRef.SetFactionRank(Config.AnimatingFaction, 2)
+				endIf
+				i += 1
+			endWhile
+			
+			CenterAlias.TryToClear()
+			CenterAlias.ForceRefTo(PlayerRef) ; Make them follow me
+
+			UnregisterForUpdate()
+			
+			; Lock hotkeys and wait 12 seconds
+			Utility.WaitMenuMode(1.0)
+			RegisterForKey(Hotkeys[kMoveScene])
+			; Ready
+			hkReady = true
+			i = 10 ; Time to wait
+			while i
+				i -= 1
+				Utility.Wait(1.0)
+				if !PlayerRef.IsInFaction(Config.AnimatingFaction)
+					PlayerRef.SetFactionRank(Config.AnimatingFaction, 0) ; In case some mod call ValidateActor function.
+				endIf
+			endWhile
+		endIf
+		if PlayerRef.GetFactionRank(Config.AnimatingFaction) == 0
+			Debug.Notification("Player movement locked - repositioning scene...")
+			ApplyFade()
+			; Disable Controls
+			if PlayerSlot != none
+				if PlayerRef.GetFurnitureReference() == none
+					PlayerSlot.SendDefaultAnimEvent() ; Seems like the CenterRef don't change if PlayerRef is running
+				endIf
+				PlayerSlot.LockActor()
+			else
+				Config.GetThreadControl(self)
+			endIf
+			int i
+			while i < ActorCount
+				sslActorAlias ActorSlot = ActorAlias[i]
+				if ActorSlot != none && ActorSlot != PlayerSlot
+					ActorSlot.LockActor()
+				endIf
+				i += 1
+			endWhile
+			; Clear CenterAlias to avoid player repositioning to previous position
+			if CenterAlias.GetReference() != none
+				CenterAlias.TryToClear()
+			endIf
+			UnregisterForUpdate()
+			; Give player time to settle incase airborne
+			Utility.Wait(1.0)
+			; Recenter on coords to avoid stager + resync animations
+			if AreUsingFurniture(Positions) > 0
+				CenterOnBed(false, 300.0)
+			endIf
+			Log("PreFurnitureStatus:"+PreFurnitureStatus+" BedTypeID:"+BedTypeID)
+			if PreFurnitureStatus != BedTypeID || (PreFurnitureStatus > 0 && CenterAlias.GetReference() == none)
+				ClearAnimations()
+				if CenterAlias.GetReference() == none ;Is not longer using Furniture
+					; Center on fallback choices
+					if HasPlayer && !(PlayerRef.GetFurnitureReference() || PlayerRef.IsSwimming() || PlayerRef.IsFlying())
+						CenterOnObject(PlayerRef, false)
+					elseIf IsAggressive && !(VictimRef.GetFurnitureReference() || VictimRef.IsSwimming() || VictimRef.IsFlying())
+						CenterOnObject(VictimRef, false)
+					else
+						i = 0
+						while i < ActorCount
+							if !(Positions[i].GetFurnitureReference() || Positions[i].IsSwimming() || Positions[i].IsFlying())
+								CenterOnObject(Positions[i], false)
+								i = ActorCount
+							endIf
+							i += 1
+						endWhile
+					endIf
+					CenterOnObject(PlayerRef, false)
+				endIf
+				ChangeActors(Positions)
+				SendThreadEvent("ActorsRelocated")
+			elseIf CenterAlias.GetReference() != none ;Is using Furniture
+				RealignActors()
+				SendThreadEvent("ActorsRelocated")
+			else
+				CenterOnObject(PlayerRef, true)
+			endIf
+			; Return to animation loop
+			ResetPositions()
+		endIf
 	endFunction
 
 	event OnKeyDown(int KeyCode)
@@ -567,8 +635,8 @@ state Animating
 
 	function TriggerOrgasm()
 		UnregisterForUpdate()
-		if SoundFX && CenterRef && CenterRef.Is3DLoaded()
-			SoundFX.Play(CenterRef)
+		if SoundFX
+			SoundFX.Play(GetCenterFX())
 		endIf
 		QuickEvent("Orgasm")
 		RegisterForSingleUpdate(0.5)
@@ -576,8 +644,9 @@ state Animating
 
 	function ResetPositions()
 		UnregisterForUpdate()
+		ApplyFade()
 		GoToState("Refresh")
-		SyncEvent(kRefreshActor, 10.0)
+		SyncEvent(kRefreshActor, 15.0)
 	endFunction
 endState
 
@@ -605,6 +674,23 @@ function SetAnimation(int aid = -1)
 	endIf
 	; Set active animation
 	Animation = Animations[aid]
+	; Sort actors positions if needed
+	int VictimPos = Positions.Find(VictimRef)
+	if Config.FixVictimPos && IsAggressive && ActorCount > 1 && VictimPos >= 0
+		if Animation.HasTag("FemDom") && VictimPos == 0
+			; Shuffle actor positions
+			Positions[VictimPos] = Positions[1]
+			Positions[1] = VictimRef
+		elseIf !Animation.HasTag("FemDom") && VictimPos != 0
+			; Shuffle actor positions
+			Positions[VictimPos] = Positions[0]
+			Positions[0] = VictimRef
+		endIf
+	endIf
+	Positions = ThreadLib.SortActorsByAnimation(Positions, Animation)
+	UpdateAdjustKey()
+	int i = ActorCount
+	
 	; Inform player of animation being played now
 	if HasPlayer
 		string msg = "Playing Animation: " + Animation.Name
@@ -616,7 +702,7 @@ function SetAnimation(int aid = -1)
 	; Update animation info
 	RecordSkills()
 	string[] Tags = Animation.GetRawTags()
-	; IsType = [1] IsVaginal, [2] IsAnal, [3] IsOral, [4] IsLoving, [5] IsDirty
+	; IsType = [1] IsVaginal, [2] IsAnal, [3] IsOral, [4] IsLoving, [5] IsDirty, [6] HadVaginal, [7] HadAnal, [8] HadOral
 	IsType[1]  = Females > 0 && (Tags.Find("Vaginal") != -1 || Tags.Find("Pussy") != -1)
 	IsType[2]  = Tags.Find("Anal")   != -1 || (Females == 0 && Tags.Find("Vaginal") != -1)
 	IsType[3]  = Tags.Find("Oral")   != -1
@@ -644,6 +730,20 @@ function SetAnimation(int aid = -1)
 	endIf
 endFunction
 
+ObjectReference function GetCenterFX()
+	if CenterRef != none && CenterRef.Is3DLoaded()
+		return CenterRef
+	else
+		int i = 0
+		while i < ActorCount
+			if Positions[i] != none && Positions[i].Is3DLoaded()
+				return Positions[i]
+			endIf
+			i += 1
+		endWhile
+	endIf
+endFunction
+
 float function GetTimer()
 	; Custom acyclic stage timer
 	if TimedStage
@@ -661,9 +761,13 @@ endFunction
 
 function ResolveTimers()
 	parent.ResolveTimers()
-	TimedStage = Animation.HasTimer(Stage)
-	if TimedStage
-		Log("Stage has timer: "+Animation.GetTimer(Stage))
+	if Animation
+		TimedStage = Animation.HasTimer(Stage)
+		if TimedStage
+			Log("Stage has timer: "+Animation.GetTimer(Stage))
+		endIf
+	else
+		TimedStage = false
 	endIf
 endFunction
 
@@ -688,6 +792,7 @@ function EndLeadIn()
 		; Restrip with new strip options
 		QuickEvent("Strip")
 		; Start primary animations at stage 1
+		StorageUtil.SetFloatValue(Config,"SexLab.LastLeadInEnd", Utility.GetCurrentRealTime())
 		SendThreadEvent("LeadInEnd")
 		Action("Advancing")
 	endIf
@@ -710,12 +815,18 @@ endFunction
 state Ending
 	event OnBeginState()
 		UnregisterForUpdate()
+		if UsingBed && CenterRef.IsActivationBlocked()
+			SetFurnitureIgnored(false)
+		endIf
 		HookAnimationEnding()
 		SendThreadEvent("AnimationEnding")
+		if IsObjectiveDisplayed(0)
+			SetObjectiveDisplayed(0, False)
+		endIf
 		RecordSkills()
 		DisableHotkeys()
 		Config.DisableThreadControl(self)
-		SyncEvent(kResetActor, 30.0)
+		SyncEvent(kResetActor, 15.0)
 	endEvent
 	event OnUpdate()
 		ResetDone()
@@ -838,6 +949,7 @@ function Initialize()
 	SkillTime   = 0.0
 	TimedStage  = false
 	Adjusted    = false
+	Prepared    = false
 	AdjustPos   = 0
 	AdjustAlias = ActorAlias[0]
 	parent.Initialize()
@@ -957,3 +1069,61 @@ endEvent
 		ActorAlias[4].Log("State: "+ActorAlias[4].GetState())
 	endIf
 endFunction /;
+
+;SLSO, block stage advancing/finishing animation until aggressor orgasms once
+int function SLSO_Animating_GoToStage(int ToStage)
+	String File = "/SLSO/Config.json"
+	int maxStage = StageCount - 1
+	; if possible do not proceed to last stage until after orgasm
+	if StageCount > 2
+		maxStage = StageCount - 2
+	endIf
+	if Stage > maxStage
+		if Config.SeparateOrgasms && HasPlayer && GetVictim() != none && (JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1 || JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1)
+
+			int i = ActorCount
+			while i > 0
+				i -= 1
+				if ActorAlias[i].GetRef() != none
+					if ActorAlias[i].IsAggressor() && ((ActorAlias[i].GetRef() != GetPlayer() && JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1) || (ActorAlias[i].GetRef() == GetPlayer() && JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1))
+						if ((ActorAlias[i].IsCreature() && JsonUtil.GetIntValue(File, "game_enabled") == 1) || !ActorAlias[i].IsCreature())
+							if ActorAlias[i].GetOrgasmCount() < 1
+								Bool Belted = false
+								
+								if JsonUtil.GetIntValue(File, "condition_ddbelt_orgasm") == 0
+									Keyword zadDeviousBelt = None
+									int DDa = Game.GetModByName("Devious Devices - Assets.esm")
+									
+									if(DDa != 255)
+										zadDeviousBelt = Game.GetFormFromFile(0x3330, "Devious Devices - Assets.esm") As Keyword
+										if (ActorAlias[i].GetRef() as Actor).WornHasKeyword(zadDeviousBelt)
+											Belted = true
+											i = 0
+											;Log("Aggressor is DD belted, ending animation")
+										EndIf
+									EndIf
+								EndIf
+								
+								if Belted == false
+									int minStage = 1
+									; If there are more than 5 stages, do not include first 2
+									if StageCount > 5
+										minStage = 3
+									; If there are more than 3 stages, do not include first 1(often transition)
+									elseIf StageCount > 3
+										minStage = 2
+									endIf
+
+									ToStage = Utility.RandomInt(minStage, maxStage)
+									i = 0
+									Log("Victim found, aggressor is not satisfied, setting stage to " + ToStage)
+								endif
+							endIf
+						endIf
+					endIf
+				endIf
+			endWhile
+		endIf
+	endIf
+	return ToStage
+endFunction
