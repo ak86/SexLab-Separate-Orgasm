@@ -68,6 +68,7 @@ function Page_Config()
 			AddToggleOptionST("condition_ddbelt_orgasm", "$condition_ddbelt_orgasm", JsonUtil.GetIntValue(File, "condition_ddbelt_orgasm"))
 			AddToggleOptionST("condition_female_orgasm", "$condition_female_orgasm", JsonUtil.GetIntValue(File, "condition_female_orgasm"))
 			AddToggleOptionST("condition_male_orgasm", "$condition_male_orgasm", JsonUtil.GetIntValue(File, "condition_male_orgasm"))
+			AddToggleOptionST("condition_futa_orgasm", "$condition_futa_orgasm", JsonUtil.GetIntValue(File, "condition_futa_orgasm"))
 			AddToggleOptionST("condition_female_orgasm_bonus", "$condition_female_orgasm_bonus", JsonUtil.GetIntValue(File, "condition_female_orgasm_bonus"))
 			AddToggleOptionST("condition_male_orgasm_penalty", "$condition_male_orgasm_penalty", JsonUtil.GetIntValue(File, "condition_male_orgasm_penalty"))
 			
@@ -76,7 +77,10 @@ function Page_Config()
 		AddHeaderOption("$Config_Orgasm_event_configuration_Header_2")
 			
 			AddToggleOptionST("condition_aggressor_orgasm", "$condition_aggressor_orgasm", JsonUtil.GetIntValue(File, "condition_aggressor_orgasm"))
+			AddToggleOptionST("condition_aggressor_change_animation", "$condition_aggressor_change_animation", JsonUtil.GetIntValue(File, "condition_aggressor_change_animation"))
+			AddSliderOptionST("condition_chance_minimum_aggressor_orgasm_increase", "$condition_chance_minimum_aggressor_orgasm_increase", JsonUtil.GetIntValue(File, "condition_chance_minimum_aggressor_orgasm_increase"), "{0}%")
 			AddToggleOptionST("condition_player_aggressor_orgasm", "$condition_player_aggressor_orgasm", JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm"))
+			AddSliderOptionST("condition_minimum_aggressor_orgasm", "$condition_minimum_aggressor_orgasm", JsonUtil.GetIntValue(File, "condition_minimum_aggressor_orgasm"))
 			;AddToggleOptionST("sl_agressor_bonus_enjoyment", "$sl_agressor_bonus_enjoyment", JsonUtil.GetIntValue(File, "sl_agressor_bonus_enjoyment"))
 
 			if JsonUtil.GetIntValue(File, "condition_victim_orgasm") == 1
@@ -380,6 +384,42 @@ state sl_enjoymentrate_female
 	endEvent
 endState
 
+state condition_minimum_aggressor_orgasm
+	event OnSliderOpenST()
+		SetSliderDialogStartValue(JsonUtil.GetIntValue(File, "condition_minimum_aggressor_orgasm"))
+		SetSliderDialogDefaultValue(1)
+		SetSliderDialogRange(0, 100)
+		SetSliderDialogInterval(1)
+	endEvent
+
+	event OnSliderAcceptST(float value)
+		JsonUtil.SetIntValue(File, "condition_minimum_aggressor_orgasm", value as int)
+		SetSliderOptionValueST(JsonUtil.GetIntValue(File, "condition_minimum_aggressor_orgasm"))
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$condition_minimum_aggressor_orgasm_description")
+	endEvent
+endState
+
+state condition_chance_minimum_aggressor_orgasm_increase
+	event OnSliderOpenST()
+		SetSliderDialogStartValue(JsonUtil.GetIntValue(File, "condition_chance_minimum_aggressor_orgasm_increase"))
+		SetSliderDialogDefaultValue(0)
+		SetSliderDialogRange(0, 100)
+		SetSliderDialogInterval(1)
+	endEvent
+
+	event OnSliderAcceptST(float value)
+		JsonUtil.SetIntValue(File, "condition_chance_minimum_aggressor_orgasm_increase", value as int)
+		SetSliderOptionValueST(JsonUtil.GetIntValue(File, "condition_chance_minimum_aggressor_orgasm_increase"), "{0}%")
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$condition_chance_minimum_aggressor_orgasm_increase_description")
+	endEvent
+endState
+
 state sl_hot_voice_strength
 	event OnSliderOpenST()
 		SetSliderDialogStartValue(JsonUtil.GetIntValue(File, "sl_hot_voice_strength"))
@@ -544,6 +584,21 @@ state condition_aggressor_orgasm
 	endEvent
 endState
 
+state condition_aggressor_change_animation
+	event OnSelectST()
+		if JsonUtil.GetIntValue(File, "condition_aggressor_change_animation") == 1
+			JsonUtil.SetIntValue(File, "condition_aggressor_change_animation", 0)
+		else
+			JsonUtil.SetIntValue(File, "condition_aggressor_change_animation", 1)
+		endif
+		SetToggleOptionValueST(JsonUtil.GetIntValue(File, "condition_aggressor_change_animation"))
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$condition_aggressor_change_animation_description")
+	endEvent
+endState
+
 state condition_player_aggressor_orgasm
 	event OnSelectST()
 		if JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1
@@ -631,6 +686,21 @@ state condition_male_orgasm
 	
 	event OnHighlightST()
 		SetInfoText("$condition_male_orgasm_description")
+	endEvent
+endState
+
+state condition_futa_orgasm
+	event OnSelectST()
+		if JsonUtil.GetIntValue(File, "condition_futa_orgasm") == 1
+			JsonUtil.SetIntValue(File, "condition_futa_orgasm", 0)
+		else
+			JsonUtil.SetIntValue(File, "condition_futa_orgasm", 1)
+		endif
+		SetToggleOptionValueST(JsonUtil.GetIntValue(File, "condition_futa_orgasm"))
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$condition_futa_orgasm_description")
 	endEvent
 endState
 

@@ -16,10 +16,14 @@
 	"int" : 
 	{
 		"condition_aggressor_orgasm" : 1,
+		"condition_aggressor_change_animation" : 0,
+		"condition_minimum_aggressor_orgasm" : 1,
+		"condition_chance_minimum_aggressor_orgasm_increase" : 0,
 		"condition_ddbelt_orgasm" : 0,
 		"condition_female_orgasm" : 1,
 		"condition_female_orgasm_bonus" : 0,
 		"condition_leadin_orgasm" : 0,
+		"condition_futa_orgasm" : 1,
 		"condition_male_orgasm" : 1,
 		"condition_male_orgasm_penalty" : 1,
 		"condition_player_aggressor_orgasm" : 0,
