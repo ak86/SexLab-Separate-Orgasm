@@ -192,7 +192,6 @@ state Animating
 		UnregisterForUpdate()
 		String File = "/SLSO/Config.json"
 		int maxStage = StageCount - 1
-		int ChangeAnimation = 0
 		; if possible do not proceed to last stage until after orgasm
 		if StageCount > 2
 			maxStage = StageCount - 2
@@ -246,7 +245,8 @@ state Animating
 										ToStage = Utility.RandomInt(minStage, maxStage)
 										if ActorAlias[i].GetRef() != GetPlayer()
 											if JsonUtil.GetIntValue(File, "condition_aggressor_change_animation") == 1
-												ChangeAnimation = 1
+												Stage = ToStage
+												ChangeAnimation()
 											endif
 										endif
 										i = 0
@@ -260,9 +260,6 @@ state Animating
 			endIf
 		endIf
 		Stage = ToStage
-		if ChangeAnimation == 1
-			ChangeAnimation()
-		endif
 		Action("Advancing")
 	endFunction
 
