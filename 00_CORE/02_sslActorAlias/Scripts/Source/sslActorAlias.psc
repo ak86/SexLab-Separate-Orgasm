@@ -2263,6 +2263,7 @@ int function SLSO_GetEnjoyment()
 	if Enjoyment > 0
 		return Enjoyment
 	endIf
+	return 0
 	;return Enjoyment - BaseEnjoyment
 endFunction
 
@@ -2409,18 +2410,32 @@ int function SLSO_DoOrgasm_Conditions(bool Forced)
 		endIf
 		if !IsAggressor
 			if !(Animation.HasTag("69") || Animation.HasTag("Masturbation")) || Thread.Positions.Length == 2
-				if  IsFemale && JsonUtil.GetIntValue(File, "condition_female_orgasm") == 1
-					if Position == 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Cunnilingus") || Animation.HasTag("Fisting") || Animation.HasTag("Lesbian"))
-						Log(ActorName + " Orgasm blocked, female pos 0, conditions not met, no HasTag(Vaginal,Anal,Cunnilingus,Fisting)")
-						return -6
+				if  !IsCreature && BaseRef.GetSex() != Gender
+					if  JsonUtil.GetIntValue(File, "condition_futa_orgasm") == 1
+						if Position == 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Cunnilingus") || Animation.HasTag("Fisting") || Animation.HasTag("Lesbian"))
+							Log(ActorName + " Orgasm blocked, female pos 0, conditions not met, no HasTag(Vaginal,Anal,Cunnilingus,Fisting)")
+							return -11
+						elseif Position != 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Boobjob") || Animation.HasTag("Blowjob") || Animation.HasTag("Handjob") || Animation.HasTag("Footjob"))
+							Log(ActorName + " Orgasm blocked, male pos > 0, conditions not met, no HasTag(Vaginal,Anal,Boobjob,Blowjob,Handjob,Footjob)")
+							return -12
+						endIf
 					endIf
-				elseif IsMale && JsonUtil.GetIntValue(File, "condition_male_orgasm") == 1
-					if Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))
-						Log(ActorName + " Orgasm blocked, male pos 0, conditions not met, no HasTag(Anal,Fisting)")
-						return -7
-					elseif Position != 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Boobjob") || Animation.HasTag("Blowjob") || Animation.HasTag("Handjob") || Animation.HasTag("Footjob"))
-						Log(ActorName + " Orgasm blocked, male pos > 0, conditions not met, no HasTag(Vaginal,Anal,Boobjob,Blowjob,Handjob,Footjob)")
-						return -8
+				elseif IsFemale
+					if JsonUtil.GetIntValue(File, "condition_female_orgasm") == 1
+						if Position == 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Cunnilingus") || Animation.HasTag("Fisting") || Animation.HasTag("Lesbian"))
+							Log(ActorName + " Orgasm blocked, female pos 0, conditions not met, no HasTag(Vaginal,Anal,Cunnilingus,Fisting)")
+							return -6
+						endIf
+					endIf
+				elseif IsMale
+					if JsonUtil.GetIntValue(File, "condition_male_orgasm") == 1
+						if Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))
+							Log(ActorName + " Orgasm blocked, male pos 0, conditions not met, no HasTag(Anal,Fisting)")
+							return -7
+						elseif Position != 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Boobjob") || Animation.HasTag("Blowjob") || Animation.HasTag("Handjob") || Animation.HasTag("Footjob"))
+							Log(ActorName + " Orgasm blocked, male pos > 0, conditions not met, no HasTag(Vaginal,Anal,Boobjob,Blowjob,Handjob,Footjob)")
+							return -8
+						endIf
 					endIf
 				endIf
 			endIf

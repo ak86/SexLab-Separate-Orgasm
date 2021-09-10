@@ -157,6 +157,7 @@ state Animating
 		RealTime[0] = Utility.GetCurrentRealTime()
 		SoundFX  = Animation.GetSoundFX(Stage)
 		SFXDelay = ClampFloat(BaseDelay - ((Stage * 0.3) * ((Stage != 1) as int)), 0.5, 30.0)
+		SLSO_condition_minimum_aggressor_orgasm = JsonUtil.GetIntValue("/SLSO/Config.json", "condition_minimum_aggressor_orgasm")
 		ResolveTimers()
 		PlayStageAnimations()
 		; Send events
@@ -1087,7 +1088,17 @@ int function SLSO_Animating_GoToStage(int ToStage)
 				if ActorAlias[i].GetRef() != none
 					if ActorAlias[i].IsAggressor() && ((ActorAlias[i].GetRef() != GetPlayer() && JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1) || (ActorAlias[i].GetRef() == GetPlayer() && JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1))
 						if ((ActorAlias[i].IsCreature() && JsonUtil.GetIntValue(File, "game_enabled") == 1) || !ActorAlias[i].IsCreature())
-							if ActorAlias[i].GetOrgasmCount() < 1
+							;if SLSO_condition_minimum_aggressor_orgasm != -1
+								if ActorAlias[i].GetRef() != GetPlayer()
+									if ActorAlias[i].GetOrgasmCount() >= SLSO_condition_minimum_aggressor_orgasm
+										if Utility.RandomInt(0, 100) < JsonUtil.GetIntValue(File, "condition_chance_minimum_aggressor_orgasm_increase")
+											SLSO_condition_minimum_aggressor_orgasm += 1
+											Log("Aggressor required orgasms has increased to: " + SLSO_condition_minimum_aggressor_orgasm)
+										endif
+									endif
+								endif
+							;endif
+							if ActorAlias[i].GetOrgasmCount() < SLSO_condition_minimum_aggressor_orgasm
 								Bool Belted = false
 								
 								if JsonUtil.GetIntValue(File, "condition_ddbelt_orgasm") == 0
@@ -1115,6 +1126,12 @@ int function SLSO_Animating_GoToStage(int ToStage)
 									endIf
 
 									ToStage = Utility.RandomInt(minStage, maxStage)
+									if ActorAlias[i].GetRef() != GetPlayer()
+										if JsonUtil.GetIntValue(File, "condition_aggressor_change_animation") == 1
+											Stage = ToStage
+											ChangeAnimation()
+										endif
+									endif
 									i = 0
 									Log("Victim found, aggressor is not satisfied, setting stage to " + ToStage)
 								endif
@@ -1127,3 +1144,11 @@ int function SLSO_Animating_GoToStage(int ToStage)
 	endIf
 	return ToStage
 endFunction
+
+
+
+
+;SLSO
+int SLSO_condition_minimum_aggressor_orgasm
+;int property SLSO_condition_minimum_aggressor_orgasm
+
