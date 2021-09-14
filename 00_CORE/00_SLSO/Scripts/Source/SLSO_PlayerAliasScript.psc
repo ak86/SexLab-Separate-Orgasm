@@ -71,13 +71,11 @@ function Clear()
 	while i <= 5
 		;clear widget alias
 		(self.GetOwningQuest().GetAlias(i)).RegisterForModEvent("SLSO_Stop_widget", "Stop_widget")
-		Utility.Wait(0.5)
 		int handle = ModEvent.Create("SLSO_Stop_widget")
 		if (handle)
 			ModEvent.PushInt(handle, i)
 			ModEvent.Send(handle)
 		endif
-		Utility.Wait(0.5)
 		i += 1
 	endwhile
 endFunction
