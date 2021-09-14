@@ -781,12 +781,12 @@ state Animating
 				int Strength = CalcReaction()
 				if LoopDelay >= VoiceDelay && Strength > 15
 					LoopDelay = 0.0
-					SLSO_Animating_Moan()
 					if OpenMouth && UseLipSync
 						sslBaseVoice.MoveLips(ActorRef, none, 0.3)
 						Log("PlayMoan:False; UseLipSync:"+UseLipSync+"; OpenMouth:"+OpenMouth)
 					elseIf !IsSilent
-						Voice.PlayMoan(ActorRef, Strength, IsVictim, UseLipSync)
+						SLSO_Animating_Moan()
+						;Voice.PlayMoan(ActorRef, Strength, IsVictim, UseLipSync)
 						Log("PlayMoan:True; UseLipSync:"+UseLipSync+"; OpenMouth:"+OpenMouth)
 					endIf
 				endIf
@@ -2147,6 +2147,7 @@ function SLSO_Initialize()
 	slaExhibitionist     = None
 	; Keywords
 	zadDeviousBelt = None
+	thread.Set_minimum_aggressor_orgasm_Count(-1)
 endFunction
 
 ;SLSO enjoyment calc
@@ -2181,9 +2182,6 @@ int function CalculateFullEnjoyment()
 		;set agressor arousal modifier to 100% so we dont get stuck in loop if animation requires aggressor orgasm to finish
 	endIf
 
-	int SLSO_FullEnjoyment = (GetEnjoyment() + slaActorArousal + BonusEnjoyment)
-	;Log("SLSO_FullEnjoyment ["+SLSO_FullEnjoyment+"] SLArousal["+slaActorArousal+"]"+"] BonusEnjoyment["+BonusEnjoyment+"]")
-	
 	; realtime exhibitionism detection, very script heavy
 	if !IsCreature
 		if JsonUtil.GetIntValue(File, "sl_exhibitionist") == 2
@@ -2216,13 +2214,21 @@ int function CalculateFullEnjoyment()
 			ExhibitionistMod = 1
 		endIf
 	endIf
-	;Log("SL Enjoyment ["+Enjoyment+"] SL BaseEnjoyment["+BaseEnjoyment+"] SLArousal["+slaActorArousal+"]"+"] BonusEnjoyment["+BonusEnjoyment+"]"+"] FullEnjoyment["+FullEnjoyment+"]")
+	
+	int SLSO_FullEnjoyment = GetEnjoyment()
+	;Log("SLSO_CalculateFullEnjoyment:")
+	;Log("SLSO_FullEnjoyment ["+SLSO_FullEnjoyment+"] SL FullEnjoyment ["+FullEnjoyment+"] BaseEnjoyment["+BaseEnjoyment+"] SLArousal["+slaActorArousal+"]"+"] BonusEnjoyment["+BonusEnjoyment+"]")
+	;Log("Modifiers: MasturbationMod["+MasturbationMod+" ExhibitionistMod ["+ExhibitionistMod+"] GenderMod["+GenderMod+"] sl_enjoymentrate["+sl_enjoymentrate+"]"+"] slaActorArousalMod["+slaActorArousalMod+"]")
+
+	SLSO_FullEnjoyment = SLSO_FullEnjoyment + slaActorArousal + BonusEnjoyment
+
 	if  EstrusForcedEnjoymentMods
 		ActorFullEnjoyment = (SLSO_FullEnjoyment * JsonUtil.GetFloatValue(File, "sl_estrusforcedenjoyment")) as int
 	else
 		ActorFullEnjoyment = (SLSO_FullEnjoyment * MasturbationMod / ExhibitionistMod / GenderMod * sl_enjoymentrate * slaActorArousalMod) as int
 	endIf
-	;Log("SLSO_FullEnjoyment with modifiers ["+ActorFullEnjoyment+"]")
+	
+	;Log("SLSO_ActorFullEnjoyment with modifiers ["+ActorFullEnjoyment+"] = (SLSO_FullEnjoyment ["+SLSO_FullEnjoyment+"] * Modifiers ["+MasturbationMod / ExhibitionistMod / GenderMod * sl_enjoymentrate * slaActorArousalMod+"])")
 	return ActorFullEnjoyment
 endFunction
 
@@ -2253,18 +2259,19 @@ int function SLSO_GetEnjoyment()
 			endIf
 			if FullEnjoyment < 0
 				FullEnjoyment = 0
-			elseIf FullEnjoyment > 100
-				FullEnjoyment = 100
+			;elseIf FullEnjoyment > 100
+			;	FullEnjoyment = 100
 			endIf
 		endIf
 	endIf
-	int Enjoyment = FullEnjoyment - QuitEnjoyment
-	;Log("SLSO_GetEnjoyment: Enjoyment["+Enjoyment+"] / FullEnjoyment["+FullEnjoyment+"] / QuitEnjoyment["+QuitEnjoyment+"]")
-	if Enjoyment > 0
-		return Enjoyment
+	int SLSO_Enjoyment = FullEnjoyment - QuitEnjoyment
+	;int SLSO_Enjoyment = FullEnjoyment - BaseEnjoyment
+	;Log("SLSO_GetEnjoyment: SLSO_Enjoyment["+SLSO_Enjoyment+"] / FullEnjoyment["+FullEnjoyment+"] / QuitEnjoyment["+QuitEnjoyment+"] / BaseEnjoyment["+BaseEnjoyment+"]")
+	if SLSO_Enjoyment > 0
+		return SLSO_Enjoyment
 	endIf
 	return 0
-	;return Enjoyment - BaseEnjoyment
+	;return SLSO_Enjoyment - BaseEnjoyment
 endFunction
 
 function BonusEnjoyment(actor Ref = none, int fixedvalue = 0)
@@ -2467,7 +2474,9 @@ function SLSO_DoOrgasm_Multiorgasm()
 			;male wont be able to orgasm 2nd time if slso game() and sla disabled
 			;Log("male FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + GetOrgasmCount()*2)) as int+"]")
 			if (Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))) || Position != 0
-				GenderMod = (1 + GetOrgasmCount()*2)
+				if (!IsAggressor)
+					GenderMod = (1 + GetOrgasmCount()*2)
+				endif
 			endif
 		endif
 	endif
