@@ -1001,13 +1001,8 @@ state Animating
 			if IsPlayer && Config.ShakeStrength > 0 && Game.GetCameraState() >= 8
 				Game.ShakeCamera(none, Config.ShakeStrength, Config.ShakeStrength + 1.0)
 			endIf
-			; Play SFX/Voice
-			if !IsSilent
-				PlayLouder(Voice.GetSound(100, false), ActorRef, Config.VoiceVolume)
-			endIf
-			PlayLouder(OrgasmFX, ActorRef, Config.SFXVolume)
+			SLSO_DoOrgasm_Moan()
 		endIf
-		SLSO_DoOrgasm_Moan()
 		; Apply cum to female positions from male position orgasm
 		i = Thread.ActorCount
 		if i > 1 && Config.UseCum && (MalePosition || IsCreature) && (IsMale || IsCreature || (Config.AllowFFCum && IsFemale))
@@ -2467,7 +2462,6 @@ endFunction
 
 function SLSO_DoOrgasm_Multiorgasm()
 	String File = "/SLSO/Config.json"
-	int Enjoyment = GetFullEnjoyment()
 
 	if BaseSex == 0
 		if JsonUtil.GetIntValue(File, "condition_male_orgasm_penalty") == 1
@@ -2486,7 +2480,7 @@ function SLSO_DoOrgasm_Multiorgasm()
 		LastOrgasm = Math.Abs(Utility.GetCurrentRealTime())
 		; Reset enjoyment build up, if using separate orgasms option
 		if SeparateOrgasms
-			BaseEnjoyment = BaseEnjoyment - Enjoyment
+			BaseEnjoyment = BaseEnjoyment - GetFullEnjoyment()
 			BaseEnjoyment += Utility.RandomInt((BestRelation + 10), PapyrusUtil.ClampInt(((OwnSkills[Stats.kLewd]*1.5) as int) + (BestRelation + 10), 10, 35))
 		endIf
 		;reset slso enjoyment build up
