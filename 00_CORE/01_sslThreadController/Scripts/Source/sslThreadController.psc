@@ -1166,7 +1166,7 @@ int function Get_minimum_aggressor_orgasm_Count()
 		String File = "/SLSO/Config.json"
 		;game on, use min orgasm
 		if JsonUtil.GetIntValue(File, "game_enabled") == 1
-			JsonUtil.GetIntValue(File, "condition_minimum_aggressor_orgasm")
+			SLSO_condition_minimum_aggressor_orgasm = JsonUtil.GetIntValue(File, "condition_minimum_aggressor_orgasm")
 		;game off, use 1
 		else
 			SLSO_condition_minimum_aggressor_orgasm = 1
