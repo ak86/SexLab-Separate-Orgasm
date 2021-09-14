@@ -805,7 +805,7 @@ state Animating
 					RefreshExpression()
 				endIf
 				; Trigger orgasm
-				if !NoOrgasm && SeparateOrgasms && CalculateFullEnjoyment() >= 100 && Stage < StageCount && (RealTime[0] - LastOrgasm) > (((IsMale as int) + (IsCreature as int) + 1) * 10.0)
+				if CalculateFullEnjoyment() >= 100 && !NoOrgasm && SeparateOrgasms && Stage < StageCount && (RealTime[0] - LastOrgasm) > (((IsMale as int) + (IsCreature as int) + 1) * 10.0)
 					OrgasmEffect()
 				endIf
 				;if !NoOrgasm && SeparateOrgasms && Strength >= 100 && Stage < StageCount && (RealTime[0] - LastOrgasm) > (((IsMale as int) + (IsCreature as int) + 1) * 10.0)
@@ -1019,28 +1019,7 @@ state Animating
 		endIf
 		Utility.WaitMenuMode(0.2)
 		; Reset enjoyment build up, if using multiple orgasms
-		QuitEnjoyment += Enjoyment
-		if IsSkilled
-			if IsVictim
-				BaseEnjoyment += ((BestRelation - 3) + PapyrusUtil.ClampInt((OwnSkills[Stats.kLewd]-OwnSkills[Stats.kPure]) as int,-6,6)) * Utility.RandomInt(5, 10)
-			else
-				if IsAggressor
-					BaseEnjoyment += (-1*((BestRelation - 4) + PapyrusUtil.ClampInt(((Skills[Stats.kLewd]-Skills[Stats.kPure])-(OwnSkills[Stats.kLewd]-OwnSkills[Stats.kPure])) as int,-6,6))) * Utility.RandomInt(5, 10)
-				else
-					BaseEnjoyment += (BestRelation + PapyrusUtil.ClampInt((((Skills[Stats.kLewd]+OwnSkills[Stats.kLewd])*0.5)-((Skills[Stats.kPure]+OwnSkills[Stats.kPure])*0.5)) as int,0,6)) * Utility.RandomInt(5, 10)
-				endIf
-			endIf
-		else
-			if IsVictim
-				BaseEnjoyment += (BestRelation - 3) * Utility.RandomInt(5, 10)
-			else
-				if IsAggressor
-					BaseEnjoyment += (-1*(BestRelation - 4)) * Utility.RandomInt(5, 10)
-				else
-					BaseEnjoyment += (BestRelation + 3) * Utility.RandomInt(5, 10)
-				endIf
-			endIf
-		endIf
+		QuitEnjoyment = FullEnjoyment
 		; VoiceDelay = 0.8
 		RegisterForSingleUpdate(0.8)
 	endFunction
@@ -1512,11 +1491,7 @@ int function GetPain()
 		Log(ActorName +"- WARNING: ActorRef if Missing or Invalid", "GetPain()")
 		return 0
 	endIf
-	GetEnjoyment()
-	if FullEnjoyment < 0
-		return Math.Abs(FullEnjoyment) as int
-	endIf
-	return 0	
+	return PapyrusUtil.ClampInt(Math.Abs(GetFullEnjoyment()) as int, 0, 100)
 endFunction
 
 int function CalcReaction()
@@ -1524,12 +1499,7 @@ int function CalcReaction()
 		Log(ActorName +"- WARNING: ActorRef if Missing or Invalid", "CalcReaction()")
 		return 0
 	endIf
-	int Strength = GetEnjoyment()
-	; Check if the actor is in pain or too excited to care about pain
-	if FullEnjoyment < 0 && Strength < Math.Abs(FullEnjoyment)
-		Strength = FullEnjoyment
-	endIf
-	return PapyrusUtil.ClampInt(Math.Abs(Strength) as int, 0, 100)
+	return PapyrusUtil.ClampInt(Math.Abs(GetFullEnjoyment()) as int, 0, 100)
 endFunction
 
 function ApplyCum()
@@ -2479,9 +2449,26 @@ function SLSO_DoOrgasm_Multiorgasm()
 		;orgasm
 		LastOrgasm = Math.Abs(Utility.GetCurrentRealTime())
 		; Reset enjoyment build up, if using separate orgasms option
-		if SeparateOrgasms
-			BaseEnjoyment = BaseEnjoyment - GetFullEnjoyment()
-			BaseEnjoyment += Utility.RandomInt((BestRelation + 10), PapyrusUtil.ClampInt(((OwnSkills[Stats.kLewd]*1.5) as int) + (BestRelation + 10), 10, 35))
+		if IsSkilled
+			if IsVictim
+				BaseEnjoyment += ((BestRelation - 3) + PapyrusUtil.ClampInt((OwnSkills[Stats.kLewd]-OwnSkills[Stats.kPure]) as int,-6,6)) * Utility.RandomInt(5, 10)
+			else
+				if IsAggressor
+					BaseEnjoyment += (-1*((BestRelation - 4) + PapyrusUtil.ClampInt(((Skills[Stats.kLewd]-Skills[Stats.kPure])-(OwnSkills[Stats.kLewd]-OwnSkills[Stats.kPure])) as int,-6,6))) * Utility.RandomInt(5, 10)
+				else
+					BaseEnjoyment += (BestRelation + PapyrusUtil.ClampInt((((Skills[Stats.kLewd]+OwnSkills[Stats.kLewd])*0.5)-((Skills[Stats.kPure]+OwnSkills[Stats.kPure])*0.5)) as int,0,6)) * Utility.RandomInt(5, 10)
+				endIf
+			endIf
+		else
+			if IsVictim
+				BaseEnjoyment += (BestRelation - 3) * Utility.RandomInt(5, 10)
+			else
+				if IsAggressor
+					BaseEnjoyment += (-1*(BestRelation - 4)) * Utility.RandomInt(5, 10)
+				else
+					BaseEnjoyment += (BestRelation + 3) * Utility.RandomInt(5, 10)
+				endIf
+			endIf
 		endIf
 		;reset slso enjoyment build up
 		BonusEnjoyment = 0
