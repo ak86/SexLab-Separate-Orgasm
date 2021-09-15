@@ -2438,7 +2438,7 @@ function SLSO_DoOrgasm_Multiorgasm()
 			;male wont be able to orgasm 2nd time if slso game() and sla disabled
 			;Log("male FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + GetOrgasmCount()*2)) as int+"]")
 			if (Position == 0 && !(Animation.HasTag("Anal") || Animation.HasTag("Fisting"))) || Position != 0
-				if (!IsAggressor)
+				if (!IsAggressor || IsPlayer)
 					GenderMod = (1 + GetOrgasmCount()*2)
 				endif
 			endif

@@ -1135,11 +1135,9 @@ int function SLSO_Animating_GoToStage(int ToStage)
 									endIf
 
 									ToStage = Utility.RandomInt(minStage, maxStage)
-									if Animations.Length < 2
-										if ActorAlias[i].GetRef() != GetPlayer()
-											if JsonUtil.GetIntValue(File, "condition_aggressor_change_animation") == 1
-												Stage = -1
-											endif
+									if ActorAlias[i].GetRef() != GetPlayer()
+										if JsonUtil.GetIntValue(File, "condition_aggressor_change_animation") == 1
+											ToStage = -1
 										endif
 									endif
 									i = 0
