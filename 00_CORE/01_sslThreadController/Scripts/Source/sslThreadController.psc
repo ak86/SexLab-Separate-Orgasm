@@ -1095,18 +1095,6 @@ int function SLSO_Animating_GoToStage(int ToStage)
 				if ActorAlias[i].GetRef() != none
 					if ActorAlias[i].IsAggressor() && ((ActorAlias[i].GetRef() != GetPlayer() && JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1) || (ActorAlias[i].GetRef() == GetPlayer() && JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1))
 						if ((ActorAlias[i].IsCreature() && JsonUtil.GetIntValue(File, "game_enabled") == 1) || !ActorAlias[i].IsCreature())
-							;if SLSO_condition_minimum_aggressor_orgasm != -1
-								if JsonUtil.GetIntValue(File, "game_enabled") == 1
-									if ActorAlias[i].GetRef() != GetPlayer() 
-										if ActorAlias[i].GetOrgasmCount() >= Get_minimum_aggressor_orgasm_Count()
-											if Utility.RandomInt(0, 100) < JsonUtil.GetIntValue(File, "condition_chance_minimum_aggressor_orgasm_increase")
-												SLSO_condition_minimum_aggressor_orgasm += 1
-												Log("Aggressor required orgasms has increased to: " + SLSO_condition_minimum_aggressor_orgasm)
-											endif
-										endif
-									endif
-								endif
-							;endif
 							if ActorAlias[i].GetOrgasmCount() < Get_minimum_aggressor_orgasm_Count()
 								Bool Belted = false
 								
