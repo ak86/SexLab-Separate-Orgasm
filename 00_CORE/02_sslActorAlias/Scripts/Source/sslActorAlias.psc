@@ -1890,6 +1890,17 @@ endFunction
 
 function SLSO_DoOrgasm_SexLabOrgasmSeparate()
 	if SeparateOrgasms
+		if IsAggressor && !IsPlayer
+			String File = "/SLSO/Config.json"
+			if JsonUtil.GetIntValue(File, "game_enabled") == 1
+				if GetOrgasmCount() == Thread.Get_minimum_aggressor_orgasm_Count()
+					if Utility.RandomInt(0, 100) < JsonUtil.GetIntValue(File, "condition_chance_minimum_aggressor_orgasm_increase")
+						Thread.Set_minimum_aggressor_orgasm_Count(Thread.Get_minimum_aggressor_orgasm_Count() + 1)
+						Log("Aggressor - " + ActorName + " increased required orgasms to: " + Thread.Get_minimum_aggressor_orgasm_Count())
+					endif
+				endif
+			endif
+		endif
 		int Seid = ModEvent.Create("SexLabOrgasmSeparate")
 		if Seid
 			ModEvent.PushForm(Seid, ActorRef)
