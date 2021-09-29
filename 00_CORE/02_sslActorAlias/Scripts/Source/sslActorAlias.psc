@@ -1447,10 +1447,6 @@ function SetVictim(bool Victimize)
 	IsVictim = Victimize
 endFunction
 
-bool function IsVictim()
-	return IsVictim
-endFunction
-
 string function GetActorKey()
 	return ActorKey
 endFunction
@@ -2076,6 +2072,10 @@ float slaActorArousalMod
 float ExhibitionistMod
 float GenderMod
 Keyword zadDeviousBelt
+
+bool function IsVictim()
+	return IsVictim
+endFunction
 
 bool function IsCreature()
 	return IsCreature
