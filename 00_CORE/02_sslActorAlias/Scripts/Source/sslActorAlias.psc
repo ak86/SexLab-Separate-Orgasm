@@ -1542,6 +1542,10 @@ float ExhibitionistMod
 float GenderMod
 Keyword zadDeviousBelt
 
+bool function IsVictim()
+	return IsVictim
+endFunction
+
 bool function IsCreature()
 	return IsCreature
 endFunction
