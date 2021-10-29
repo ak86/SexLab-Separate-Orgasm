@@ -139,6 +139,7 @@ function Page_Config()
 		AddHeaderOption("$Config_Game_Header_3")
 			AddToggleOptionST("slso_game", "$slso_game", JsonUtil.GetIntValue(File, "game_enabled"))
 			AddToggleOptionST("slso_game_npc", "$slso_game_npc", JsonUtil.GetIntValue(File, "game_npc_enabled"))
+			AddToggleOptionST("slso_game_edging", "$slso_game_edging", JsonUtil.GetIntValue(File, "game_edging"))
 			;AddToggleOptionST("slso_game_scriptupdate_boost", "$slso_game_scriptupdate_boost", JsonUtil.GetIntValue(File, "game_scriptupdate_boost"))
 			AddToggleOptionST("game_player_autoplay", "$game_player_autoplay", JsonUtil.GetIntValue(File, "game_player_autoplay"))
 			AddToggleOptionST("game_passive_enjoyment_reduction", "$game_passive_enjoyment_reduction", JsonUtil.GetIntValue(File, "game_passive_enjoyment_reduction"))
@@ -802,6 +803,21 @@ state slso_game_npc
 	
 	event OnHighlightST()
 		SetInfoText("$slso_game_npc_description")
+	endEvent
+endState
+
+state slso_game_edging
+	event OnSelectST()
+		if JsonUtil.GetIntValue(File, "game_edging") == 1
+			JsonUtil.SetIntValue(File, "game_edging", 0)
+		else
+			JsonUtil.SetIntValue(File, "game_edging", 1)
+		endif
+		SetToggleOptionValueST(JsonUtil.GetIntValue(File, "game_edging"))
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$slso_game_edging_description")
 	endEvent
 endState
 
