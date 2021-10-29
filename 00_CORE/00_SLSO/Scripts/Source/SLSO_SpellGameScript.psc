@@ -244,12 +244,14 @@ Function Game(string var = "")
 		
 		mod = GetModSelfMag
 		
-		;try to hold out orgasm if high relation with partner
-		If GetTargetActor().GetActorValuePercentage("Magicka") > 0.10 && (Utility.RandomInt(0, 100) < (25+controller.GetHighestPresentRelationshipRank(GetTargetActor())*10*2) && controller.ActorCount == 2)
-			If controller.ActorAlias(GetTargetActor()).GetFullEnjoyment() as float > 95
-				GetTargetActor().DamageActorValue("Magicka", GetTargetActor().GetBaseActorValue("Magicka")/(10-mod)) 
-				controller.ActorAlias(GetTargetActor()).HoldOut(3)
-				PartnerRef = GetTargetActor()
+		;try to hold out orgasm especially if high relation with partner
+		If JsonUtil.GetIntValue(File, "game_edging") == 1
+			If GetTargetActor().GetActorValuePercentage("Magicka") > 0.10 && (Utility.RandomInt(0, 100) < (25+controller.GetHighestPresentRelationshipRank(GetTargetActor())*10*2) && controller.ActorCount == 2)
+				If controller.ActorAlias(GetTargetActor()).GetFullEnjoyment() as float > 95
+					GetTargetActor().DamageActorValue("Magicka", GetTargetActor().GetBaseActorValue("Magicka")/(10-mod)) 
+					controller.ActorAlias(GetTargetActor()).HoldOut(3)
+					PartnerRef = GetTargetActor()
+				EndIf
 			EndIf
 		EndIf
 	endif
