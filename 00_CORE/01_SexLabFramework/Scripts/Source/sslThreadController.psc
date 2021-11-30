@@ -93,7 +93,7 @@ state Prepare
 				SendThreadEvent("LeadInStart")
 			endIf
 			; Start time trackers
-			RealTime[0] = Utility.GetCurrentRealTime()
+			RealTime[0] = SexLabUtil.GetCurrentGameRealTime()
 			SkillTime = RealTime[0]
 			StartedAt = RealTime[0]
 			; Start actor loops
@@ -154,7 +154,7 @@ state Animating
 	function FireAction()
 		UnregisterForUpdate()
 		; Prepare loop
-		RealTime[0] = Utility.GetCurrentRealTime()
+		RealTime[0] = SexLabUtil.GetCurrentGameRealTime()
 		SoundFX  = Animation.GetSoundFX(Stage)
 		SFXDelay = ClampFloat(BaseDelay - ((Stage * 0.3) * ((Stage != 1) as int)), 0.5, 30.0)
 		SLSO_condition_minimum_aggressor_orgasm = Get_minimum_aggressor_orgasm_Count()
@@ -173,7 +173,7 @@ state Animating
 	event OnUpdate()
 		; Debug.Trace("(thread update)")
 		; Update timer share
-		RealTime[0] = Utility.GetCurrentRealTime()
+		RealTime[0] = SexLabUtil.GetCurrentGameRealTime()
 		; Pause further updates if in menu
 		if HasPlayer && Utility.IsInMenuMode()
 			while Utility.IsInMenuMode()
@@ -455,7 +455,7 @@ state Animating
 				Config.DisableThreadControl(self)
 				PlayerRef.SetFactionRank(Config.AnimatingFaction, 0)
 			endIf
-			Debug.Notification("Player movement unlocked - repositioning scene in 12 seconds...")
+			Debug.Notification("Player movement unlocked - repositioning scene in 30 seconds...")
 			UnregisterForUpdate()
 			int i
 			while i < ActorCount
@@ -473,13 +473,13 @@ state Animating
 
 			UnregisterForUpdate()
 			
-			; Lock hotkeys and wait 12 seconds
+			; Lock hotkeys and wait 30 seconds
 			Utility.WaitMenuMode(1.0)
 			RegisterForKey(Hotkeys[kMoveScene])
 			; Ready
 			hkReady = true
-			i = 10 ; Time to wait
-			while i
+			i = 28 ; Time to wait
+			while i && hkReady
 				i -= 1
 				Utility.Wait(1.0)
 				if !PlayerRef.IsInFaction(Config.AnimatingFaction)
@@ -487,7 +487,7 @@ state Animating
 				endIf
 			endWhile
 		endIf
-		if PlayerRef.GetFactionRank(Config.AnimatingFaction) == 0
+		if GetState() == "Animating" && PlayerRef.GetFactionRank(Config.AnimatingFaction) == 0
 			Debug.Notification("Player movement locked - repositioning scene...")
 			ApplyFade()
 			; Disable Controls
@@ -800,7 +800,7 @@ function EndLeadIn()
 		; Restrip with new strip options
 		QuickEvent("Strip")
 		; Start primary animations at stage 1
-		StorageUtil.SetFloatValue(Config,"SexLab.LastLeadInEnd", Utility.GetCurrentRealTime())
+		StorageUtil.SetFloatValue(Config,"SexLab.LastLeadInEnd", SexLabUtil.GetCurrentGameRealTime())
 		SendThreadEvent("LeadInEnd")
 		Action("Advancing")
 	endIf

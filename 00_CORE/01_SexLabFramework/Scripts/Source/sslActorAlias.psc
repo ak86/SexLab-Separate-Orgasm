@@ -169,6 +169,7 @@ bool function SetActor(Actor ProspectRef)
 			ActorKey += "M"
 		endIf
 	endIf
+	NioScale = 1.0
 	float TempScale
 	String Node = "NPC"
 	if NetImmerse.HasNode(ActorRef, Node, False)
@@ -186,7 +187,6 @@ bool function SetActor(Actor ProspectRef)
 	endIf
 	
 	if Config.HasNiOverride && !IsCreature
-		NioScale = 1.0
 		string[] MOD_OVERRIDE_KEY = NiOverride.GetNodeTransformKeys(ActorRef, False, isRealFemale, "NPC")
 		int idx = 0
 		While idx < MOD_OVERRIDE_KEY.Length
@@ -422,6 +422,9 @@ state Ready
 			ActorRef.SetPosition(Loc[0], Loc[1], Loc[2])
 			ActorRef.SetAngle(Loc[3], Loc[4], Loc[5])
 			AttachMarker()
+			if !IsPlayer || Game.GetCameraState() != 10
+				ActorRef.QueueNiNodeUpdate()
+			endIf
 		endIf
 
 		; Player specific actions
@@ -500,6 +503,9 @@ state Ready
 				FirsStageTime = Config.StageTimer[0]
 			endIf
 			BaseEnjoyment -= Math.Abs(CalcEnjoyment(SkillBonus, Skills, LeadIn, IsFemale, FirsStageTime, 1, StageCount)) as int
+			if BaseEnjoyment < -5
+				BaseEnjoyment += 10
+			endIf
 			; Add Bonus Enjoyment
 			if IsVictim
 				BestRelation = Thread.GetLowestPresentRelationshipRank(ActorRef)
@@ -558,8 +564,8 @@ state Ready
 				
 				; Start wait loop for actor pathing.
 				int StuckCheck  = 0
-				float Failsafe  = Utility.GetCurrentRealTime() + 30.0
-				while Distance > 100.0 && Utility.GetCurrentRealTime() < Failsafe
+				float Failsafe  = SexLabUtil.GetCurrentGameRealTime() + 30.0
+				while Distance > 100.0 && SexLabUtil.GetCurrentGameRealTime() < Failsafe
 					Utility.Wait(1.0)
 					float Previous = Distance
 					Distance = ActorRef.GetDistance(WaitRef)
@@ -609,6 +615,9 @@ state Prepare
 			ActorRef.SetPosition(Loc[0], Loc[1], Loc[2])
 			ActorRef.SetAngle(Loc[3], Loc[4], Loc[5])
 			AttachMarker()
+			if !IsPlayer || Game.GetCameraState() != 10
+				ActorRef.QueueNiNodeUpdate()
+			endIf
 			Debug.SendAnimationEvent(ActorRef, "SOSFastErect")
 			; Notify thread prep is done
 			if Thread.GetState() == "Prepare"
@@ -628,7 +637,7 @@ state Prepare
 		Config.CheckBardAudience(ActorRef, true)
 		; Prepare for loop
 		StopAnimating(true)
-		StartedAt  = Utility.GetCurrentRealTime()
+		StartedAt  = SexLabUtil.GetCurrentGameRealTime()
 		LastOrgasm = StartedAt
 		GoToState("Animating")
 		SyncAll(true)
@@ -779,9 +788,9 @@ state Animating
 			; Lip sync and refresh expression
 			if GetState() == "Animating"
 				int Strength = CalcReaction()
-				if LoopDelay >= VoiceDelay && Strength > 15
+				if LoopDelay >= VoiceDelay && (Config.LipsFixedValue || Strength > 10)
 					LoopDelay = 0.0
-					if OpenMouth && UseLipSync
+					if OpenMouth && UseLipSync && !Config.LipsFixedValue
 						sslBaseVoice.MoveLips(ActorRef, none, 0.3)
 						Log("PlayMoan:False; UseLipSync:"+UseLipSync+"; OpenMouth:"+OpenMouth)
 					elseIf !IsSilent
@@ -937,12 +946,10 @@ state Animating
 		if !Forced && (NoOrgasm || Thread.DisableOrgasms)
 			; Orgasm Disabled for actor or whole thread
 			return
-		;WTFFFFFFFFFFFFFFFF?!
-		;elseIf !Forced && Config.SeparateOrgasms && Enjoyment < 100 && (Enjoyment < 1 || Stage < StageCount || Orgasms > 0)
-			; Someone need to do better job to make you happy
-			; Someone need to do better job writing code
-			;return
-		elseIf Math.Abs(Utility.GetCurrentRealTime() - LastOrgasm) < 5.0
+		elseIf !Forced && Enjoyment < 1
+			; Actor have the orgasm few seconds ago or is in pain and can't orgasm
+			return
+		elseIf Math.Abs(RealTime[0] - LastOrgasm) < 5.0
 			Log("Excessive OrgasmEffect Triggered")
 			return
 		elseIf Forced != true && SeparateOrgasms
@@ -951,18 +958,23 @@ state Animating
 				return
 			endIf
 		endIf
-		; WTFFFFFFFFFFFFFFFF!!!!!!!!!!!!!!!!!
-		;bool CanOrgasm = Forced || (Animation.HasTag("Lesbian") && Thread.ActorCount == Thread.Females && !Stats.IsStraight(ActorRef)) ; Lesbians have special treatment because the Lesbian Animations usually don't have CumId assigned.
+		; Check if the animation allow Orgasm. By default all the animations with a CumID>0 are type SEX and allow orgasm 
+		; But the Lesbian Animations usually don't have CumId assigned and still the orgasm should be allowed at least for Females.
+		bool CanOrgasm = Forced || (IsFemale && (Animation.HasTag("Lesbian") || Animation.Females == Animation.PositionCount))
 		int i = Thread.ActorCount
-		;while !CanOrgasm && i > 0
-		;	i -= 1
-		;	CanOrgasm = Animation.GetCumID(i, Stage) > 0 || Animation.GetCum(i) > 0
-		;endWhile
-		;if !CanOrgasm
-		;	; Orgasm Disabled for the animation
-		;	return
-		;endIf
+		while !CanOrgasm && i > 0
+			i -= 1
+			CanOrgasm = Animation.GetCumID(i, Stage) > 0 || Animation.GetCum(i) > 0
+		endWhile
+		if !CanOrgasm
+			; Orgasm Disabled for the animation
+			return
+		endIf
 		if !Forced && Config.SeparateOrgasms
+			;if Enjoyment < 100 && (Stage < StageCount || Orgasms > 0)
+			;	; Prevent the orgasm with low enjoyment at least the last stage be reached without orgasms
+			;	return
+			;endIf
 			bool IsCumSource = False
 			i = Thread.ActorCount
 			while !IsCumSource && i > 0
@@ -978,7 +990,7 @@ state Animating
 			endIf
 		endIf
 		UnregisterForUpdate()
-		LastOrgasm = StartedAt
+		LastOrgasm = RealTime[0]
 		Orgasms   += 1
 		
 		; reset timers
@@ -1458,14 +1470,19 @@ function SetAdjustKey(string KeyVar)
 	endIf
 endfunction
 
+function AdjustEnjoyment(int AdjustBy)
+	BaseEnjoyment += AdjustBy
+endfunction
+
 int function GetEnjoyment()
 	return SLSO_GetEnjoyment()
+;	Log(ActorName +"- RealTime:["+Utility.GetCurrentRealTime()+"], GameTime:["+SexLabUtil.GetCurrentGameRealTime()+"] IsMenuMode:"+Utility.IsInMenuMode(), "GetEnjoyment()")
 	if !ActorRef
 		Log(ActorName +"- WARNING: ActorRef if Missing or Invalid", "GetEnjoyment()")
 		FullEnjoyment = 0
 		return 0
 	elseif !IsSkilled
-			FullEnjoyment = BaseEnjoyment + (PapyrusUtil.ClampFloat(((RealTime[0] - StartedAt) + 1.0) / 5.0, 0.0, 40.0) + ((Stage as float / StageCount as float) * 60.0)) as int
+		FullEnjoyment = BaseEnjoyment + (PapyrusUtil.ClampFloat(((RealTime[0] - StartedAt) + 1.0) / 5.0, 0.0, 40.0) + ((Stage as float / StageCount as float) * 60.0)) as int
 	else
 		if Position == 0
 			Thread.RecordSkills()
