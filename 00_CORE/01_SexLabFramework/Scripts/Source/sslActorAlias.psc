@@ -2464,7 +2464,7 @@ function SLSO_DoOrgasm_Multiorgasm()
 	;if (Utility.RandomInt(0, 100) > (JsonUtil.GetIntValue(File, "sl_multiorgasmchance") + ((OwnSkills[Stats.kLewd]*10) as int) - 10 * Orgasms)) || BaseSex != 1
 	if (Utility.RandomInt(0, 100) > (JsonUtil.GetIntValue(File, "sl_multiorgasmchance") + ((OwnSkills[Stats.kLewd] * JsonUtil.GetIntValue(File, "sl_multiorgasmchance_curve")) as int) - 10 * Orgasms)) || BaseSex != 1
 		;orgasm
-		LastOrgasm = Math.Abs(Utility.GetCurrentRealTime())
+		LastOrgasm = Math.Abs(SexLabUtil.GetCurrentGameRealTime())
 		; Reset enjoyment build up, if using separate orgasms option
 		if IsSkilled
 			if IsVictim
@@ -2491,7 +2491,7 @@ function SLSO_DoOrgasm_Multiorgasm()
 		BonusEnjoyment = 0
 	else
 		;slso multiorgasm for females (rnd + lewdness), reset timer
-		LastOrgasm = Math.Abs(Utility.GetCurrentRealTime() - 9)
+		LastOrgasm = Math.Abs(SexLabUtil.GetCurrentGameRealTime() - 9)
 	endIf
 endFunction
 
