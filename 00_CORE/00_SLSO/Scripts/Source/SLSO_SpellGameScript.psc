@@ -362,6 +362,11 @@ Function Change_Partner(int partnerid = 0)
 		;SexLab.Log("Change_Partner partner set to: " + PartnerReference.GetDisplayName() + " pos (" + partnerid + ")")
 		GetModPartSta = GetMod("Stamina", PartnerReference)
 		GetModPartMag = GetMod("Magicka", PartnerReference) 
+		int handle = ModEvent.Create("SLSO_Change_Partner")
+		if (handle)
+			ModEvent.PushForm(handle, PartnerReference)
+			ModEvent.Send(handle)
+		endif
 	endif
 	;SexLab.Log("SLSO partner post: " + PartnerReference.GetDisplayName())
 EndFunction
