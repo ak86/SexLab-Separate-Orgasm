@@ -3,9 +3,9 @@
 	<installSteps order="Explicit">	
 		<installStep name="Core Setup">
 			<optionalFileGroups>
-				<group name="0_Config" type="SelectExactlyOne">
+				<group name="SLSO" type="SelectExactlyOne">
 					<plugins order="Explicit">
-						<plugin name="CONFIG.json">
+						<plugin name="SLSO">
 							<description>
 								<![CDATA[Core mod, includes .esp with widgets, scripts, mcm and json config file with mod settings. Data\SKSE\Plugins\StorageUtilData\SLSO]]>
 							</description>
@@ -13,7 +13,7 @@
 								<flag name="Config">Active</flag>
 							</conditionFlags>
 							<files>
-								<folder source="00_Core\00_slso" destination=""/>
+								<folder source="00_Core\00_SLSO" destination=""/>
 							</files>
 							<typeDescriptor>
 								<type name="Required"/>
@@ -21,71 +21,35 @@
 						</plugin>
 					</plugins>
 				</group>
-				<group name="0_sslThreadController" type="SelectAny">
+				<group name="SexLabFramework" type="SelectExactlyOne">
 					<plugins order="Explicit">
-						<plugin name="sslThreadController">
+						<plugin name="SexLabFramework">
 							<description>
-								<![CDATA[Modified sslThreadController script, allows disabling of "OrgasmStart" and "OrgasmEnd" events when player has "Separate Orgasms". Enables Victim control loss.]]>
+								<![CDATA[Modified SexLabFramework scripts for SLSO to work]]>
 							</description>
 							<conditionFlags>
 								<flag name="sslThreadController">Active</flag>
 							</conditionFlags>
 							<files>
-								<folder source="00_Core\01_sslThreadController" destination=""/>
+								<folder source="00_Core\01_SexLabFramework" destination=""/>
 							</files>
 							<typeDescriptor>
-								<type name="Recommended"/>
+								<type name="Required"/>
 							</typeDescriptor>
 						</plugin>
 					</plugins>   
 				</group>
-				<group name="1_sslActorAlias" type="SelectExactlyOne">
-					<plugins order="Explicit">
-						<plugin name="sslActorAlias">
-							<description>
-								<![CDATA[Modified sslActorAlias script, you want this! No, you dont have a choice.]]>
-							</description>
-							<conditionFlags>
-								<flag name="sslActorAlias">Active</flag>
-							</conditionFlags>
-							<files>
-								<folder source="00_Core\02_sslActorAlias" destination=""/>
-							</files>
-							<typeDescriptor>
-								<type name="Required"/>
-							</typeDescriptor>				
-						</plugin>
-					</plugins>   
-				</group>
-				<group name="2_sslBaseVoice" type="SelectAny">
-					<plugins order="Explicit">
-						<plugin name="sslBaseVoice">
-							<description>
-								<![CDATA[Modified sslBaseVoice script to allow "hot" voice strenght change.]]>
-							</description>
-							<conditionFlags>
-								<flag name="sslBaseVoice">Active</flag>
-							</conditionFlags>
-							<files>
-								<folder source="00_Core\03_sslBaseVoice" destination=""/>
-							</files>
-							<typeDescriptor>
-								<type name="Recommended"/>
-							</typeDescriptor>				
-						</plugin>
-					</plugins>   
-				</group>
-				<group name="3_Patches" type="SelectAny">
+				<group name="SexLabAroused" type="SelectAny">
 					<plugins order="Explicit">			
-						<plugin name="Patch_SLA">
+						<plugin name="SLA">
 							<description>
-								<![CDATA[SexLab Aroused Redux + Animation-Appropriate Arousal Adjustments 1.0.5 + SLSO patch]]>
+								<![CDATA[SLAR AAAA 1.0.5 based patch. Support for SLSO.]]>
 							</description>
 							<conditionFlags>
-								<flag name="Patch_SLA">Active</flag>
+								<flag name="SLA">Active</flag>
 							</conditionFlags>
 							<files>
-								<folder source="01_Patches\01_Sla" destination=""/>
+								<folder source="00_Core\02_SexLabAroused" destination=""/>
 							</files>
 							<typeDescriptor>
 								<dependencyType>
