@@ -229,9 +229,12 @@ function Page_Widget_Colors()
 			AddColorOptionST("widgetcolors_3", "$Low", JsonUtil.StringListGet(File, "widgetcolors", 3) as int)
 			AddColorOptionST("widgetcolors_4", "$Base_Male", JsonUtil.StringListGet(File, "widgetcolors", 4) as int)
 			AddColorOptionST("widgetcolors_5", "$Base_Female", JsonUtil.StringListGet(File, "widgetcolors", 5) as int)
+		AddEmptyOption()
 
 	SetCursorPosition(1)
 		AddHeaderOption("$Widget_Settings_Header")
+			AddColorOptionST("LabelColor", "$LabelColor", JsonUtil.GetFloatValue(File, "widget_labelcolor") as int)
+			AddColorOptionST("SelectedActorColor", "$SelectedActorColor", JsonUtil.GetFloatValue(File, "widget_selectedactorcolor") as int)
 			AddSliderOptionST("BorderAlpha", "$BorderAlpha", JsonUtil.GetFloatValue(File, "widget_borderalpha") as Int)
 			AddSliderOptionST("BackgroundAlpha", "$BackgroundAlpha", JsonUtil.GetFloatValue(File, "widget_backgroundalpha") as Int)
 			AddSliderOptionST("MeterAlpha", "$MeterAlpha", JsonUtil.GetFloatValue(File, "widget_meteralpha") as Int)
@@ -1677,6 +1680,28 @@ state widgetcolors_5
 	event OnColorAcceptST(int value)
 		JsonUtil.StringListSet(File, "widgetcolors", 5, value as string)
 		SetColorOptionValueST(JsonUtil.StringListGet(File, "widgetcolors", 5) as int)
+	endEvent
+endState
+
+state LabelColor
+	event OnColorOpenST()
+		SetColorDialogStartColor(JsonUtil.GetFloatValue(File, "widget_labelcolor", 16777215) as int)
+	endEvent
+
+	event OnColorAcceptST(int value)
+		JsonUtil.SetFloatValue(File, "widget_labelcolor", value)
+		SetColorOptionValueST(JsonUtil.GetFloatValue(File, "widget_labelcolor", 16777215) as int)
+	endEvent
+endState
+
+state SelectedActorColor
+	event OnColorOpenST()
+		SetColorDialogStartColor(JsonUtil.GetFloatValue(File, "widget_selectedactorcolor", 16768768) as int)
+	endEvent
+
+	event OnColorAcceptST(int value)
+		JsonUtil.SetFloatValue(File, "widget_selectedactorcolor", value)
+		SetColorOptionValueST(JsonUtil.GetFloatValue(File, "widget_selectedactorcolor", 16768768) as int)
 	endEvent
 endState
 

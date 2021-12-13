@@ -35,6 +35,18 @@ Event Start_widget(Int Widget_Id, Int Thread_Id)
 		else
 			StopWidget()
 		endif
+		self.RegisterForModEvent("SLSO_Change_Partner", "Change_Partner")
+	endif
+EndEvent
+
+Event Change_Partner(Form ActorRef)
+	;SexLab.Log(GetActorRef().GetDisplayName() + " changed widget recieved:" + ActorRef as Actor + " ref:" + self.GetActorRef())
+	if ActorRef as Actor == self.GetActorRef()
+		Widget.LabelTextColor = JsonUtil.GetFloatValue(File, "widget_selectedactorcolor", 16768768) as int
+		;SexLab.Log(" changed widget BorderColor - yellow:" + Widget.BorderColor)
+	else
+		Widget.LabelTextColor = JsonUtil.GetFloatValue(File, "widget_labelcolor", 16777215) as int
+		;SexLab.Log(" changed widget BorderColor - black:"+ Widget.BorderColor)
 	endif
 EndEvent
 
@@ -79,6 +91,8 @@ Function UpdateWidgetPosition()
 	Else
 		BaseColor = 0xFFFFFF
 	EndIf
+	Widget.BorderColor = JsonUtil.GetFloatValue(File, "widget_bordercolor", 0) as int
+	Widget.BorderWidth = 0
 	if ((JsonUtil.GetIntValue(File, "widget_player_only") == 1 && self.GetActorRef() == Game.Getplayer()) || JsonUtil.GetIntValue(File, "widget_player_only") != 1)
 		Display_widget = true
 	else
@@ -96,6 +110,7 @@ Function UpdateWidgetPosition()
 	Widget.MeterScale = JsonUtil.GetFloatValue(File, "widget_meterscale")
 	Widget.LabelTextSize = JsonUtil.GetFloatValue(File, "widget_labeltextsize")
 	Widget.ValueTextSize = JsonUtil.GetFloatValue(File, "widget_valuetextsize")
+	Widget.LabelTextColor = JsonUtil.GetFloatValue(File, "widget_labelcolor", 16777215) as int
 	ActorName = self.GetActorRef().GetLeveledActorBase().GetName()
 	if JsonUtil.GetIntValue(File, "widget_show_enjoymentmodifier") == 1
 		EnjoymentValue = "0.00%"
