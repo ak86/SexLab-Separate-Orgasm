@@ -111,7 +111,7 @@ Function UpdateWidgetPosition()
 	Widget.LabelTextSize = JsonUtil.GetFloatValue(File, "widget_labeltextsize")
 	Widget.ValueTextSize = JsonUtil.GetFloatValue(File, "widget_valuetextsize")
 	Widget.LabelTextColor = JsonUtil.GetFloatValue(File, "widget_labelcolor", 16777215) as int
-	ActorName = self.GetActorRef().GetLeveledActorBase().GetName()
+	ActorName = self.GetActorRef().GetDisplayName()
 	if JsonUtil.GetIntValue(File, "widget_show_enjoymentmodifier") == 1
 		EnjoymentValue = "0.00%"
 	else
