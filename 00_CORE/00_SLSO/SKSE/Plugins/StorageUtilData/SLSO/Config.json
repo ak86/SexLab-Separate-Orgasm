@@ -28,6 +28,7 @@
 		"condition_male_orgasm" : 1,
 		"condition_male_orgasm_penalty" : 1,
 		"condition_minimum_aggressor_orgasm" : 1,
+		"condition_maximum_aggressor_orgasm" : 0,
 		"condition_player_aggressor_orgasm" : 0,
 		"condition_player_orgasm" : 1,
 		"condition_victim_arousal" : 2,
