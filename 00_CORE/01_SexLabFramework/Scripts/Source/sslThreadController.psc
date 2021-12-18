@@ -157,6 +157,7 @@ state Animating
 		RealTime[0] = SexLabUtil.GetCurrentGameRealTime()
 		SoundFX  = Animation.GetSoundFX(Stage)
 		SFXDelay = ClampFloat(BaseDelay - ((Stage * 0.3) * ((Stage != 1) as int)), 0.5, 30.0)
+		SLSO_condition_maximum_aggressor_orgasm = Get_maximum_aggressor_orgasm_Count()
 		SLSO_condition_minimum_aggressor_orgasm = Get_minimum_aggressor_orgasm_Count()
 		ResolveTimers()
 		PlayStageAnimations()
@@ -1161,9 +1162,38 @@ int function Get_minimum_aggressor_orgasm_Count()
 	return SLSO_condition_minimum_aggressor_orgasm
 endFunction
 
+int SLSO_condition_maximum_aggressor_orgasm = -1
+int function Get_maximum_aggressor_orgasm_Count()
+	;not set, setup
+	if SLSO_condition_maximum_aggressor_orgasm == -1
+		String File = "/SLSO/Config.json"
+		;game on, use min orgasm
+		if JsonUtil.GetIntValue(File, "game_enabled") == 1
+			SLSO_condition_maximum_aggressor_orgasm = JsonUtil.GetIntValue(File, "condition_maximum_aggressor_orgasm")
+		;game off, use 1
+		else
+			SLSO_condition_maximum_aggressor_orgasm = 1
+		endif
+	endif
+	return SLSO_condition_maximum_aggressor_orgasm
+endFunction
+
 function Set_minimum_aggressor_orgasm_Count(int i)
-	SLSO_condition_minimum_aggressor_orgasm = i
+	if Get_maximum_aggressor_orgasm_Count() > 0
+		if SLSO_condition_maximum_aggressor_orgasm > i
+			SLSO_condition_minimum_aggressor_orgasm = i
+		else
+			SLSO_condition_minimum_aggressor_orgasm = SLSO_condition_maximum_aggressor_orgasm
+		endif
+	else
+		SLSO_condition_minimum_aggressor_orgasm = 1
+	endif
+endFunction
+
+function Set_maximum_aggressor_orgasm_Count(int i)
+	SLSO_condition_maximum_aggressor_orgasm = i
 endFunction
 
 ;int property SLSO_condition_minimum_aggressor_orgasm
+;int property SLSO_condition_maximum_aggressor_orgasm
 

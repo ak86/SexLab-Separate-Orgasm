@@ -81,6 +81,7 @@ function Page_Config()
 			AddSliderOptionST("condition_chance_minimum_aggressor_orgasm_increase", "$condition_chance_minimum_aggressor_orgasm_increase", JsonUtil.GetIntValue(File, "condition_chance_minimum_aggressor_orgasm_increase"), "{0}%")
 			AddToggleOptionST("condition_player_aggressor_orgasm", "$condition_player_aggressor_orgasm", JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm"))
 			AddSliderOptionST("condition_minimum_aggressor_orgasm", "$condition_minimum_aggressor_orgasm", JsonUtil.GetIntValue(File, "condition_minimum_aggressor_orgasm"))
+			AddSliderOptionST("condition_maximum_aggressor_orgasm", "$condition_maximum_aggressor_orgasm", JsonUtil.GetIntValue(File, "condition_maximum_aggressor_orgasm"))
 			;AddToggleOptionST("sl_agressor_bonus_enjoyment", "$sl_agressor_bonus_enjoyment", JsonUtil.GetIntValue(File, "sl_agressor_bonus_enjoyment"))
 
 			if JsonUtil.GetIntValue(File, "condition_victim_orgasm") == 1
@@ -403,6 +404,24 @@ state condition_minimum_aggressor_orgasm
 	
 	event OnHighlightST()
 		SetInfoText("$condition_minimum_aggressor_orgasm_description")
+	endEvent
+endState
+
+state condition_maximum_aggressor_orgasm
+	event OnSliderOpenST()
+		SetSliderDialogStartValue(JsonUtil.GetIntValue(File, "condition_maximum_aggressor_orgasm"))
+		SetSliderDialogDefaultValue(1)
+		SetSliderDialogRange(0, 100)
+		SetSliderDialogInterval(1)
+	endEvent
+
+	event OnSliderAcceptST(float value)
+		JsonUtil.SetIntValue(File, "condition_maximum_aggressor_orgasm", value as int)
+		SetSliderOptionValueST(JsonUtil.GetIntValue(File, "condition_maximum_aggressor_orgasm"))
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$condition_maximum_aggressor_orgasm_description")
 	endEvent
 endState
 
