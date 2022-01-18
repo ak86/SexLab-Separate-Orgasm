@@ -814,7 +814,7 @@ state Animating
 					RefreshExpression()
 				endIf
 				; Trigger orgasm
-				if CalculateFullEnjoyment() >= 100 && !NoOrgasm && SeparateOrgasms && Stage < StageCount && (RealTime[0] - LastOrgasm) > (((IsMale as int) + (IsCreature as int) + 1) * 10.0)
+				if CalculateFullEnjoyment() >= 100 && !NoOrgasm && SeparateOrgasms && (RealTime[0] - LastOrgasm) > (((IsMale as int) + (IsCreature as int) + 1) * 10.0)
 					OrgasmEffect()
 				endIf
 				;if !NoOrgasm && SeparateOrgasms && Strength >= 100 && Stage < StageCount && (RealTime[0] - LastOrgasm) > (((IsMale as int) + (IsCreature as int) + 1) * 10.0)
