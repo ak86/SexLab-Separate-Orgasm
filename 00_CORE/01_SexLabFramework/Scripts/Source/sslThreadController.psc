@@ -980,19 +980,25 @@ int function Get_maximum_aggressor_orgasm_Count()
 endFunction
 
 function Set_minimum_aggressor_orgasm_Count(int i)
-	if Get_maximum_aggressor_orgasm_Count() > 0
+	if i < 1
+		SLSO_condition_minimum_aggressor_orgasm = 0
+	elseif Get_maximum_aggressor_orgasm_Count() > 0
 		if SLSO_condition_maximum_aggressor_orgasm > i
 			SLSO_condition_minimum_aggressor_orgasm = i
 		else
 			SLSO_condition_minimum_aggressor_orgasm = SLSO_condition_maximum_aggressor_orgasm
 		endif
 	else
-		SLSO_condition_minimum_aggressor_orgasm = 1
+		SLSO_condition_minimum_aggressor_orgasm = i
 	endif
 endFunction
 
 function Set_maximum_aggressor_orgasm_Count(int i)
-	SLSO_condition_maximum_aggressor_orgasm = i
+	if i < 1
+		SLSO_condition_maximum_aggressor_orgasm = 0
+	else
+		SLSO_condition_maximum_aggressor_orgasm = i
+	endif
 endFunction
 
 ;int property SLSO_condition_minimum_aggressor_orgasm

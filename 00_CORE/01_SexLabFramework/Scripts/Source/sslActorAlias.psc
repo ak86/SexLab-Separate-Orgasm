@@ -1708,7 +1708,7 @@ function BonusEnjoyment(actor Ref = none, int fixedvalue = 0)
 				elseif JsonUtil.GetIntValue(File, "condition_female_orgasm_bonus") != 1
 					BonusEnjoyment +=slaActorArousal
 				else
-				Log("female [" +Ref.GetDisplayName()+ "] bonus enjoyment [" +GetOrgasmCount()+ "]")
+					Log("female [" +Ref.GetDisplayName()+ "] bonus enjoyment [" +GetOrgasmCount()+ "]")
 					BonusEnjoyment +=slaActorArousal + GetOrgasmCount()
 				endif
 			endIf
