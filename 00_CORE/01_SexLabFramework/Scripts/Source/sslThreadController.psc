@@ -58,6 +58,11 @@ state Prepare
 	endFunction
 
 	function StartupDone()
+		;Log("SLSO reinit orgam default values")
+		SLSO_condition_maximum_aggressor_orgasm = -1
+		SLSO_condition_minimum_aggressor_orgasm = -1
+		SLSO_condition_maximum_aggressor_orgasm = Get_maximum_aggressor_orgasm_Count()
+		SLSO_condition_minimum_aggressor_orgasm = Get_minimum_aggressor_orgasm_Count()
 		RegisterForSingleUpdate(0.1)
 	endFunction
 
@@ -141,8 +146,6 @@ state Animating
 		RealTime[0] = Utility.GetCurrentRealTime()
 		SoundFX  = Animation.GetSoundFX(Stage)
 		SFXDelay = ClampFloat(BaseDelay - ((Stage * 0.3) * ((Stage != 1) as int)), 0.5, 30.0)
-		SLSO_condition_maximum_aggressor_orgasm = Get_maximum_aggressor_orgasm_Count()
-		SLSO_condition_minimum_aggressor_orgasm = Get_minimum_aggressor_orgasm_Count()
 		ResolveTimers()
 		PlayStageAnimations()
 		; Send events
@@ -909,7 +912,7 @@ int function SLSO_Animating_GoToStage(int ToStage)
 										if (ActorAlias[i].GetRef() as Actor).WornHasKeyword(zadDeviousBelt)
 											Belted = true
 											i = 0
-											;Log("Aggressor is DD belted, ending animation")
+											Log("Aggressor is DD belted, ending animation")
 										EndIf
 									EndIf
 								EndIf
