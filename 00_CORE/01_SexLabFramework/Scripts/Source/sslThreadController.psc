@@ -61,6 +61,11 @@ state Prepare
 	endFunction
 
 	function StartupDone()
+		;Log("SLSO reinit orgam default values")
+		SLSO_condition_maximum_aggressor_orgasm = -1
+		SLSO_condition_minimum_aggressor_orgasm = -1
+		SLSO_condition_maximum_aggressor_orgasm = Get_maximum_aggressor_orgasm_Count()
+		SLSO_condition_minimum_aggressor_orgasm = Get_minimum_aggressor_orgasm_Count()
 		RegisterForSingleUpdate(0.1)
 	endFunction
 
@@ -157,8 +162,6 @@ state Animating
 		RealTime[0] = SexLabUtil.GetCurrentGameRealTime()
 		SoundFX  = Animation.GetSoundFX(Stage)
 		SFXDelay = ClampFloat(BaseDelay - ((Stage * 0.3) * ((Stage != 1) as int)), 0.5, 30.0)
-		SLSO_condition_maximum_aggressor_orgasm = Get_maximum_aggressor_orgasm_Count()
-		SLSO_condition_minimum_aggressor_orgasm = Get_minimum_aggressor_orgasm_Count()
 		ResolveTimers()
 		PlayStageAnimations()
 		; Send events
@@ -1087,6 +1090,7 @@ int function SLSO_Animating_GoToStage(int ToStage)
 	if StageCount > 2
 		maxStage = StageCount - 2
 	endIf
+	
 	if Stage > maxStage
 		if Config.SeparateOrgasms && HasPlayer && GetVictim() != none && (JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1 || JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1)
 
@@ -1096,7 +1100,7 @@ int function SLSO_Animating_GoToStage(int ToStage)
 				if ActorAlias[i].GetRef() != none
 					if ActorAlias[i].IsAggressor() && ((ActorAlias[i].GetRef() != GetPlayer() && JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1) || (ActorAlias[i].GetRef() == GetPlayer() && JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1))
 						if ((ActorAlias[i].IsCreature() && JsonUtil.GetIntValue(File, "game_enabled") == 1) || !ActorAlias[i].IsCreature())
-							if ActorAlias[i].GetOrgasmCount() < Get_minimum_aggressor_orgasm_Count()
+							if ActorAlias[i].GetOrgasmCount() < Get_minimum_aggressor_orgasm_Count() && ActorAlias[i].IsOrgasmAllowed()
 								Bool Belted = false
 								
 								if JsonUtil.GetIntValue(File, "condition_ddbelt_orgasm") == 0
@@ -1108,7 +1112,7 @@ int function SLSO_Animating_GoToStage(int ToStage)
 										if (ActorAlias[i].GetRef() as Actor).WornHasKeyword(zadDeviousBelt)
 											Belted = true
 											i = 0
-											;Log("Aggressor is DD belted, ending animation")
+											Log("Aggressor is DD belted, ending animation")
 										EndIf
 									EndIf
 								EndIf
