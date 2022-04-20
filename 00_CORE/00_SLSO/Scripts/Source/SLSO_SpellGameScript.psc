@@ -134,7 +134,11 @@ Function Game(string var = "")
 	float FullEnjoymentMOD = PapyrusUtil.ClampFloat((controller.ActorAlias(GetTargetActor()).GetFullEnjoyment() as float)/30, 1.0, 3.0)
 	float mod
 	
-	if GetTargetActor().GetActorValuePercentage("Magicka") > 0.25 && MentallyBroken == true
+	if (IsVictim && GetTargetActor() == Game.GetPlayer() && JsonUtil.GetIntValue(File, "game_victim_autoplay") == 1)
+		MentallyBroken = true
+	ElseIf GetTargetActor().GetActorValuePercentage("Magicka") <= 0.10
+		MentallyBroken = true
+	ElseIf GetTargetActor().GetActorValuePercentage("Magicka") > 0.25 && MentallyBroken == true
 		MentallyBroken = false
 	EndIf
 	
@@ -184,7 +188,7 @@ Function Game(string var = "")
 	;PC(auto/mentalbreak)/NPC
 	Elseif GetTargetActor() != Game.GetPlayer()\
 	|| JsonUtil.GetIntValue(File, "game_player_autoplay") == 1\
-	|| GetTargetActor().GetActorValuePercentage("Magicka") < 0.10
+	|| MentallyBroken == true
 		mod = GetModSelfSta
 		
 		If GetTargetActor().GetActorValuePercentage("Stamina") > 0.10
@@ -196,10 +200,10 @@ Function Game(string var = "")
 					ModEnjoyment(GetTargetActor(), mod, FullEnjoymentMOD)
 					PartnerRef = GetTargetActor()
 				
-				;rough sex, nautrals-lovers
+				;rough sex, neutrals-lovers
 				else
 				;not broken, pleasure self
-					if GetTargetActor().GetActorValuePercentage("Magicka") > 0.10 || controller.ActorCount > 2
+					if MentallyBroken == false || controller.ActorCount > 2
 						ModEnjoyment(GetTargetActor(), mod, FullEnjoymentMOD)
 						PartnerRef = GetTargetActor()
 				;mental broken, pleasure partner
@@ -212,7 +216,7 @@ Function Game(string var = "")
 				;not aggressor
 				
 				;mentally not broken, pleasure self
-				if GetTargetActor().GetActorValuePercentage("Magicka") > 0.10 || controller.ActorCount > 2
+				if MentallyBroken == false || controller.ActorCount > 2
 					;pleasure self if self priority
 					;lewdness based check
 					if (Utility.RandomInt(0, 100) < SexLab.Stats.GetSkillLevel(GetTargetActor(), "Lewd", 0.3)*10*1.5) && JsonUtil.GetIntValue(File, "game_pleasure_priority") == 1
@@ -235,7 +239,6 @@ Function Game(string var = "")
 					
 				;mentally broken, pleasure partner
 				else
-					MentallyBroken = true
 					ModEnjoyment(PartnerReference, mod, FullEnjoymentMOD)
 					PartnerRef = PartnerReference
 				EndIf

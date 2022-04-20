@@ -143,6 +143,7 @@ function Page_Config()
 			AddToggleOptionST("slso_game_edging", "$slso_game_edging", JsonUtil.GetIntValue(File, "game_edging"))
 			;AddToggleOptionST("slso_game_scriptupdate_boost", "$slso_game_scriptupdate_boost", JsonUtil.GetIntValue(File, "game_scriptupdate_boost"))
 			AddToggleOptionST("game_player_autoplay", "$game_player_autoplay", JsonUtil.GetIntValue(File, "game_player_autoplay"))
+			AddToggleOptionST("game_victim_autoplay", "$game_victim_autoplay", JsonUtil.GetIntValue(File, "game_victim_autoplay"))
 			AddToggleOptionST("game_passive_enjoyment_reduction", "$game_passive_enjoyment_reduction", JsonUtil.GetIntValue(File, "game_passive_enjoyment_reduction"))
 			AddToggleOptionST("game_enjoyment_reduction_chance", "$game_enjoyment_reduction_chance", JsonUtil.GetIntValue(File, "game_enjoyment_reduction_chance"))
 			if JsonUtil.GetIntValue(File, "game_animation_speed_control") == 1
@@ -168,6 +169,8 @@ function Page_Config()
 			endif
 			AddToggleOptionST("game_no_sta_endanim", "$game_no_sta_endanim", JsonUtil.GetIntValue(File, "game_no_sta_endanim"))
 			AddToggleOptionST("game_male_orgasm_endanim", "$game_male_orgasm_endanim", JsonUtil.GetIntValue(File, "game_male_orgasm_endanim"))
+			;AddToggleOptionST("game_hybrid_progression", "$game_hybrid_progression", JsonUtil.GetIntValue(File, "game_hybrid_progression"))
+			;AddSliderOptionST("game_hybrid_progression_delay", "$game_hybrid_progression_delay", JsonUtil.GetIntValue(File, "game_hybrid_progression_delay"))
 	
 			AddEmptyOption()
 
@@ -461,6 +464,24 @@ state sl_hot_voice_strength
 	endEvent
 endState
 
+state game_hybrid_progression_delay
+	event OnSliderOpenST()
+		SetSliderDialogStartValue(JsonUtil.GetIntValue(File, "game_hybrid_progression_delay"))
+		SetSliderDialogDefaultValue(0)
+		SetSliderDialogRange(0, 60)
+		SetSliderDialogInterval(1)
+	endEvent
+
+	event OnSliderAcceptST(float value)
+		JsonUtil.SetIntValue(File, "game_hybrid_progression_delay", value as int)
+		SetSliderOptionValueST(JsonUtil.GetIntValue(File, "game_hybrid_progression_delay"))
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$game_hybrid_progression_delay_description")
+	endEvent
+endState
+
 state sl_multiorgasmchance
 	event OnSliderOpenST()
 		SetSliderDialogStartValue(JsonUtil.GetIntValue(File, "sl_multiorgasmchance"))
@@ -559,6 +580,21 @@ state game_male_orgasm_endanim
 	
 	event OnHighlightST()
 		SetInfoText("$game_male_orgasm_endanim_description")
+	endEvent
+endState
+
+state game_hybrid_progression
+	event OnSelectST()
+		if JsonUtil.GetIntValue(File, "game_hybrid_progression") == 1
+			JsonUtil.SetIntValue(File, "game_hybrid_progression", 0)
+		else
+			JsonUtil.SetIntValue(File, "game_hybrid_progression", 1)
+		endif
+		SetToggleOptionValueST(JsonUtil.GetIntValue(File, "game_hybrid_progression"))
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$game_hybrid_progression_description")
 	endEvent
 endState
 
@@ -870,6 +906,21 @@ state game_player_autoplay
 	
 	event OnHighlightST()
 		SetInfoText("$game_player_autoplay_description")
+	endEvent
+endState
+
+state game_victim_autoplay
+	event OnSelectST()
+		if JsonUtil.GetIntValue(File, "game_victim_autoplay") == 1
+			JsonUtil.SetIntValue(File, "game_victim_autoplay", 0)
+		else
+			JsonUtil.SetIntValue(File, "game_victim_autoplay", 1)
+		endif
+		SetToggleOptionValueST(JsonUtil.GetIntValue(File, "game_victim_autoplay"))
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$game_victim_autoplay_description")
 	endEvent
 endState
 
