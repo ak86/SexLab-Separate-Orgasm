@@ -958,10 +958,13 @@ state Animating
 				return
 			endIf
 		endIf
+		
+		int i
+		;/ SLSO: this probably breaks orgasms in some animations
 		; Check if the animation allow Orgasm. By default all the animations with a CumID>0 are type SEX and allow orgasm 
 		; But the Lesbian Animations usually don't have CumId assigned and still the orgasm should be allowed at least for Females.
 		bool CanOrgasm = Forced || (IsFemale && (Animation.HasTag("Lesbian") || Animation.Females == Animation.PositionCount))
-		int i = Thread.ActorCount
+		i = Thread.ActorCount
 		while !CanOrgasm && i > 0
 			i -= 1
 			CanOrgasm = Animation.GetCumID(i, Stage) > 0 || Animation.GetCum(i) > 0
@@ -989,6 +992,8 @@ state Animating
 				endIf
 			endIf
 		endIf
+		/;
+		
 		UnregisterForUpdate()
 		LastOrgasm = RealTime[0]
 		Orgasms   += 1
