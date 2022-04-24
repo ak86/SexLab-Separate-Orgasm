@@ -1,73 +1,120 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
-	<moduleName>SexLab Separate Orgasm</moduleName>
-	<installSteps order="Explicit">	
-		<installStep name="Core Setup">
-			<optionalFileGroups>
-				<group name="SLSO" type="SelectExactlyOne">
-					<plugins order="Explicit">
-						<plugin name="SLSO">
-							<description>
-								<![CDATA[Core mod, includes .esp with widgets, scripts, mcm and json config file with mod settings. Data\SKSE\Plugins\StorageUtilData\SLSO]]>
+  <moduleName position="Left" colour="000000">SexLab Separate Orgasm</moduleName>
+  <installSteps order="Explicit">
+    <installStep name="Mod Setup">
+      <!--<designer.metadata.do.not.edit> {"name":"Mod Setup"}-->
+      <optionalFileGroups order="Ascending">
+        <group name="SLSO" type="SelectExactlyOne">
+          <plugins order="Explicit">
+            <plugin name="SLSO">
+              <description>Core mod, includes .esp with widgets, scripts, mcm and json config file with mod settings. Data\SKSE\Plugins\StorageUtilData\SLSO
 							</description>
-							<conditionFlags>
-								<flag name="Config">Active</flag>
-							</conditionFlags>
-							<files>
-								<folder source="00_Core\00_SLSO" destination=""/>
-							</files>
-							<typeDescriptor>
-								<type name="Required"/>
-							</typeDescriptor>
-						</plugin>
-					</plugins>
-				</group>
-				<group name="SexLabFramework" type="SelectExactlyOne">
-					<plugins order="Explicit">
-						<plugin name="SexLabFramework">
-							<description>
-								<![CDATA[Modified SexLabFramework scripts for SLSO to work]]>
+              <conditionFlags>
+                <flag name="Config">Active</flag>
+              </conditionFlags>
+              <files>
+                <folder source="00_Core\00_SLSO" destination="" priority="0" alwaysInstall="false" installIfUsable="false"/>
+              </files>
+              <typeDescriptor>
+                <type name="Required"/>
+              </typeDescriptor>
+            </plugin>
+          </plugins>
+        </group>
+        <group name="SexLabFramework" type="SelectExactlyOne">
+          <plugins order="Explicit">
+            <plugin name="SexLab LE 1.62">
+              <!--<designer.metadata.do.not.edit> {"name":"SexLab LE 1.62"}-->
+              <description>Modified SexLabFramework scripts for SLSO to work
 							</description>
-							<conditionFlags>
-								<flag name="sslThreadController">Active</flag>
-							</conditionFlags>
-							<files>
-								<folder source="00_Core\01_SexLabFramework" destination=""/>
-							</files>
-							<typeDescriptor>
-								<type name="Required"/>
-							</typeDescriptor>
-						</plugin>
-					</plugins>   
-				</group>
-				<group name="SexLabAroused" type="SelectAny">
-					<plugins order="Explicit">			
-						<plugin name="SLA">
-							<description>
-								<![CDATA[SLAR AAAA 1.0.5 based patch. Support for SLSO.]]>
+              <files>
+                <folder source="00_CORE\SexLabFramework LE" destination="" priority="0" alwaysInstall="false" installIfUsable="false"/>
+              </files>
+              <typeDescriptor>
+                <type name="Optional"/>
+              </typeDescriptor>
+            </plugin>
+            <plugin name="SexLab SE 1.63">
+              <!--<designer.metadata.do.not.edit> {"name":"SexLab SE 1.63"}-->
+              <description>Modified SexLabFramework scripts for SLSO to work
 							</description>
-							<conditionFlags>
-								<flag name="SLA">Active</flag>
-							</conditionFlags>
-							<files>
-								<folder source="00_Core\02_SexLabAroused" destination=""/>
-							</files>
-							<typeDescriptor>
-								<dependencyType>
-									<defaultType name="NotUsable"/>
-									<patterns>
-										<pattern>
-											<dependencies>
-												<fileDependency file="SexLabAroused.esm" state="Active"/>
-											</dependencies>
-											<type name="Recommended"/>
-										</pattern>
-									</patterns>
-								</dependencyType>
-							</typeDescriptor>
-						</plugin>
-					</plugins>   
-				</group>
-			</optionalFileGroups>
-		</installStep>
-	</installSteps>
-</config>		
+              <files>
+                <folder source="00_CORE\SexLabFramework SE" destination="" priority="0" alwaysInstall="false" installIfUsable="false"/>
+              </files>
+              <typeDescriptor>
+                <type name="Optional"/>
+              </typeDescriptor>
+            </plugin>
+            <plugin name="SexLab AE 1.64c">
+              <!--<designer.metadata.do.not.edit> {"name":"SexLab AE 1.64c"}-->
+              <description>Modified SexLabFramework scripts for SLSO to work
+							</description>
+              <files>
+                <folder source="00_CORE\SexLabFramework AE" destination="" priority="0" alwaysInstall="false" installIfUsable="false"/>
+              </files>
+              <typeDescriptor>
+                <type name="Optional"/>
+              </typeDescriptor>
+            </plugin>
+          </plugins>
+        </group>
+        <group name="SexLab Aroused (Redux)" type="SelectAny">
+          <plugins order="Explicit">
+            <plugin name="SLAR Patch">
+              <!--<designer.metadata.do.not.edit> {"name":"SLAR Patch"}-->
+              <description>SLA(R) 2.90 patch.
+Based on SLAR AAAA 1.0.5 patch. 
+Adds support for SLSO.
+Fixes some bugs in SLA related to orgasms and animation ending.
+							</description>
+              <files>
+                <folder source="00_Core\SexLabAroused" destination="" priority="0" alwaysInstall="false" installIfUsable="false"/>
+              </files>
+              <typeDescriptor>
+                <dependencyType>
+                  <defaultType name="Recommended"/>
+                  <patterns>
+                    <pattern>
+                      <dependencies operator="And">
+                        <fileDependency file="SexLabAroused.esm" state="Active"/>
+                      </dependencies>
+                      <type name="Recommended"/>
+                    </pattern>
+                  </patterns>
+                </dependencyType>
+              </typeDescriptor>
+            </plugin>
+          </plugins>
+          <!--<designer.metadata.do.not.edit> {"name":"SexLab Aroused (Redux)"}-->
+        </group>
+        <group name="AnimSpeedPlugin (LE)" type="SelectAny">
+          <plugins order="Explicit">
+            <plugin name="AnimSpeedPlugin">
+              <!--<designer.metadata.do.not.edit> {"name":"AnimSpeedPlugin"}-->
+              <description>AnimSpeedPlugin, allows changing speed of animations.
+Works only in Skyrim - Legendary edition
+							</description>
+              <files>
+                <folder source="00_CORE\AnimSpeedPlugin" destination="" priority="0" alwaysInstall="false" installIfUsable="false"/>
+              </files>
+              <typeDescriptor>
+                <dependencyType>
+                  <defaultType name="Optional"/>
+                  <patterns>
+                    <pattern>
+                      <dependencies operator="And">
+                        <fileDependency file="SexLabAroused.esm" state="Active"/>
+                      </dependencies>
+                      <type name="Optional"/>
+                    </pattern>
+                  </patterns>
+                </dependencyType>
+              </typeDescriptor>
+            </plugin>
+          </plugins>
+          <!--<designer.metadata.do.not.edit> {"name":"AnimSpeedPlugin (LE)"}-->
+        </group>
+      </optionalFileGroups>
+    </installStep>
+  </installSteps>
+</config>
