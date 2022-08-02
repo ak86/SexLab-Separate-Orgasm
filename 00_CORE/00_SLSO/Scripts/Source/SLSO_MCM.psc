@@ -76,6 +76,7 @@ function Page_Config()
 			
 		AddHeaderOption("$Config_Orgasm_event_configuration_Header_2")
 			
+			AddToggleOptionST("condition_consensual_orgasm", "$condition_consensual_orgasm", JsonUtil.GetIntValue(File, "condition_consensual_orgasm"))
 			AddToggleOptionST("condition_aggressor_orgasm", "$condition_aggressor_orgasm", JsonUtil.GetIntValue(File, "condition_aggressor_orgasm"))
 			AddToggleOptionST("condition_aggressor_change_animation", "$condition_aggressor_change_animation", JsonUtil.GetIntValue(File, "condition_aggressor_change_animation"))
 			AddSliderOptionST("condition_chance_minimum_aggressor_orgasm_increase", "$condition_chance_minimum_aggressor_orgasm_increase", JsonUtil.GetIntValue(File, "condition_chance_minimum_aggressor_orgasm_increase"), "{0}%")
@@ -625,6 +626,21 @@ state sl_stage_enjoyment
 	
 	event OnHighlightST()
 		SetInfoText("$sl_stage_enjoyment_description")
+	endEvent
+endState
+
+state condition_consensual_orgasm
+	event OnSelectST()
+		if JsonUtil.GetIntValue(File, "condition_consensual_orgasm") == 1
+			JsonUtil.SetIntValue(File, "condition_consensual_orgasm", 0)
+		else
+			JsonUtil.SetIntValue(File, "condition_consensual_orgasm", 1)
+		endif
+		SetToggleOptionValueST(JsonUtil.GetIntValue(File, "condition_consensual_orgasm"))
+	endEvent
+	
+	event OnHighlightST()
+		SetInfoText("$condition_consensual_orgasm_description")
 	endEvent
 endState
 

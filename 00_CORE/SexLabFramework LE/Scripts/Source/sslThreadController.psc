@@ -63,6 +63,17 @@ state Prepare
 		SLSO_condition_minimum_aggressor_orgasm = -1
 		SLSO_condition_maximum_aggressor_orgasm = Get_maximum_aggressor_orgasm_Count()
 		SLSO_condition_minimum_aggressor_orgasm = Get_minimum_aggressor_orgasm_Count()
+		
+		String File = "/SLSO/Config.json"
+		SLSO_shouldrun_SLSO_Animating_GoToStage = Config.SeparateOrgasms && HasPlayer
+		;Log("SLSO_shouldrun_SLSO_Animating_GoToStage so+hp " + SLSO_shouldrun_SLSO_Animating_GoToStage)
+		if (GetVictim() == none) ; consensual
+			SLSO_shouldrun_SLSO_Animating_GoToStage = SLSO_shouldrun_SLSO_Animating_GoToStage && JsonUtil.GetIntValue(File, "condition_consensual_orgasm") == 1
+			;Log("SLSO_shouldrun_SLSO_Animating_GoToStage c " + SLSO_shouldrun_SLSO_Animating_GoToStage)
+		else
+			SLSO_shouldrun_SLSO_Animating_GoToStage = SLSO_shouldrun_SLSO_Animating_GoToStage && (JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1 || JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1)
+			;Log("SLSO_shouldrun_SLSO_Animating_GoToStage a " + SLSO_shouldrun_SLSO_Animating_GoToStage)
+		endif
 		RegisterForSingleUpdate(0.1)
 	endFunction
 
@@ -196,7 +207,7 @@ state Animating
 		UnregisterForUpdate()
 		ToStage = SLSO_Animating_GoToStage(ToStage)
 		if (ToStage == -1)
-			Log("Victim found, aggressor is not satisfied, aggressor changing animation")
+			Log("Lead is not satisfied, Lead changing animation")
 			Stage = 2 ; 1 - is probably leadin
 			ChangeAnimation()
 			return
@@ -883,22 +894,22 @@ endEvent
 	endIf
 endFunction /;
 
-;SLSO, block stage advancing/finishing animation until aggressor orgasms once
+;SLSO, block stage advancing/finishing animation until aggressor orgasms X times
 int function SLSO_Animating_GoToStage(int ToStage)
-	String File = "/SLSO/Config.json"
 	int maxStage = StageCount - 1
 	; if possible do not proceed to last stage until after orgasm
 	if StageCount > 2
 		maxStage = StageCount - 2
 	endIf
+	
 	if Stage > maxStage
-		if Config.SeparateOrgasms && HasPlayer && GetVictim() != none && (JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1 || JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1)
-
+		if SLSO_shouldrun_SLSO_Animating_GoToStage
+			String File = "/SLSO/Config.json"
 			int i = ActorCount
 			while i > 0
 				i -= 1
 				if ActorAlias[i].GetRef() != none
-					if ActorAlias[i].IsAggressor() && ((ActorAlias[i].GetRef() != GetPlayer() && JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1) || (ActorAlias[i].GetRef() == GetPlayer() && JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1))
+					if ((ActorAlias[i].GetRef() != GetPlayer() && JsonUtil.GetIntValue(File, "condition_aggressor_orgasm") == 1) || (ActorAlias[i].GetRef() == GetPlayer() && JsonUtil.GetIntValue(File, "condition_player_aggressor_orgasm") == 1))
 						if ((ActorAlias[i].IsCreature() && JsonUtil.GetIntValue(File, "game_enabled") == 1) || !ActorAlias[i].IsCreature())
 							if ActorAlias[i].GetOrgasmCount() < Get_minimum_aggressor_orgasm_Count()
 								Bool Belted = false
@@ -912,7 +923,7 @@ int function SLSO_Animating_GoToStage(int ToStage)
 										if (ActorAlias[i].GetRef() as Actor).WornHasKeyword(zadDeviousBelt)
 											Belted = true
 											i = 0
-											Log("Aggressor is DD belted, ending animation")
+											Log("Lead is DD belted, DD belt orgasms blocked, ending animation")
 										EndIf
 									EndIf
 								EndIf
@@ -934,7 +945,7 @@ int function SLSO_Animating_GoToStage(int ToStage)
 										endif
 									endif
 									i = 0
-									Log("Victim found, aggressor is not satisfied, setting stage to " + ToStage)
+									Log("Lead is not satisfied, setting stage to " + ToStage)
 								endif
 							endIf
 						endIf
@@ -950,6 +961,8 @@ endFunction
 
 
 ;SLSO
+bool SLSO_shouldrun_SLSO_Animating_GoToStage = false
+
 int SLSO_condition_minimum_aggressor_orgasm = -1
 int function Get_minimum_aggressor_orgasm_Count()
 	;not set, setup

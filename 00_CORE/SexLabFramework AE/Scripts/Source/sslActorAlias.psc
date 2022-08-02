@@ -970,6 +970,7 @@ state Animating
 			CanOrgasm = Animation.GetCumID(i, Stage) > 0 || Animation.GetCum(i) > 0
 		endWhile
 		if !CanOrgasm
+			Log(ActorName + " Orgasm Disabled for the animation")
 			; Orgasm Disabled for the animation
 			return
 		endIf
@@ -2502,8 +2503,8 @@ endFunction
 
 function SLSO_DoOrgasm_SexLabOrgasmSeparate()
 	if SeparateOrgasms
-		if IsAggressor && !IsPlayer
-			String File = "/SLSO/Config.json"
+		String File = "/SLSO/Config.json"
+		if !IsPlayer && (IsAggressor || (!IsAggressor && JsonUtil.GetIntValue(File, "condition_consensual_orgasm") == 1))
 			if JsonUtil.GetIntValue(File, "game_enabled") == 1
 				if GetOrgasmCount() == Thread.Get_minimum_aggressor_orgasm_Count()
 					if Utility.RandomInt(0, 100) < JsonUtil.GetIntValue(File, "condition_chance_minimum_aggressor_orgasm_increase")
