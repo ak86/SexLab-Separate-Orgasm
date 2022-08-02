@@ -48,4 +48,11 @@ Event OnUpdate()
 		SLSO_VoicesSetsQuests.AddForm(self.GetOwningQuest())
 		Debug.Notification("SLSO: addEd " + self.GetOwningQuest().GetName() + " voice set.")
 	EndIf
+	
+	;Add VP to json
+	String Q_name = self.GetOwningQuest().GetName()
+	String File = "/SLSO/SLSO_VP_" + Q_name + ".json"
+	;JsonUtil.FormListAdd(File, self.GetOwningQuest().GetName(), self.GetOwningQuest(), false)
+	JsonUtil.FormListAdd(File, "voicepack", self.GetOwningQuest(), false)
+	
 EndEvent
