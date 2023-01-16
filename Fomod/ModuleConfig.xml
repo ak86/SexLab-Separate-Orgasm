@@ -45,8 +45,8 @@
                 <type name="Optional"/>
               </typeDescriptor>
             </plugin>
-            <plugin name="SexLab AE 1.64c">
-              <!--<designer.metadata.do.not.edit> {"name":"SexLab AE 1.64c"}-->
+            <plugin name="SexLab AE 1.65">
+              <!--<designer.metadata.do.not.edit> {"name":"SexLab AE 1.65"}-->
               <description>Modified SexLabFramework scripts for SLSO to work
 							</description>
               <files>
