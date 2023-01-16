@@ -281,7 +281,7 @@ bool function HasRaceKeyMatch(string[] RaceList)
 endFunction
 
 function Save(int id = -1)
-	AddTagConditional("Male",   (Gender == 0 || Gender == -1))
+	AddTagConditional("Male",	(Gender == 0 || Gender == -1))
 	AddTagConditional("Female", (Gender == 1 || Gender == -1))
 	AddTagConditional("Creature", (Gender == 2 || Gender == 3))
 	Log(Name, "Voices["+id+"]")
@@ -289,10 +289,10 @@ function Save(int id = -1)
 endFunction
 
 function Initialize()
-	Gender  = -1
-	Mild    = none
-	Medium  = none
-	Hot     = none
+	Gender	= -1
+	Mild	= none
+	Medium	= none
+	Hot		= none
 	RaceKeys = Utility.CreateStringArray(0)
 	parent.Initialize()
 	LipSync = Config.LipSync

@@ -18,6 +18,7 @@ bool isRealFemale
 bool IsMale
 bool IsFemale
 bool IsCreature
+bool IsFuta
 bool IsVictim
 bool IsAggressor
 bool IsPlayer
@@ -112,7 +113,7 @@ bool property MalePosition hidden
 endProperty
 
 ; ------------------------------------------------------- ;
-; --- Load/Clear Alias For Use                        --- ;
+; --- Load/Clear Alias For Use						  --- ;
 ; ------------------------------------------------------- ;
 
 bool function SetActor(Actor ProspectRef)
@@ -122,15 +123,16 @@ bool function SetActor(Actor ProspectRef)
 	endIf
 	; Init actor alias information
 	ActorRef   = ProspectRef
-	BaseRef    = ActorRef.GetLeveledActorBase()
+	BaseRef	   = ActorRef.GetLeveledActorBase()
 	ActorName  = BaseRef.GetName()
 	; ActorVoice = BaseRef.GetVoiceType()
-	BaseSex    = BaseRef.GetSex()
+	BaseSex	   = BaseRef.GetSex()
 	isRealFemale = BaseSex == 1
-	Gender     = ActorLib.GetGender(ActorRef)
-	IsMale     = Gender == 0
+	Gender	   = ActorLib.GetGender(ActorRef)
+	IsMale	   = Gender == 0
 	IsFemale   = Gender == 1
 	IsCreature = Gender >= 2
+	IsFuta	   = ActorLib.GetTrans(ActorRef) != -1
 	IsTracked  = Config.ThreadLib.IsActorTracked(ActorRef)
 	IsPlayer   = ActorRef == PlayerRef
 	RaceEditorID = MiscUtil.GetRaceEditorID(BaseRef.GetRace())
@@ -235,9 +237,9 @@ bool function SetActor(Actor ProspectRef)
 	VoiceDelay = BaseDelay
 	ExpressionDelay = Config.ExpressionDelay * BaseDelay
 	; Init some needed arrays
-	Flags   = new int[5]
+	Flags	= new int[5]
 	Offsets = new float[4]
-	Loc     = new float[6]
+	Loc		= new float[6]
 	; Ready
 	RegisterEvents()
 	TrackedEvent("Added")
@@ -258,14 +260,15 @@ function ClearAlias()
 	if GetReference() && GetReference() as Actor != none
 		; Init variables needed for reset
 		ActorRef   = GetReference() as Actor
-		BaseRef    = ActorRef.GetLeveledActorBase()
+		BaseRef	   = ActorRef.GetLeveledActorBase()
 		ActorName  = BaseRef.GetName()
-		BaseSex    = BaseRef.GetSex()
+		BaseSex	   = BaseRef.GetSex()
 		isRealFemale = BaseSex == 1
-		Gender     = ActorLib.GetGender(ActorRef)
-		IsMale     = Gender == 0
+		Gender	   = ActorLib.GetGender(ActorRef)
+		IsMale	   = Gender == 0
 		IsFemale   = Gender == 1
 		IsCreature = Gender >= 2
+		IsFuta	   = ActorLib.GetTrans(ActorRef) != -1
 		if !RaceEditorID || RaceEditorID == ""
 			RaceEditorID = MiscUtil.GetRaceEditorID(BaseRef.GetRace())
 		endIf
@@ -305,14 +308,14 @@ function LoadShares()
 	UseLipSync = Config.UseLipSync && !IsCreature
 	UseScale   = !Config.DisableScale
 
-	Center     = Thread.CenterLocation
+	Center	   = Thread.CenterLocation
 	Position   = Thread.Positions.Find(ActorRef)
 	BedStatus  = Thread.BedStatus
 	RealTime   = Thread.RealTime
 	SkillBonus = Thread.SkillBonus
 	AdjustKey  = Thread.AdjustKey
-	IsType     = Thread.IsType
-	LeadIn     = Thread.LeadIn
+	IsType	   = Thread.IsType
+	LeadIn	   = Thread.LeadIn
 	AnimEvents = Thread.AnimEvents
 
 	SeparateOrgasms = Config.SeparateOrgasms
@@ -320,7 +323,7 @@ function LoadShares()
 endFunction
 
 ; ------------------------------------------------------- ;
-; --- Actor Prepartion                                --- ;
+; --- Actor Prepartion								  --- ;
 ; ------------------------------------------------------- ;
 
 
@@ -422,7 +425,7 @@ state Ready
 			ActorRef.SetPosition(Loc[0], Loc[1], Loc[2])
 			ActorRef.SetAngle(Loc[3], Loc[4], Loc[5])
 			AttachMarker()
-			if !IsPlayer || Game.GetCameraState() != 10
+			if !IsPlayer || !ActorRef.IsOnMount()
 				ActorRef.QueueNiNodeUpdate()
 			endIf
 		endIf
@@ -450,9 +453,9 @@ state Ready
 		; Extras for non creatures
 		if !IsCreature
 			; Decide on strapon for female, default to worn, otherwise pick random.
-			if IsFemale && Config.UseStrapons
+			if IsFemale && !IsFuta && Config.UseStrapons
 				HadStrapon = Config.WornStrapon(ActorRef)
-				Strapon    = HadStrapon
+				Strapon	   = HadStrapon
 				if !HadStrapon
 					Strapon = Config.GetStrapon()
 				endIf
@@ -491,8 +494,8 @@ state Ready
 				SkilledActor = Thread.Positions[sslUtility.IndexTravel(Position, Thread.ActorCount)]
 			endIf
 			; Get sex skills of partner/player
-			Skills       = Stats.GetSkillLevels(SkilledActor)
-			OwnSkills    = Stats.GetSkillLevels(ActorRef)
+			Skills		 = Stats.GetSkillLevels(SkilledActor)
+			OwnSkills	 = Stats.GetSkillLevels(ActorRef)
 			; Try to prevent orgasms on fist stage resting enjoyment
 			float FirsStageTime
 			if LeadIn
@@ -563,8 +566,8 @@ state Ready
 				endIf
 				
 				; Start wait loop for actor pathing.
-				int StuckCheck  = 0
-				float Failsafe  = SexLabUtil.GetCurrentGameRealTime() + 30.0
+				int StuckCheck	= 0
+				float Failsafe	= SexLabUtil.GetCurrentGameRealTime() + 30.0
 				while Distance > 100.0 && SexLabUtil.GetCurrentGameRealTime() < Failsafe
 					Utility.Wait(1.0)
 					float Previous = Distance
@@ -615,7 +618,7 @@ state Prepare
 			ActorRef.SetPosition(Loc[0], Loc[1], Loc[2])
 			ActorRef.SetAngle(Loc[3], Loc[4], Loc[5])
 			AttachMarker()
-			if !IsPlayer || Game.GetCameraState() != 10
+			if !IsPlayer || !ActorRef.IsOnMount()
 				ActorRef.QueueNiNodeUpdate()
 			endIf
 			Debug.SendAnimationEvent(ActorRef, "SOSFastErect")
@@ -712,7 +715,7 @@ state Prepare
 endState
 
 ; ------------------------------------------------------- ;
-; --- Animation Loop                                  --- ;
+; --- Animation Loop								  --- ;
 ; ------------------------------------------------------- ;
 
 
@@ -724,16 +727,16 @@ function GetPositionInfo()
 		if AdjustKey != Thread.AdjustKey
 			SetAdjustKey(Thread.AdjustKey)
 		endIf
-		LeadIn     = Thread.LeadIn
-		Stage      = Thread.Stage
+		LeadIn	   = Thread.LeadIn
+		Stage	   = Thread.Stage
 		Animation  = Thread.Animation
 		StageCount = Animation.StageCount
 		if Stage > StageCount
 			return
 		endIf
 	;	Log("Animation:"+Animation.Name+" AdjustKey:"+AdjustKey+" Position:"+Position+" Stage:"+Stage)
-		Flags      = Animation.PositionFlags(Flags, AdjustKey, Position, Stage)
-		Offsets    = Animation.PositionOffsets(Offsets, AdjustKey, Position, Stage, BedStatus[1])
+		Flags	   = Animation.PositionFlags(Flags, AdjustKey, Position, Stage)
+		Offsets	   = Animation.PositionOffsets(Offsets, AdjustKey, Position, Stage, BedStatus[1])
 		CurrentSA  = Animation.Registry
 		; AnimEvents[Position] = Animation.FetchPositionStage(Position, Stage)
 	endIf
@@ -764,8 +767,8 @@ state Animating
 				; Log("NEW SA - "+Animation.FetchPositionStage(Position, 1))
 			endIf
 			; Play the primary animation
-		 	Debug.SendAnimationEvent(ActorRef, CurrentAE)
-		 	; Log(CurrentAE)
+			Debug.SendAnimationEvent(ActorRef, CurrentAE)
+			; Log(CurrentAE)
 		endIf
 		; Save id of last SA played
 		PlayingSA = Animation.Registry
@@ -945,7 +948,7 @@ state Animating
 		int Enjoyment = GetFullEnjoyment()
 		if !Forced && (NoOrgasm || Thread.DisableOrgasms)
 			; Orgasm Disabled for actor or whole thread
-			return
+			return 
 		elseIf !Forced && Enjoyment < 1
 			; Actor have the orgasm few seconds ago or is in pain and can't orgasm
 			return
@@ -958,12 +961,13 @@ state Animating
 				return
 			endIf
 		endIf
+
 		
 		int i
 		;/ SLSO: this probably breaks orgasms in some animations
 		; Check if the animation allow Orgasm. By default all the animations with a CumID>0 are type SEX and allow orgasm 
 		; But the Lesbian Animations usually don't have CumId assigned and still the orgasm should be allowed at least for Females.
-		bool CanOrgasm = Forced || (IsFemale && (Animation.HasTag("Lesbian") || Animation.Females == Animation.PositionCount))
+		bool CanOrgasm = Forced || ((IsFemale || IsFuta) && (Animation.HasTag("Lesbian") || Animation.Females == Animation.PositionCount))
 		i = Thread.ActorCount
 		while !CanOrgasm && i > 0
 			i -= 1
@@ -986,7 +990,9 @@ state Animating
 				IsCumSource = Animation.GetCumSource(i, Stage) == Position
 			endWhile
 			if !IsCumSource
-				if IsMale && !(Animation.HasTag("Anal") || Animation.HasTag("Vaginal") || Animation.HasTag("Handjob") || Animation.HasTag("Blowjob") || Animation.HasTag("Boobjob") || Animation.HasTag("Footjob") || Animation.HasTag("Penis"))
+				if IsFuta && !(Animation.HasTag("Anal") || Animation.HasTag("Vaginal") || Animation.HasTag("Pussy") || Animation.HasTag("Cunnilingus") || Animation.HasTag("Fisting") || Animation.HasTag("Handjob") || Animation.HasTag("Blowjob") || Animation.HasTag("Boobjob") || Animation.HasTag("Footjob") || Animation.HasTag("Penis"))
+					return
+				elseIf IsMale && !(Animation.HasTag("Anal") || Animation.HasTag("Vaginal") || Animation.HasTag("Handjob") || Animation.HasTag("Blowjob") || Animation.HasTag("Boobjob") || Animation.HasTag("Footjob") || Animation.HasTag("Penis"))
 					return
 				elseIf IsFemale && !(Animation.HasTag("Anal") || Animation.HasTag("Vaginal") || Animation.HasTag("Pussy") || Animation.HasTag("Cunnilingus") || Animation.HasTag("Fisting") || Animation.HasTag("Breast"))
 					return
@@ -997,7 +1003,7 @@ state Animating
 		
 		UnregisterForUpdate()
 		LastOrgasm = RealTime[0]
-		Orgasms   += 1
+		Orgasms	  += 1
 		
 		; reset timers
 		SLSO_DoOrgasm_Multiorgasm()
@@ -1013,7 +1019,7 @@ state Animating
 		SLSO_DoOrgasm_SexLabOrgasmSeparate()
 
 		TrackedEvent("Orgasm")
-		Log(ActorName + "- Orgasms["+Orgasms+"] Enjoyment ["+Enjoyment+"] BaseEnjoyment["+BaseEnjoyment+"] FullEnjoyment["+FullEnjoyment+"]")
+		Log(ActorName + ": Orgasms["+Orgasms+"] Enjoyment ["+Enjoyment+"] BaseEnjoyment["+BaseEnjoyment+"] FullEnjoyment["+FullEnjoyment+"]")
 		if Config.OrgasmEffects
 			; Shake camera for player
 			if IsPlayer && Config.ShakeStrength > 0 && Game.GetCameraState() >= 8
@@ -1023,7 +1029,7 @@ state Animating
 		endIf
 		; Apply cum to female positions from male position orgasm
 		i = Thread.ActorCount
-		if i > 1 && Config.UseCum && (MalePosition || IsCreature) && (IsMale || IsCreature || (Config.AllowFFCum && IsFemale))
+		if i > 1 && Config.UseCum && (MalePosition || IsCreature) && (IsMale || IsFuta || IsCreature || (Config.AllowFFCum && IsFemale))
 			if i == 2
 				Thread.PositionAlias(IntIfElse(Position == 1, 0, 1)).ApplyCum()
 			else
@@ -1057,7 +1063,7 @@ state Animating
 			if IsVictim
 				VictimRef = ActorRef
 			endIf
-			sslActorStats.RecordThread(ActorRef, Gender, BestRelation, StartedAt, Utility.GetCurrentRealTime(), Utility.GetCurrentGameTime(), Thread.HasPlayer, VictimRef, Thread.Genders, Thread.SkillXP)
+			sslActorStats.RecordThread(ActorRef, Gender, BestRelation, StartedAt, RealTime[0], Utility.GetCurrentGameTime(), Thread.HasPlayer, VictimRef, Thread.Genders, Thread.SkillXP)
 			Stats.AddPartners(ActorRef, Thread.Positions, Thread.Victims)
 			if IsType[6]
 				Stats.AdjustSkill(ActorRef, "VaginalCount", 1)
@@ -1125,7 +1131,7 @@ function SyncAll(bool Force = false)
 endFunction
 
 ; ------------------------------------------------------- ;
-; --- Actor Manipulation                              --- ;
+; --- Actor Manipulation							  --- ;
 ; ------------------------------------------------------- ;
 
 function StopAnimating(bool Quick = false, string ResetAnim = "IdleForceDefaultState")
@@ -1135,7 +1141,7 @@ function StopAnimating(bool Quick = false, string ResetAnim = "IdleForceDefaultS
 	endIf
 	; Disable free camera, if in it
 	; if IsPlayer
-	; 	MiscUtil.SetFreeCameraState(false)
+	;	MiscUtil.SetFreeCameraState(false)
 	; endIf
 	; Clear possibly troublesome effects
 	ActorRef.StopTranslation()
@@ -1146,7 +1152,7 @@ function StopAnimating(bool Quick = false, string ResetAnim = "IdleForceDefaultS
 			StageOffset = StageCount
 		endIf
 		if AdjustKey && AdjustKey != ""
-			Offsets    = Animation.PositionOffsets(Offsets, AdjustKey, Position, StageOffset, BedStatus[1])
+			Offsets	   = Animation.PositionOffsets(Offsets, AdjustKey, Position, StageOffset, BedStatus[1])
 		endIf
 		float OffsetZ = 10.0
 		if Offsets[2] < 1.0 ; Fix for animation default missaligned 
@@ -1240,6 +1246,7 @@ function SendDefaultAnimEvent(bool Exit = False)
 	Debug.SendAnimationEvent(ActorRef, "AnimObjectUnequip")
 	if !IsCreature
 		Debug.SendAnimationEvent(ActorRef, "IdleForceDefaultState")
+		Utility.Wait(0.1)
 	elseIf ActorRaceKey != ""
 		if ActorRaceKey == "Dragons"
 			Debug.SendAnimationEvent(ActorRef, "FlyStopDefault") ; for Dragons only
@@ -1247,40 +1254,42 @@ function SendDefaultAnimEvent(bool Exit = False)
 			Debug.SendAnimationEvent(ActorRef, "Reset") ; for Dragons only
 		elseIf ActorRaceKey == "Hagravens"
 			Debug.SendAnimationEvent(ActorRef, "ReturnToDefault") ; for Dragons only
+			Utility.Wait(0.1)
 			if Exit
-				Utility.Wait(0.1)
 				Debug.SendAnimationEvent(ActorRef, "Reset") ; for Dragons only
 			endIf
 		elseIf ActorRaceKey == "Chaurus" || ActorRaceKey == "ChaurusReapers"
 			Debug.SendAnimationEvent(ActorRef, "FNISDefault") ; for dwarvenspider and chaurus without time bettwen.
+			Utility.Wait(0.1)
 			if Exit
-		;		Utility.Wait(0.1)
 		;		Debug.SendAnimationEvent(ActorRef, "ReturnToDefault")
 			endIf
 		elseIf ActorRaceKey == "DwarvenSpiders"
 			Debug.SendAnimationEvent(ActorRef, "ReturnToDefault")
+			Utility.Wait(0.1)
 			if Exit
-		;		Utility.Wait(0.1)
 		;		Debug.SendAnimationEvent(ActorRef, "FNISDefault") ; for dwarvenspider and chaurus
 			endIf
 		elseIf ActorRaceKey == "Draugrs" || ActorRaceKey == "Seekers" || ActorRaceKey == "DwarvenBallistas" || ActorRaceKey == "DwarvenSpheres" || ActorRaceKey == "DwarvenCenturions"
 			Debug.SendAnimationEvent(ActorRef, "ForceFurnExit") ; for draugr, trolls daedras and all dwarven exept spiders
 		elseIf ActorRaceKey == "Trolls"
 			Debug.SendAnimationEvent(ActorRef, "ReturnToDefault")
+			Utility.Wait(0.1)
 			if Exit
-				Utility.Wait(0.1)
 				Debug.SendAnimationEvent(ActorRef, "ForceFurnExit") ; the troll need this afther "ReturnToDefault" to allow the attack idles
 			endIf
 		elseIf ActorRaceKey == "Chickens" || ActorRaceKey == "Rabbits" || ActorRaceKey == "Slaughterfishes"
 			Debug.SendAnimationEvent(ActorRef, "ReturnDefaultState") ; for chicken, hare and slaughterfish
+			Utility.Wait(0.1)
 			if Exit
-				Utility.Wait(0.1)
 				Debug.SendAnimationEvent(ActorRef, "ReturnToDefault")
 			endIf
 		elseIf ActorRaceKey == "Werewolves" || ActorRaceKey == "VampireLords"
 			Debug.SendAnimationEvent(ActorRef, "IdleReturnToDefault") ; for Werewolves and VampirwLords
+			Utility.Wait(0.1)
 		else
 			Debug.SendAnimationEvent(ActorRef, "ReturnToDefault") ; the rest creature-animal
+			Utility.Wait(0.1)
 		endIf
 	elseIf Exit
 		Debug.SendAnimationEvent(ActorRef, "ReturnDefaultState") ; for chicken, hare and slaughterfish before the "ReturnToDefault"
@@ -1289,6 +1298,7 @@ function SendDefaultAnimEvent(bool Exit = False)
 		Debug.SendAnimationEvent(ActorRef, "IdleReturnToDefault") ; for Werewolves and VampirwLords
 		Debug.SendAnimationEvent(ActorRef, "ForceFurnExit") ; for Trolls afther the "ReturnToDefault" and draugr, daedras and all dwarven exept spiders
 		Debug.SendAnimationEvent(ActorRef, "Reset") ; for Hagravens afther the "ReturnToDefault" and Dragons
+		Utility.Wait(0.1)
 	endIf
 	Utility.Wait(0.2)
 endFunction
@@ -1384,7 +1394,7 @@ function UnlockActor()
 endFunction
 
 function RestoreActorDefaults()
-	; Make sure  have actor, can't afford to miss this block
+	; Make sure	 have actor, can't afford to miss this block
 	if !ActorRef
 		ActorRef = GetReference() as Actor
 		if !ActorRef
@@ -1399,7 +1409,7 @@ function RestoreActorDefaults()
 	if !IsCreature
 		; Reset voicetype
 		; if ActorVoice && ActorVoice != BaseRef.GetVoiceType()
-		; 	BaseRef.SetVoiceType(ActorVoice)
+		;	BaseRef.SetVoiceType(ActorVoice)
 		; endIf
 		; Remove strapon
 		if Strapon && !HadStrapon; && Strapon != HadStrapon
@@ -1440,7 +1450,7 @@ function RefreshActor()
 endFunction
 
 ; ------------------------------------------------------- ;
-; --- Data Accessors                                  --- ;
+; --- Data Accessors								  --- ;
 ; ------------------------------------------------------- ;
 
 int function GetGender()
@@ -1511,6 +1521,7 @@ int function GetPain()
 		return 0
 	endIf
 	return PapyrusUtil.ClampInt(Math.Abs(GetFullEnjoyment()) as int, 0, 100)
+
 endFunction
 
 int function CalcReaction()
@@ -1729,30 +1740,30 @@ function Strip()
 endFunction
 
 function UnStrip()
- 	if !ActorRef || IsCreature || Equipment.Length == 0
- 		return
- 	endIf
+	if !ActorRef || IsCreature || Equipment.Length == 0
+		return
+	endIf
 	; Remove nudesuit if present
 	int n = ActorRef.GetItemCount(Config.NudeSuit)
 	if n > 0
 		ActorRef.RemoveItem(Config.NudeSuit, n, true)
 	endIf
 	; Continue with undress, or am I disabled?
- 	if !DoRedress
- 		return ; Fuck clothes, bitch.
- 	endIf
- 	; Equip Stripped
- 	int i = Equipment.Length
- 	while i
- 		i -= 1
- 		if Equipment[i]
- 			int hand = StorageUtil.GetIntValue(Equipment[i], "Hand", 0)
- 			if hand != 0
-	 			StorageUtil.UnsetIntValue(Equipment[i], "Hand")
-	 		endIf
-	 		ActorRef.EquipItemEx(Equipment[i], hand, false)
-  		endIf
- 	endWhile
+	if !DoRedress
+		return ; Fuck clothes, bitch.
+	endIf
+	; Equip Stripped
+	int i = Equipment.Length
+	while i
+		i -= 1
+		if Equipment[i]
+			int hand = StorageUtil.GetIntValue(Equipment[i], "Hand", 0)
+			if hand != 0
+				StorageUtil.UnsetIntValue(Equipment[i], "Hand")
+			endIf
+			ActorRef.EquipItemEx(Equipment[i], hand, false)
+		endIf
+	endWhile
 endFunction
 
 bool NoRagdoll
@@ -1833,7 +1844,7 @@ function RefreshExpression()
 endFunction
 
 ; ------------------------------------------------------- ;
-; --- System Use                                      --- ;
+; --- System Use									  --- ;
 ; ------------------------------------------------------- ;
 
 function TrackedEvent(string EventName)
@@ -1862,10 +1873,10 @@ function ClearEffects()
 endFunction
 
 int property kPrepareActor = 0 autoreadonly hidden
-int property kSyncActor    = 1 autoreadonly hidden
+int property kSyncActor	   = 1 autoreadonly hidden
 int property kResetActor   = 2 autoreadonly hidden
 int property kRefreshActor = 3 autoreadonly hidden
-int property kStartup      = 4 autoreadonly hidden
+int property kStartup	   = 4 autoreadonly hidden
 
 function RegisterEvents()
 	string e = Thread.Key("")
@@ -1914,50 +1925,50 @@ function Initialize()
 		MarkerRef.Delete()
 	endIf
 	; Forms
-	ActorRef       = none
-	MarkerRef      = none
-	HadStrapon     = none
-	Strapon        = none
+	ActorRef	   = none
+	MarkerRef	   = none
+	HadStrapon	   = none
+	Strapon		   = none
 	HDTHeelSpell   = none
 	; Voice
-	Voice          = none
-	ActorVoice     = none
+	Voice		   = none
+	ActorVoice	   = none
 	IsForcedSilent = false
 	; Expression
-	Expression     = none
-	Expressions    = sslUtility.ExpressionArray(0)
+	Expression	   = none
+	Expressions	   = sslUtility.ExpressionArray(0)
 	; Flags
-	NoRagdoll      = false
-	NoUndress      = false
-	NoRedress      = false
-	NoOrgasm       = false
+	NoRagdoll	   = false
+	NoUndress	   = false
+	NoRedress	   = false
+	NoOrgasm	   = false
 	ForceOpenMouth = false
-	Prepared       = false
-	StartedUp      = false
+	Prepared	   = false
+	StartedUp	   = false
 	; Integers
-	Orgasms        = 0
+	Orgasms		   = 0
 	BestRelation   = 0
 	BaseEnjoyment  = 0
 	QuitEnjoyment  = 0
 	FullEnjoyment  = 0
-	PathingFlag    = 0
+	PathingFlag	   = 0
 	; Floats
-	LastOrgasm     = 0.0
-	ActorScale     = 1.0
-	AnimScale      = 1.0
-	NioScale       = 1.0
-	StartWait      = 0.1
+	LastOrgasm	   = 0.0
+	ActorScale	   = 1.0
+	AnimScale	   = 1.0
+	NioScale	   = 1.0
+	StartWait	   = 0.1
 	; Strings
 	EndAnimEvent   = "IdleForceDefaultState"
 	StartAnimEvent = ""
-	ActorKey       = ""
-	PlayingSA      = ""
-	CurrentSA      = ""
-	PlayingAE      = ""
-	CurrentAE      = ""
+	ActorKey	   = ""
+	PlayingSA	   = ""
+	CurrentSA	   = ""
+	PlayingAE	   = ""
+	CurrentAE	   = ""
 	; Storage
 	StripOverride  = Utility.CreateBoolArray(0)
-	Equipment      = Utility.CreateFormArray(0)
+	Equipment	   = Utility.CreateFormArray(0)
 	; Make sure alias is emptied
 	
 	SLSO_Initialize()
@@ -1970,13 +1981,13 @@ function Setup()
 	if !Config || !ActorLib || !Stats
 		Form SexLabQuestFramework = Game.GetFormFromFile(0xD62, "SexLab.esm")
 		if SexLabQuestFramework
-			Config   = SexLabQuestFramework as sslSystemConfig
+			Config	 = SexLabQuestFramework as sslSystemConfig
 			ActorLib = SexLabQuestFramework as sslActorLibrary
-			Stats    = SexLabQuestFramework as sslActorStats
+			Stats	 = SexLabQuestFramework as sslActorStats
 		endIf
 	endIf
 	PlayerRef = Game.GetPlayer()
-	Thread    = GetOwningQuest() as sslThreadController
+	Thread	  = GetOwningQuest() as sslThreadController
 	OrgasmFX  = Config.OrgasmFX
 	DebugMode = Config.DebugMode
 	AnimatingFaction = Config.AnimatingFaction
@@ -2002,7 +2013,7 @@ function PlayLouder(Sound SFX, ObjectReference FromRef, float Volume)
 endFunction
 
 ; ------------------------------------------------------- ;
-; --- State Restricted                                --- ;
+; --- State Restricted								  --- ;
 ; ------------------------------------------------------- ;
 
 ; Ready
@@ -2053,7 +2064,7 @@ endfunction
 
 ; function AdjustCoords(float[] Output, float[] CenterCoords, ) global native
 ; function AdjustOffset(int i, float amount, bool backwards, bool adjustStage)
-; 	Animation.
+;	Animation.
 ; endFunction
 
 ; function OffsetBed(float[] Output, float[] BedOffsets, float CenterRot) global native
@@ -2063,10 +2074,10 @@ endfunction
 
 
 ; function GetVars()
-; 	IntShare = Thread.IntShare
-; 	FloatShare = Thread.FloatS1hare
-; 	StringShare = Thread.StringShare
-; 	BoolShare
+;	IntShare = Thread.IntShare
+;	FloatShare = Thread.FloatS1hare
+;	StringShare = Thread.StringShare
+;	BoolShare
 ; endFunction
 
 ; int[] property IntShare auto hidden ; Stage, ActorCount, BedStatus[1]
@@ -2120,19 +2131,19 @@ function SLSO_Initialize()
 	;SLSO
 	; Flags
 	EstrusForcedEnjoymentMods = false
-	bslaExhibitionist    = false
+	bslaExhibitionist	 = false
 	; Integers
-	BonusEnjoyment      = 0
-	ActorFullEnjoyment      = 0
-	slaExhibitionistNPCCount      = 0
+	BonusEnjoyment		= 0
+	ActorFullEnjoyment		= 0
+	slaExhibitionistNPCCount	  = 0
 	; Floats
-	MasturbationMod     = 1.0
-	slaActorArousalMod  = 1.0
-	ExhibitionistMod    = 1.0
-	GenderMod     = 1.0
+	MasturbationMod		= 1.0
+	slaActorArousalMod	= 1.0
+	ExhibitionistMod	= 1.0
+	GenderMod	  = 1.0
 	; Factions
-	slaArousal 	         = None
-	slaExhibitionist     = None
+	slaArousal			 = None
+	slaExhibitionist	 = None
 	; Keywords
 	zadDeviousBelt = None
 	thread.Set_minimum_aggressor_orgasm_Count(-1)
@@ -2144,7 +2155,7 @@ int function GetFullEnjoyment()
 endFunction
 
 float function GetFullEnjoymentMod()
-	return 	100*MasturbationMod/ExhibitionistMod/GenderMod*slaActorArousalMod
+	return	100*MasturbationMod/ExhibitionistMod/GenderMod*slaActorArousalMod
 endFunction
 
 int function CalculateFullEnjoyment()
@@ -2187,7 +2198,7 @@ int function CalculateFullEnjoyment()
 				slaExhibitionistNPCCount = PapyrusUtil.ClampInt(slaExhibitionistNPCCount, 0, 7)
 				;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
 				;ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
-				ExhibitionistMod =  (1.6 - 0.2 * slaExhibitionistNPCCount)
+				ExhibitionistMod =	(1.6 - 0.2 * slaExhibitionistNPCCount)
 			elseif slaExhibitionistNPCCount > 1 && !IsAggressor
 				;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + 0.2 * slaExhibitionistNPCCount)) as int+"]")
 				ExhibitionistMod = (1 + 0.2 * slaExhibitionistNPCCount)
@@ -2210,7 +2221,7 @@ int function CalculateFullEnjoyment()
 
 	SLSO_FullEnjoyment = SLSO_FullEnjoyment + slaActorArousal + BonusEnjoyment
 
-	if  EstrusForcedEnjoymentMods
+	if	EstrusForcedEnjoymentMods
 		ActorFullEnjoyment = (SLSO_FullEnjoyment * JsonUtil.GetFloatValue(File, "sl_estrusforcedenjoyment")) as int
 	else
 		ActorFullEnjoyment = (SLSO_FullEnjoyment * MasturbationMod / ExhibitionistMod / GenderMod * sl_enjoymentrate * slaActorArousalMod) as int
@@ -2333,7 +2344,7 @@ endFunction
 
 function HoldOut(float experience = 0.0)
 	if Position == 0
-		if  IsFemale 
+		if	IsFemale 
 			if (Animation.HasTag("Vaginal" || Animation.HasTag("Fisting") || Animation.HasTag("69")))
 				LastOrgasm = Math.Abs(RealTime[0] - 8 + OwnSkills[Stats.kVaginal] + experience)
 				BonusEnjoyment(ActorRef, (- 1 - OwnSkills[Stats.kVaginal]) as int)
@@ -2344,7 +2355,7 @@ function HoldOut(float experience = 0.0)
 				LastOrgasm = Math.Abs(RealTime[0] - 8 + experience)
 				BonusEnjoyment(ActorRef, -1)
 			endIf
-		elseif IsMale
+		elseif IsMale || IsFuta
 			if (Animation.HasTag("Anal") || Animation.HasTag("Fisting"))
 				LastOrgasm = Math.Abs(RealTime[0] - 8 + OwnSkills[Stats.kAnal] + experience)
 				BonusEnjoyment(ActorRef, (-1 - OwnSkills[Stats.kAnal]) as int)
@@ -2405,13 +2416,13 @@ int function SLSO_DoOrgasm_Conditions(bool Forced)
 		endIf
 		if !IsAggressor
 			if !(Animation.HasTag("69") || Animation.HasTag("Masturbation")) || Thread.Positions.Length == 2
-				if  !IsCreature && BaseRef.GetSex() != Gender
-					if  JsonUtil.GetIntValue(File, "condition_futa_orgasm") == 1
+				if	!IsCreature && BaseRef.GetSex() != Gender || IsFuta
+					if	JsonUtil.GetIntValue(File, "condition_futa_orgasm") == 1
 						if Position == 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Cunnilingus") || Animation.HasTag("Fisting") || Animation.HasTag("Lesbian"))
-							Log(ActorName + " Orgasm blocked, female pos 0, conditions not met, no HasTag(Vaginal,Anal,Cunnilingus,Fisting)")
+							Log(ActorName + " Orgasm blocked, futa female pos 0, conditions not met, no HasTag(Vaginal,Anal,Cunnilingus,Fisting)")
 							return -11
 						elseif Position != 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Boobjob") || Animation.HasTag("Blowjob") || Animation.HasTag("Handjob") || Animation.HasTag("Footjob"))
-							Log(ActorName + " Orgasm blocked, male pos > 0, conditions not met, no HasTag(Vaginal,Anal,Boobjob,Blowjob,Handjob,Footjob)")
+							Log(ActorName + " Orgasm blocked, futa male pos > 0, conditions not met, no HasTag(Vaginal,Anal,Boobjob,Blowjob,Handjob,Footjob)")
 							return -12
 						endIf
 					endIf
@@ -2581,7 +2592,7 @@ function SLSO_StartAnimating()
 				slaExhibitionistNPCCount = PapyrusUtil.ClampInt(slaExhibitionistNPCCount, 0, 7)
 				;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (3 - 0.4 * slaExhibitionistNPCCount)) as int+"]")
 				;ExhibitionistMod = (3 - 0.4 * slaExhibitionistNPCCount)
-				ExhibitionistMod =  (1.6 - 0.2 * slaExhibitionistNPCCount)
+				ExhibitionistMod =	(1.6 - 0.2 * slaExhibitionistNPCCount)
 			elseif slaExhibitionistNPCCount > 1 && !IsAggressor
 				;Log("slaExhibitionistNPCCount ["+slaExhibitionistNPCCount+"] FullEnjoyment MOD["+(FullEnjoyment-FullEnjoyment / (1 + 0.2 * slaExhibitionistNPCCount)) as int+"]")
 				ExhibitionistMod = (1 + 0.2 * slaExhibitionistNPCCount)
@@ -2642,7 +2653,7 @@ function SLSO_StartAnimating()
 ;		AllowNonAggressorOrgasm = 0
 ;		if !IsAggressor
 ;			if !(Animation.HasTag("69") || Animation.HasTag("Masturbation")) || Thread.Positions.Length == 2
-;				if  IsFemale && JsonUtil.GetIntValue(File, "condition_female_orgasm") == 1
+;				if	IsFemale && JsonUtil.GetIntValue(File, "condition_female_orgasm") == 1
 ;					if Position == 0 && !(Animation.HasTag("Vaginal") || Animation.HasTag("Anal") || Animation.HasTag("Cunnilingus") || Animation.HasTag("Fisting") || Animation.HasTag("Lesbian"))
 ;						AllowNonAggressorOrgasm = 1
 ;					endIf
@@ -2662,10 +2673,10 @@ Function SLSO_Animating_Moan()
 	if !IsSilent
 		if !IsFemale
 			Voice.PlayMoan(ActorRef, ActorFullEnjoyment, IsVictim, UseLipSync)
-			;Log("  !IsFemale " + ActorName)
+			;Log("	!IsFemale " + ActorName)
 		elseif ((JsonUtil.GetIntValue(File, "sl_voice_player") == 0 && IsPlayer) || (JsonUtil.GetIntValue(File, "sl_voice_npc") == 0 && !IsPlayer))
 			Voice.PlayMoan(ActorRef, ActorFullEnjoyment, IsVictim, UseLipSync)
-			;Log("  IsFemale " + ActorName)
+			;Log("	IsFemale " + ActorName)
 		endIf
 	endIf
 endFunction
